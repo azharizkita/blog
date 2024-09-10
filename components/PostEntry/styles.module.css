@@ -1,0 +1,48 @@
+.post-entry {
+  display: flex;
+  flex-direction: column;
+  width: 15em;
+  gap: 0.25em;
+  padding: 1em 1.5em;
+  margin: 1px;
+  text-decoration: none;
+  color: inherit;
+  background-color: var(--background);
+  border-radius: var(--rounded);
+}
+
+.post-date {
+  text-align: center;
+  color: GrayText;
+  font-size: 0.65em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.post-title-container {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  width: 100%;
+}
+
+.post-title {
+  text-align: center;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.post-description {
+  text-align: center;
+  color: GrayText;
+  font-size: 0.75em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}

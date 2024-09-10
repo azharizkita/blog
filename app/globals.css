@@ -1,6 +1,29 @@
+@import "github-syntax-dark/lib/github-dark.css";
+
+.markdown-body ul,
+.markdown-body ol {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-left: 2em;
+}
+
+.markdown-body ol ol,
+.markdown-body ul ol {
+  list-style-type: lower-roman;
+}
+
+.markdown-body ul ul ol,
+.markdown-body ul ol ol,
+.markdown-body ol ul ol,
+.markdown-body ol ol ol {
+  list-style-type: lower-alpha;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --accent: rgba(252, 82, 3, 0.8);
+  --rounded: 8px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,6 +45,107 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  border-radius: var(--rounded);
+  background-color: transparent;
+  border: 1px solid var(--accent);
+  width: fit-content;
+  padding: 8px;
+  font-weight: bolder;
+  color: var(--accent);
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  grid-row-start: 2;
+}
+
+main ol {
+  font-family: var(--font-geist-mono);
+  padding-left: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 24px;
+  letter-spacing: -0.01em;
+  list-style-position: inside;
+}
+
+main li:not(:last-of-type) {
+  margin-bottom: 8px;
+}
+
+main code {
+  font-family: inherit;
+  background: var(--gray-alpha-100);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+pre {
+  overflow-x: scroll;
+  background-color: rgb(20, 19, 19);
+  padding: 1em;
+  max-height: 30em;
+  border-radius: 8px;
+}
+
+article {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  grid-row-start: 2;
+  padding: 0em 2em;
+  max-width: 100vw;
+}
+
+article h2 {
+  text-align: center;
+  padding-bottom: 2em;
+}
+
+article ol {
+  font-family: var(--font-geist-mono);
+  padding-left: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 24px;
+  letter-spacing: -0.01em;
+  list-style-position: inside;
+}
+
+article li:not(:last-of-type) {
+  margin-bottom: 8px;
+}
+
+article code {
+  font-family: inherit;
+  background: var(--gray-alpha-100);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+blockquote {
+  border-left: 0.25em solid var(--accent);
+  margin: 1.5em 10px;
+  padding: 0.5em 10px;
+  font-style: italic;
+  font-weight: bolder;
+}
+blockquote:before {
+  font-size: 4em;
+  line-height: 0.1em;
+  margin-right: 0.25em;
+  vertical-align: -0.4em;
+}
+blockquote p {
+  display: inline;
 }
 
 * {
