@@ -134,8 +134,8 @@ article {
   gap: 1em;
   max-width: 50em;
   grid-row-start: 2;
-  padding: 2em 1em;
-  max-width: 100vw;
+  padding: 2em;
+  max-width: min(100vw, 50em);
 }
 
 article h2 {

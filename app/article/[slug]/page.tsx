@@ -45,7 +45,10 @@ export default async function Blog({ params }: { params: { slug: string } }) {
     <>
       <article
         className="markdown-body"
-        style={{ textAlign: isPoetry ? "center" : "unset" }}
+        style={{
+          textAlign: isPoetry ? "center" : "unset",
+          padding: isPoetry ? "2em 1.5em" : "2em",
+        }}
         dangerouslySetInnerHTML={{ __html: data }}
       />
       <p
