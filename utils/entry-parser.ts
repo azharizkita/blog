@@ -1,4 +1,4 @@
-type EntryType = "Blog" | "Poet" | "Sharing";
+type EntryType = "Blog" | "Poetry" | "Sharing";
 
 interface BlogEntry {
   type: "Blog";
@@ -7,7 +7,7 @@ interface BlogEntry {
 }
 
 interface PoetEntry {
-  type: "Poet";
+  type: "Poetry";
   title: string;
   description: string | null;
 }
@@ -32,9 +32,9 @@ export default function parseEntry(entry: string): Entry {
         title: parts[1].trim(),
         description: parts[2].trim(),
       };
-    case "Poet":
+    case "Poetry":
       return {
-        type: "Poet",
+        type: "Poetry",
         title: parts[1].trim(),
         description: parts[2]?.trim() ?? null,
       };

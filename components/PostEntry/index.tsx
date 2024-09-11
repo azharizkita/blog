@@ -17,7 +17,7 @@ export default function PostEntry(props: PostEntryProps) {
     const { description: _description, title, type } = parseEntry(description);
 
     const color = (() => {
-      if (type === "Poet") {
+      if (type === "Poetry") {
         return "rgba(186, 48, 154, 0.8)";
       }
       if (type === "Blog") {

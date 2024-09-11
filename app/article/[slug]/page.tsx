@@ -39,7 +39,7 @@ export default async function Blog({ params }: { params: { slug: string } }) {
       }).format(new Date(repoData?.created_at))
     : "";
 
-  const isPoetry = type === "Poet";
+  const isPoetry = type === "Poetry";
 
   return (
     <>
