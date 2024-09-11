@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import styles from "./layout.module.css";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const font = Chakra_Petch({
   subsets: ["latin"],
@@ -29,6 +30,7 @@ export default function RootLayout({
           <main>{children}</main>
           <Footer />
         </div>
+        <SpeedInsights sampleRate={0.5} />
       </body>
     </html>
   );
