@@ -1,5 +1,10 @@
 @import "github-syntax-dark/lib/github-dark.css";
 
+.skeleton {
+  animation: skeleton-loading 1s linear infinite alternate;
+  color: transparent;
+}
+
 .markdown-body ul,
 .markdown-body ol {
   margin-top: 0;
@@ -98,9 +103,14 @@ article {
   display: flex;
   flex-direction: column;
   gap: 1em;
+  max-width: 50em;
   grid-row-start: 2;
   padding: 0em 2em;
-  max-width: 100vw;
+  width: 100vw;
+}
+
+hr {
+  border-color: var(--accent);
 }
 
 article h2 {
@@ -162,5 +172,14 @@ a {
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
+  }
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-color: #3b3938;
+  }
+  100% {
+    background-color: #545352;
   }
 }
