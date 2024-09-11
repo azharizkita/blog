@@ -29,6 +29,8 @@ export default async function Blog({ params }: { params: { slug: string } }) {
     notFound();
   }
 
+  const { type } = parseEntry(repoData.description ?? "");
+
   const { data } = await getGistContent(content);
 
   const createdAt = repoData?.created_at
@@ -37,13 +39,24 @@ export default async function Blog({ params }: { params: { slug: string } }) {
       }).format(new Date(repoData?.created_at))
     : "";
 
+  const isPoetry = type === "Poet";
+
   return (
     <>
       <article
         className="markdown-body"
+        style={{ textAlign: isPoetry ? "center" : "unset" }}
         dangerouslySetInnerHTML={{ __html: data }}
       />
-      <p style={{ paddingLeft: "2em", color: "GrayText" }}>{createdAt}</p>
+      <p
+        style={{
+          paddingLeft: isPoetry ? "unset" : "2em",
+          color: "GrayText",
+          textAlign: isPoetry ? "center" : "unset",
+        }}
+      >
+        {createdAt}
+      </p>
     </>
   );
 }
