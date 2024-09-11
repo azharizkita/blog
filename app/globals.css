@@ -176,6 +176,12 @@ a {
   text-decoration: none;
 }
 
+.skeleton {
+  animation: skeleton-loading 1s linear infinite alternate;
+  color: transparent;
+  min-width: calc(100svw - 4em);
+}
+
 .pl-c {
   color: var(--color-prettylights-syntax-comment);
 }
@@ -294,4 +300,13 @@ a {
 .pl-corl {
   text-decoration: underline;
   color: var(--color-prettylights-syntax-constant-other-reference-link);
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-color: #3b3938;
+  }
+  100% {
+    background-color: #545352;
+  }
 }
