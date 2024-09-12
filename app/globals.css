@@ -144,6 +144,22 @@ article h2 {
   padding-bottom: 2em;
 }
 
+article a {
+  color: var(--accent);
+  text-decoration: underline;
+  font-size: bolder;
+}
+
+article img {
+  border-radius: var(--rounded);
+  width: 100%;
+}
+
+.markdown-body p > a:has(img) {
+  padding: min(7.5svw, 4em);
+  display: flex;
+}
+
 code {
   background: var(--code-background);
   padding: 0.25em 0.5em;
