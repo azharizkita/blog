@@ -1,6 +1,7 @@
 import { parseEntry } from "@/utils";
 import Link from "next/link";
 import styles from "./styles.module.css";
+import TimeAgo from "../TimeAgo";
 
 interface PostEntryProps {
   description: string;
@@ -14,9 +15,6 @@ export default function PostEntry({
   createdAt: _createdAt,
 }: PostEntryProps) {
   try {
-    const createdAt = Intl.DateTimeFormat("en-US", {
-      dateStyle: "medium",
-    }).format(new Date(_createdAt));
     const { description: _description, title, type } = parseEntry(description);
 
     const color = (() => {
@@ -36,9 +34,7 @@ export default function PostEntry({
           className={styles["post-entry"]}
         >
           <header style={{ height: "fit-content" }}>
-            <time dateTime={_createdAt} className={styles["post-date"]}>
-              {createdAt}
-            </time>
+            <TimeAgo className={styles["post-date"]} createdAt={_createdAt} />
             <h2 className={styles["post-title"]}>{title}</h2>
           </header>
           <p className={styles["post-description"]}>
