@@ -8,9 +8,12 @@ interface PostEntryProps {
   createdAt: string;
 }
 
-export default function PostEntry(props: PostEntryProps) {
+export default function PostEntry({
+  description,
+  id,
+  createdAt: _createdAt,
+}: PostEntryProps) {
   try {
-    const { description, id, createdAt: _createdAt } = props;
     const createdAt = Intl.DateTimeFormat("en-US", {
       dateStyle: "medium",
     }).format(new Date(_createdAt));
@@ -18,48 +21,31 @@ export default function PostEntry(props: PostEntryProps) {
 
     const color = (() => {
       if (type === "Poetry") {
-        return "rgba(186, 48, 154, 0.8)";
+        return "rgb(218, 66, 245)";
       }
       if (type === "Blog") {
-        return "rgba(48, 186, 94, 0.8)";
+        return "rgb(48, 186, 94)";
       }
-
       return "var(--accent)";
     })();
 
     return (
-      <Link
-        href={`/article/${id}`.toLocaleLowerCase()}
-        style={{
-          display: "flex",
-          background: color,
-          borderRadius: "var(--rounded)",
-        }}
-      >
-        <div className={styles["post-entry"]}>
-          <p className={styles["post-date"]}>{createdAt}</p>
-          <p className={styles["post-title"]}>{title}</p>
-          <p className={styles["post-description"]}>{_description}</p>
-        </div>
-        <div
-          style={{
-            writingMode: "vertical-lr",
-            color: "var(--foreground)",
-            padding: "0.5em 0.3em",
-            width: "2em",
-          }}
+      <article className={styles["post-wrapper"]}>
+        <Link
+          href={`/article/${id.toLowerCase()}`}
+          className={styles["post-entry"]}
         >
-          <p
-            style={{
-              fontSize: "1em",
-              fontWeight: "bolder",
-              textAlign: "center",
-            }}
-          >
-            {type}
+          <header style={{ height: "fit-content" }}>
+            <time dateTime={_createdAt} className={styles["post-date"]}>
+              {createdAt}
+            </time>
+            <h2 className={styles["post-title"]}>{title}</h2>
+          </header>
+          <p className={styles["post-description"]}>
+            <span style={{ color }}>{type}</span> — {_description}
           </p>
-        </div>
-      </Link>
+        </Link>
+      </article>
     );
   } catch (error) {
     return null;

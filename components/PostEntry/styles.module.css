@@ -1,18 +1,21 @@
+.post-wrapper {
+  padding: 0.25em 1.5em;
+}
+
 .post-entry {
   display: flex;
   flex-direction: column;
-  width: 15em;
+  max-width: min(30em, 100svw);
+  width: 100%;
+  overflow: hidden;
   gap: 0.25em;
-  padding: 1em 1.5em;
   margin: 1px;
   text-decoration: none;
   color: inherit;
   background-color: var(--background);
-  border-radius: var(--rounded);
 }
 
 .post-date {
-  text-align: center;
   color: var(--gray-text);
   font-size: 0.65em;
   white-space: nowrap;
@@ -24,12 +27,13 @@
 .post-title-container {
   display: flex;
   gap: 0.5em;
-  align-items: center;
   width: 100%;
 }
 
 .post-title {
-  text-align: center;
+  padding: unset;
+  font-size: 1em;
+  text-align: left;
   font-weight: bold;
   white-space: nowrap;
   overflow: hidden;
@@ -38,7 +42,6 @@
 }
 
 .post-description {
-  text-align: center;
   color: var(--gray-text);
   font-size: 0.75em;
   white-space: nowrap;
