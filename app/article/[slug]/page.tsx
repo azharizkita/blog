@@ -1,3 +1,4 @@
+import ScrollToHash from "@/components/ScrollToHash";
 import { getGistContent, getGistDetails } from "@/repositories/gist";
 import { parseEntry } from "@/utils";
 import type { Metadata } from "next";
@@ -43,6 +44,8 @@ export default async function Blog({ params }: { params: { slug: string } }) {
 
   return (
     <>
+      <ScrollToHash />
+
       <article
         className="markdown-body"
         style={{
