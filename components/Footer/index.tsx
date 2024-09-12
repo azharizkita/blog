@@ -11,12 +11,11 @@ export default function Footer() {
       >
         <Image
           aria-hidden
-          src="https://nextjs.org/icons/github.svg"
+          src="/github.svg"
           alt="File icon"
           width={16}
           height={16}
         />
-        GitHub
       </a>
     </footer>
   );
