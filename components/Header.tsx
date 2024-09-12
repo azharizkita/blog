@@ -2,33 +2,40 @@ import Link from "next/link";
 
 export default function Header() {
   return (
-    <Link href="/">
-      <header
+    <header
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "0.5em",
+      }}
+    >
+      <Link
+        href="/"
         style={{
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
           gap: "0.5em",
+          textDecoration: "none",
+          color: "inherit",
         }}
       >
-        <h1>Silenced</h1>
-        <div
+        <h1 style={{ margin: 0, lineHeight: "0.75em" }}>Silenced</h1>
+        <p
           style={{
-            border: "2px solid var(--accent)",
-            height: "30px",
-            borderRadius: "20px",
-          }}
-        />
-        <h4
-          style={{
-            color: "var(--gray-text)",
+            color: "var(--accent)",
             width: "110px",
             lineHeight: "0.8em",
+            margin: 0,
+            fontWeight: "bold",
+            textAlign: "center",
+            fontSize: "0.75em",
           }}
         >
-          Personal post dumps
-        </h4>
-      </header>
-    </Link>
+          personal dumps
+        </p>
+      </Link>
+    </header>
   );
 }
