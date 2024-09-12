@@ -21,7 +21,7 @@ export default function Header() {
         />
         <h4
           style={{
-            color: "GrayText",
+            color: "var(--gray-text)",
             width: "110px",
             lineHeight: "0.8em",
           }}

@@ -13,7 +13,7 @@
 
 .post-date {
   text-align: center;
-  color: GrayText;
+  color: var(--gray-text);
   font-size: 0.65em;
   white-space: nowrap;
   overflow: hidden;
@@ -39,7 +39,7 @@
 
 .post-description {
   text-align: center;
-  color: GrayText;
+  color: var(--gray-text);
   font-size: 0.75em;
   white-space: nowrap;
   overflow: hidden;
