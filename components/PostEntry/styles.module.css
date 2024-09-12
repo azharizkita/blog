@@ -15,6 +15,32 @@
   background-color: var(--background);
 }
 
+.post-entry:hover .post-title {
+  background-size: 100% 0.1em, 0 0.1em;
+}
+
+.post-title {
+  padding: unset;
+  font-size: 1em;
+  text-align: left;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: fit-content;
+  transition: text-decoration 0.3s ease;
+  background: linear-gradient(
+    to right,
+    var(--foreground),
+    var(--foreground),
+    var(--background)
+  );
+  background-size: 0 0.1em, 100% 0.1em;
+  background-position: 0 100%, 100% 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.4s ease;
+}
+
 .post-date {
   color: var(--gray-text);
   font-size: 0.65em;
@@ -27,17 +53,6 @@
 .post-title-container {
   display: flex;
   gap: 0.5em;
-  width: 100%;
-}
-
-.post-title {
-  padding: unset;
-  font-size: 1em;
-  text-align: left;
-  font-weight: bold;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   width: 100%;
 }
 

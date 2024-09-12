@@ -1,6 +1,6 @@
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: rgb(23, 23, 23);
   --accent: rgba(252, 82, 3, 0.9);
   --rounded: 8px;
   --code-background: rgb(245, 244, 243);
@@ -42,7 +42,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
-    --foreground: #ededed;
+    --foreground: rgb(237, 237, 237);
     --code-background: rgb(20, 19, 19);
     --outline-color: rgb(46, 46, 46);
 
