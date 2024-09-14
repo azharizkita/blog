@@ -1,5 +1,5 @@
-import ScrollToHash from "@/components/ScrollToHash";
-import { getGistContent, getGistDetails } from "@/repositories/gist";
+import ArticleContent from "@/components/ArticleContent";
+import { getGistDetails } from "@/repositories/gist";
 import { parseEntry } from "@/utils";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -32,8 +32,6 @@ export default async function Blog({ params }: { params: { slug: string } }) {
 
   const { type } = parseEntry(repoData.description ?? "");
 
-  const { data } = await getGistContent(content);
-
   const createdAt = repoData?.created_at
     ? Intl.DateTimeFormat("en-US", {
         dateStyle: "medium",
@@ -44,16 +42,7 @@ export default async function Blog({ params }: { params: { slug: string } }) {
 
   return (
     <>
-      <ScrollToHash />
-
-      <article
-        className="markdown-body"
-        style={{
-          textAlign: isPoetry ? "center" : "unset",
-          padding: isPoetry ? "2em 1.5em" : "2em",
-        }}
-        dangerouslySetInnerHTML={{ __html: data }}
-      />
+      <ArticleContent content={content} isPoetry={isPoetry} />
       <p
         style={{
           paddingLeft: isPoetry ? "unset" : "2em",
