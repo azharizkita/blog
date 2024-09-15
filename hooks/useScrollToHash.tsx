@@ -6,7 +6,7 @@ export default function useScrollToHash() {
       const url = new URL(window.location.href);
       if (url.hash) {
         const sectionId = url.hash.slice(1);
-        const element = document.getElementById(`user-content-${sectionId}`);
+        const element = document.getElementById(sectionId);
         if (element) {
           element.scrollIntoView({ behavior: "smooth" });
         }

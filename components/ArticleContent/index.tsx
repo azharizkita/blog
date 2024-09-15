@@ -5,6 +5,8 @@ import * as runtime from "react/jsx-runtime";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeStringify from "rehype-stringify";
 import placeholder from "./placeholder.png";
+import getSlug from "@/utils/get-slug";
+import Title from "../Title";
 
 export default async function ArticleContent({
   content,
@@ -16,7 +18,6 @@ export default async function ArticleContent({
   // @ts-expect-error: https://github.com/mdx-js/mdx/issues/2463#issuecomment-2039288869
   const { default: MDXContent } = await evaluate(content, {
     ...runtime,
-    // remarkPlugins: [remarkUnwrapImages],
     rehypePlugins: [
       [
         rehypePrettyCode,
@@ -39,6 +40,11 @@ export default async function ArticleContent({
     >
       <MDXContent
         components={{
+          h3: ({ children }) => {
+            const title = JSON.stringify(children);
+            const slug = getSlug(title);
+            return <Title slug={slug}>{children}</Title>;
+          },
           img: ({ src, alt }) => {
             if (!src || !alt) return null;
 

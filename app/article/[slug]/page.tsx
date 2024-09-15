@@ -1,4 +1,5 @@
 import ArticleContent from "@/components/ArticleContent";
+import ScrollToHash from "@/components/ScrollToHash";
 import { getGistDetails } from "@/repositories/gist";
 import { parseEntry } from "@/utils";
 import type { Metadata } from "next";
@@ -42,6 +43,7 @@ export default async function Blog({ params }: { params: { slug: string } }) {
 
   return (
     <>
+      <ScrollToHash />
       <ArticleContent content={content} isPoetry={isPoetry} />
       <p
         style={{
