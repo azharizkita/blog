@@ -1,5 +1,6 @@
 import ArticleContent from "@/components/ArticleContent";
 import ScrollToHash from "@/components/ScrollToHash";
+import TimeAgo from "@/components/TimeAgo";
 import { getGistDetails } from "@/repositories/gist";
 import { parseEntry } from "@/utils";
 import type { Metadata } from "next";
@@ -33,27 +34,30 @@ export default async function Blog({ params }: { params: { slug: string } }) {
 
   const { type } = parseEntry(repoData.description ?? "");
 
-  const createdAt = repoData?.created_at
-    ? Intl.DateTimeFormat("en-US", {
-        dateStyle: "medium",
-      }).format(new Date(repoData?.created_at))
-    : "";
-
   const isPoetry = type === "Poetry";
 
   return (
     <>
       <ScrollToHash />
       <ArticleContent content={content} isPoetry={isPoetry} />
-      <p
-        style={{
-          paddingLeft: isPoetry ? "unset" : "2em",
-          color: "var(--paragraph-color)",
-          textAlign: isPoetry ? "center" : "unset",
-        }}
-      >
-        {createdAt}
-      </p>
+      {repoData?.created_at && (
+        <div
+          style={{
+            paddingLeft: isPoetry ? "unset" : "2em",
+            color: "var(--paragraph-color)",
+            justifyContent: isPoetry ? "center" : "unset",
+            textAlign: isPoetry ? "center" : "unset",
+            display: "flex",
+            gap: "0.5em",
+          }}
+        >
+          <TimeAgo
+            time={repoData.created_at}
+            updatedAt={!isPoetry ? repoData.updated_at : ""}
+            styles={{ flexDirection: "column", display: "flex" }}
+          />
+        </div>
+      )}
     </>
   );
 }

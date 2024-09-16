@@ -34,7 +34,7 @@ export default function PostEntry({
           className={styles["post-entry"]}
         >
           <header style={{ height: "fit-content" }}>
-            <TimeAgo className={styles["post-date"]} createdAt={_createdAt} />
+            <TimeAgo className={styles["post-date"]} time={_createdAt} />
             <h2 className={styles["post-title"]}>{title}</h2>
           </header>
           <p className={styles["post-description"]}>

@@ -36,6 +36,7 @@ export default async function ArticleContent({
       style={{
         textAlign: isPoetry ? "center" : "unset",
         padding: isPoetry ? "2em 1.5em" : "2em",
+        width: isPoetry ? "fit-content" : "100svw",
       }}
     >
       <MDXContent
