@@ -85,7 +85,7 @@
   padding: 0;
   margin: 0;
   scroll-behavior: smooth;
-  scroll-margin: 1em;
+  scroll-margin: 4em;
 }
 
 html,
@@ -213,9 +213,4 @@ a {
   animation: skeleton-loading 1s linear infinite alternate;
   color: transparent;
   min-width: calc(100svw - 4em);
-}
-
-@view-transition {
-  navigation: auto;
-  types: slide, forwards;
 }

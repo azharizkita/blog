@@ -7,6 +7,7 @@ import rehypeStringify from "rehype-stringify";
 import placeholder from "./placeholder.png";
 import getSlug from "@/utils/get-slug";
 import Title from "../Title";
+import Link from "next/link";
 
 export default async function ArticleContent({
   content,
@@ -32,10 +33,12 @@ export default async function ArticleContent({
 
   return (
     <article
+      id="article"
       style={{
         textAlign: isPoetry ? "center" : "unset",
         padding: isPoetry ? "0em 2em 1.5em 2em" : "0em 2em 2em 2em",
         width: isPoetry ? "fit-content" : "100svw",
+        scrollMargin: "0px",
       }}
     >
       <MDXContent
@@ -44,22 +47,25 @@ export default async function ArticleContent({
             const title = JSON.stringify(children);
             const slug = getSlug(title);
             return (
-              <h2
-                {...rest}
+              <div
                 style={{
                   viewTransitionName: slug,
                   position: "sticky",
-                  top: "0.00000001px",
-                  background: "var(--background)",
+                  top: "-1px",
                   zIndex: 100,
                   marginLeft: "calc(-50vw + 50%)",
                   width: "100vw",
                   paddingTop: "1em",
                   paddingBottom: "1em",
+                  backdropFilter: "blur(15px)",
+                  justifyContent: "center",
+                  display: "flex",
                 }}
               >
-                {children}
-              </h2>
+                <Link href="#article" style={{ all: "unset" }}>
+                  <h2 {...rest}>{children}</h2>
+                </Link>
+              </div>
             );
           },
           h3: ({ children }) => {

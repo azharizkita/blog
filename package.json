@@ -17,7 +17,6 @@
     "github-markdown-css": "^5.6.1",
     "github-syntax-dark": "^0.5.0",
     "next": "14.2.8",
-    "next-view-transitions": "^0.3.1",
     "octokit": "^4.0.2",
     "react": "^18",
     "react-dom": "^18",
@@ -26,6 +25,7 @@
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.0",
     "remark-unwrap-images": "^4.0.0",
+    "schema-dts": "^1.1.2",
     "sharp": "^0.33.5"
   },
   "devDependencies": {

@@ -4,6 +4,7 @@ import TimeAgo from "@/components/TimeAgo";
 import { getGistDetails, getGistList } from "@/repositories/gist";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { WithContext, BlogPosting } from "schema-dts";
 
 export async function generateMetadata({
   params,
@@ -53,13 +54,25 @@ export default async function Blog({ params }: { params: { slug: string } }) {
   }
 
   const {
-    entry: { type },
+    entry: { type, title, description },
   } = repoData;
 
   const isPoetry = type === "Poetry";
 
+  const jsonLd: WithContext<BlogPosting> = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    name: `Silenced | ${title}`,
+    image: `https://silenced.life/api/og?title=${title}`,
+    description: description ?? "",
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ScrollToHash />
       <ArticleContent content={content} isPoetry={isPoetry} />
       {repoData?.created_at && (

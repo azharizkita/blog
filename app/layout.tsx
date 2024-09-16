@@ -6,7 +6,6 @@ import Footer from "@/components/Footer";
 import styles from "./layout.module.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
-import { ViewTransitions } from "next-view-transitions";
 
 const font = Noto_Sans({
   subsets: ["latin"],
@@ -28,18 +27,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ViewTransitions>
-      <html lang="en">
-        <body className={font.className}>
-          <div className={styles.page}>
-            <Header />
-            <main>{children}</main>
-            <Footer />
-          </div>
-          <SpeedInsights sampleRate={0.5} />
-          <Analytics />
-        </body>
-      </html>
-    </ViewTransitions>
+    <html lang="en">
+      <body className={font.className}>
+        <div className={styles.page}>
+          <Header />
+          <main>{children}</main>
+          <Footer />
+        </div>
+        <SpeedInsights sampleRate={0.5} />
+        <Analytics />
+      </body>
+    </html>
   );
 }

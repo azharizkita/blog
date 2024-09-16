@@ -1,7 +1,7 @@
 import { parseEntry } from "@/utils";
-import { Link } from "next-view-transitions";
 import styles from "./styles.module.css";
 import TimeAgo from "../TimeAgo";
+import Link from "next/link";
 
 interface PostEntryProps {
   description: string;
