@@ -4,6 +4,7 @@ import TimeAgo from "@/components/TimeAgo";
 import { getGistDetails, getGistList } from "@/repositories/gist";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Script from "next/script";
 import { WithContext, BlogPosting } from "schema-dts";
 
 export async function generateMetadata({
@@ -69,10 +70,9 @@ export default async function Blog({ params }: { params: { slug: string } }) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <Script type="application/ld+json" id="schema">
+        {JSON.stringify(jsonLd)}
+      </Script>
       <ScrollToHash />
       <ArticleContent content={content} isPoetry={isPoetry} />
       {repoData?.created_at && (
