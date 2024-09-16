@@ -1,5 +1,5 @@
 import { parseEntry } from "@/utils";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import styles from "./styles.module.css";
 import TimeAgo from "../TimeAgo";
 
@@ -31,7 +31,12 @@ export default function PostEntry({
         <Link href={`/article/${slug}`} className={styles["post-entry"]}>
           <header style={{ height: "fit-content" }}>
             <TimeAgo className={styles["post-date"]} time={_createdAt} />
-            <h2 className={styles["post-title"]}>{entry.title}</h2>
+            <h2
+              className={styles["post-title"]}
+              style={{ viewTransitionName: slug }}
+            >
+              {entry.title}
+            </h2>
           </header>
           <p className={styles["post-description"]}>
             <span style={{ color }}>{entry.type}</span> — {entry.description}

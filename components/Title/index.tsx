@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import type { ReactNode } from "react";
 import styles from "./styles.module.css";
 import Anchor from "./Anchor";

@@ -91,7 +91,6 @@
 html,
 body {
   max-width: 100vw;
-  overflow-x: hidden;
 }
 
 body {
@@ -162,8 +161,8 @@ article {
 }
 
 article h2 {
+  contain: layout;
   text-align: center;
-  padding-bottom: 2em;
 }
 
 article a {
@@ -214,4 +213,9 @@ a {
   animation: skeleton-loading 1s linear infinite alternate;
   color: transparent;
   min-width: calc(100svw - 4em);
+}
+
+@view-transition {
+  navigation: auto;
+  types: slide, forwards;
 }
