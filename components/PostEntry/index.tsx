@@ -5,23 +5,22 @@ import TimeAgo from "../TimeAgo";
 
 interface PostEntryProps {
   description: string;
-  id: string;
   createdAt: string;
+  slug: string;
+  entry: ReturnType<typeof parseEntry>;
 }
 
 export default function PostEntry({
-  description,
-  id,
   createdAt: _createdAt,
+  slug,
+  entry,
 }: PostEntryProps) {
   try {
-    const { description: _description, title, type } = parseEntry(description);
-
     const color = (() => {
-      if (type === "Poetry") {
+      if (entry.type === "Poetry") {
         return "rgb(218, 66, 245)";
       }
-      if (type === "Blog") {
+      if (entry.type === "Blog") {
         return "rgb(48, 186, 94)";
       }
       return "var(--accent)";
@@ -29,16 +28,13 @@ export default function PostEntry({
 
     return (
       <article className={styles["post-wrapper"]}>
-        <Link
-          href={`/article/${id.toLowerCase()}`}
-          className={styles["post-entry"]}
-        >
+        <Link href={`/article/${slug}`} className={styles["post-entry"]}>
           <header style={{ height: "fit-content" }}>
             <TimeAgo className={styles["post-date"]} time={_createdAt} />
-            <h2 className={styles["post-title"]}>{title}</h2>
+            <h2 className={styles["post-title"]}>{entry.title}</h2>
           </header>
           <p className={styles["post-description"]}>
-            <span style={{ color }}>{type}</span> — {_description}
+            <span style={{ color }}>{entry.type}</span> — {entry.description}
           </p>
         </Link>
       </article>

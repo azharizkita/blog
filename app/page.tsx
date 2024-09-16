@@ -6,10 +6,18 @@ export default async function Home() {
 
   return (
     <>
-      {list.data.map(({ description, id, created_at }, i) => {
+      {list.map(({ description, slug, created_at, entry }, i) => {
         if (!description) return null;
 
-        return <PostEntry key={i} description={description} id={id} createdAt={created_at} />;
+        return (
+          <PostEntry
+            key={i}
+            entry={entry}
+            description={description}
+            createdAt={created_at}
+            slug={slug}
+          />
+        );
       })}
     </>
   );

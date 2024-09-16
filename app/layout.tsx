@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Titillium_Web } from "next/font/google";
+import { Noto_Sans } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -7,7 +7,7 @@ import styles from "./layout.module.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 
-const font = Titillium_Web({
+const font = Noto_Sans({
   subsets: ["latin"],
   display: "swap",
   weight: ["400"],
@@ -15,7 +15,10 @@ const font = Titillium_Web({
 
 export const metadata: Metadata = {
   title: "Silenced",
-  description: `Dumps by ${process.env.GITHUB_USERNAME}`,
+  description: `Personal dumps by ${process.env.GITHUB_USERNAME}`,
+  openGraph: {
+    images: [{ url: "/api/og" }],
+  },
 };
 
 export default function RootLayout({

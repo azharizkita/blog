@@ -1,8 +1,7 @@
 import ArticleContent from "@/components/ArticleContent";
 import ScrollToHash from "@/components/ScrollToHash";
 import TimeAgo from "@/components/TimeAgo";
-import { getGistDetails } from "@/repositories/gist";
-import { parseEntry } from "@/utils";
+import { getGistDetails, getGistList } from "@/repositories/gist";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -12,19 +11,40 @@ export async function generateMetadata({
   params: { slug: string };
 }): Promise<Metadata> {
   const { slug } = params;
-  const { data: repoData } = await getGistDetails(slug);
+  const repoData = await getGistDetails(slug);
 
-  const { title, description } = parseEntry(repoData.description ?? "");
+  if (!repoData) notFound();
+
+  const {
+    entry: { title, description },
+  } = repoData;
 
   return {
     title: `Silenced | ${title}`,
     description: description,
+    openGraph: {
+      images: [{ url: `/api/og?title=${title}` }],
+    },
   };
+}
+
+export async function generateStaticParams() {
+  const data = await getGistList();
+  if (!data) return [];
+
+  return data.map(({ slug }) => {
+    return {
+      slug,
+    };
+  });
 }
 
 export default async function Blog({ params }: { params: { slug: string } }) {
   const { slug } = params;
-  const { data: repoData } = await getGistDetails(slug);
+
+  const repoData = await getGistDetails(slug);
+
+  if (!repoData) notFound();
 
   const content = repoData.files?.["index.md"]?.content;
 
@@ -32,7 +52,9 @@ export default async function Blog({ params }: { params: { slug: string } }) {
     notFound();
   }
 
-  const { type } = parseEntry(repoData.description ?? "");
+  const {
+    entry: { type },
+  } = repoData;
 
   const isPoetry = type === "Poetry";
 
