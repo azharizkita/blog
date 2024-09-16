@@ -5,7 +5,7 @@
   --rounded: 8px;
   --code-background: rgb(245, 244, 243);
   --outline-color: rgb(212, 210, 210);
-  --gray-text: rgb(128, 128, 128);
+  --paragraph-color: #525150;
 
   --color-prettylights-syntax-comment: #59636e;
   --color-prettylights-syntax-constant: #0550ae;
@@ -45,6 +45,7 @@
     --foreground: rgb(237, 237, 237);
     --code-background: rgb(20, 19, 19);
     --outline-color: rgb(46, 46, 46);
+    --paragraph-color: #c5c1c0;
 
     --color-prettylights-syntax-comment: #9198a1;
     --color-prettylights-syntax-constant: #79c0ff;
@@ -173,6 +174,10 @@ article a {
 
 article img {
   border-radius: var(--rounded);
+}
+
+article > p {
+  color: var(--paragraph-color);
 }
 
 article p:has(img) {

@@ -42,7 +42,7 @@
 }
 
 .post-date {
-  color: var(--gray-text);
+  color: var(--paragraph-color);
   font-size: 0.65em;
   white-space: nowrap;
   overflow: hidden;
@@ -57,7 +57,7 @@
 }
 
 .post-description {
-  color: var(--gray-text);
+  color: var(--paragraph-color);
   font-size: 0.75em;
   white-space: nowrap;
   overflow: hidden;

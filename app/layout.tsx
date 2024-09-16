@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Chakra_Petch } from "next/font/google";
+import { Titillium_Web } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -7,7 +7,7 @@ import styles from "./layout.module.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 
-const font = Chakra_Petch({
+const font = Titillium_Web({
   subsets: ["latin"],
   display: "swap",
   weight: ["400"],
@@ -32,7 +32,7 @@ export default function RootLayout({
           <Footer />
         </div>
         <SpeedInsights sampleRate={0.5} />
-        <Analytics  />
+        <Analytics />
       </body>
     </html>
   );

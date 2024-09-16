@@ -48,7 +48,7 @@ export default async function Blog({ params }: { params: { slug: string } }) {
       <p
         style={{
           paddingLeft: isPoetry ? "unset" : "2em",
-          color: "var(--gray-text)",
+          color: "var(--paragraph-color)",
           textAlign: isPoetry ? "center" : "unset",
         }}
       >
