@@ -1,7 +1,13 @@
-type EntryType = "Blog" | "Poetry" | "Sharing";
+type EntryType = "Blog" | "Poetry" | "Sharing" | "Beep";
 
 interface BlogEntry {
   type: "Blog";
+  title: string;
+  description: string;
+}
+
+interface BeepEntry {
+  type: "Beep";
   title: string;
   description: string;
 }
@@ -19,7 +25,7 @@ interface SharingEntry {
   description: string;
 }
 
-type Entry = BlogEntry | PoetEntry | SharingEntry;
+type Entry = BlogEntry | PoetEntry | SharingEntry | BeepEntry;
 
 export default function parseEntry(entry: string): Entry {
   const parts = entry.split(" - ");
@@ -29,6 +35,12 @@ export default function parseEntry(entry: string): Entry {
     case "Blog":
       return {
         type: "Blog",
+        title: parts[1].trim(),
+        description: parts[2].trim(),
+      };
+    case "Beep":
+      return {
+        type: "Beep",
         title: parts[1].trim(),
         description: parts[2].trim(),
       };
