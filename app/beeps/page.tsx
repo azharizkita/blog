@@ -2,8 +2,8 @@ import { ArticleItem } from "@/components/article-item";
 import { getGistList } from "@/repositories/gist";
 import { Suspense } from "react";
 
-export default async function Page() {
-  const list = await getGistList("articles");
+export default async function Beeps() {
+  const list = await getGistList("beeps");
 
   return (
     <div className="grid auto-rows-min gap-6 ">
