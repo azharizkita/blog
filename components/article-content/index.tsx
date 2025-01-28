@@ -30,7 +30,10 @@ export default async function ArticleContent({
   });
 
   return (
-    <article id="article" className="flex flex-col gap-6">
+    <article
+      id="article"
+      className={`flex flex-col gap-6 ${isPoetry && "justify-center"}`}
+    >
       <MDXContent
         components={{
           h1: ({ children, ...rest }) => {
@@ -83,7 +86,7 @@ export default async function ArticleContent({
           },
           p: ({ children, ...rest }) => {
             return (
-              <p {...rest} className="leading-7 [&:not(:first-child)]:mt-2">
+              <p {...rest} className={`leading-7 [&:not(:first-child)]:mt-2 ${isPoetry && 'text-center'}`}>
                 {children}
               </p>
             );

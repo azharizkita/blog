@@ -10,10 +10,6 @@ export function CategoryTab() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  console.log({ pathname });
-
-  const type = searchParams.get("type");
-
   const isAll = (() => {
     if (pathname === "/" || pathname.includes("/article/")) {
       return true;

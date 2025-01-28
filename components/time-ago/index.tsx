@@ -106,7 +106,7 @@ export default function TimeAgo({ time, className, updatedAt }: TimeAgoProps) {
       {updatedAt && (
         <span
           ref={spanRef}
-          className={`${
+          className={`text-muted-foreground ${
             isSpanVisible ? "opacity-100" : "opacity-0 invisible"
           } text-xs transition-opacity duration-1000`}
         >
