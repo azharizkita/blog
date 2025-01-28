@@ -54,8 +54,8 @@ export default function RootLayout({
             <Suspense>
               <CategoryTab />
             </Suspense>
-            <div className="flex w-full h-2 bg-black z-10" />
-            <div className="flex w-full h-4 bg-gradient-to-b from-black via-black/50 to-black/0 sticky top-[104px] z-10" />
+            <div className="flex w-full h-2 bg-background z-10" />
+            <div className="flex w-full h-4 bg-gradient-to-b from-background via-background/50 to-background/0 sticky top-[104px] z-10" />
           </div>
           <div className="flex flex-1 w-full flex-col gap-4 p-4 max-w-2xl self-center">
             {children}

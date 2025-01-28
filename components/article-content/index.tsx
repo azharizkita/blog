@@ -60,7 +60,7 @@ export default async function ArticleContent({
                     {children}
                   </h2>
                 </span>
-                <div className="flex w-full h-4 bg-gradient-to-b from-black via-black/50 to-black/0 z-10 sticky top-[107px]" />
+                <div className="flex w-full h-4 bg-gradient-to-b from-background via-background/50 to-background/0 z-10 sticky top-[107px]" />
               </div>
             );
           },
