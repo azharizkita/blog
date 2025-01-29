@@ -49,7 +49,7 @@ export default async function ArticleContent({
           h2: ({ children, ...rest }) => {
             return (
               <div className="flex flex-col sticky top-[67px] z-20">
-                <span className="flex gap-2 items-center w-full bg-black">
+                <span className="flex gap-2 items-center w-full bg-background">
                   <Link href="/">
                     <CircleArrowLeft />
                   </Link>
