@@ -1,6 +1,6 @@
-import ArticleContent from "@/components/ArticleContent";
-import ScrollToHash from "@/components/ScrollToHash";
-import TimeAgo from "@/components/TimeAgo";
+import ArticleContent from "@/components/article-content";
+import ScrollToHash from "@/components/scroll-to-hash";
+import TimeAgo from "@/components/time-ago";
 import { getGistDetails, getGistList } from "@/repositories/gist";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -10,9 +10,9 @@ import { WithContext, BlogPosting } from "schema-dts";
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = params;
+  const { slug } = await params;
   const repoData = await getGistDetails(slug);
 
   if (!repoData) notFound();
@@ -41,8 +41,12 @@ export async function generateStaticParams() {
   });
 }
 
-export default async function Blog({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+export default async function Blog({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
 
   const repoData = await getGistDetails(slug);
 
@@ -74,25 +78,14 @@ export default async function Blog({ params }: { params: { slug: string } }) {
         {JSON.stringify(jsonLd)}
       </Script>
       <ScrollToHash />
-      <ArticleContent content={content} isPoetry={isPoetry} />
       {repoData?.created_at && (
-        <div
-          style={{
-            paddingLeft: isPoetry ? "unset" : "2em",
-            color: "var(--paragraph-color)",
-            justifyContent: isPoetry ? "center" : "unset",
-            textAlign: isPoetry ? "center" : "unset",
-            display: "flex",
-            gap: "0.5em",
-          }}
-        >
-          <TimeAgo
-            time={repoData.created_at}
-            updatedAt={!isPoetry ? repoData.updated_at : ""}
-            styles={{ flexDirection: "column", display: "flex" }}
-          />
-        </div>
+        <TimeAgo
+          time={repoData.created_at}
+          updatedAt={!isPoetry ? repoData.updated_at : ""}
+          className="flex flex-col"
+        />
       )}
+      <ArticleContent content={content} isPoetry={isPoetry} />
     </>
   );
 }
