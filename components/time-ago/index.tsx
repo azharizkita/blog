@@ -76,6 +76,7 @@ export default function TimeAgo({ time, className, updatedAt }: TimeAgoProps) {
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout | null = null;
+    const spanRefCurrent = spanRef.current;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -86,10 +87,10 @@ export default function TimeAgo({ time, className, updatedAt }: TimeAgoProps) {
       { threshold: 0.1 }
     );
 
-    if (spanRef.current) observer.observe(spanRef.current);
+    if (spanRefCurrent) observer.observe(spanRefCurrent);
 
     return () => {
-      if (spanRef.current) observer.unobserve(spanRef.current);
+      if (spanRefCurrent) observer.unobserve(spanRefCurrent);
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);
