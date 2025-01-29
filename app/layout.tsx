@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Inter, Roboto_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
-
-import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { CategoryTab } from "@/components/category-tab";
 import { Suspense } from "react";
+
+import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -61,6 +63,8 @@ export default function RootLayout({
             {children}
           </div>
         </ThemeProvider>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
