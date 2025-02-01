@@ -1,3 +1,4 @@
+import { Inter } from "next/font/google";
 import { ImageResponse } from "next/og";
 
 export async function GET(request: Request) {
@@ -20,75 +21,21 @@ export async function GET(request: Request) {
           justifyContent: "center",
           flexDirection: "column",
           flexWrap: "nowrap",
-          fontFamily: '"Titillium Web", sans-serif',
+          fontFamily: "Inter",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            justifyItems: "center",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.5em",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "0.5em",
-                textDecoration: "none",
-                color: "inherit",
-              }}
-            >
-              <h1
-                style={{
-                  fontSize: "3em",
-                  margin: 0,
-                  lineHeight: "0.75em",
-                  color: "rgb(237, 237, 237)",
-                }}
-              >
-                Silenced
-              </h1>
-              <p
-                style={{
-                  color: "rgba(252, 82, 3, 0.9)",
-                  lineHeight: "0.25em",
-                  margin: 0,
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  fontSize: "1.25em",
-                }}
-              >
-                personal dumps
-              </p>
-            </div>
-          </div>
+        <div tw="flex flex-col items-center gap-0">
+          <span tw="text-5xl font-semibold tracking-tight text-[#FAFAFA]">
+            Silenced
+          </span>
+          <span tw="text-lg tracking-tight text-orange-600">
+            personal dumps
+          </span>
         </div>
         {title && (
-          <div
-            style={{
-              fontSize: 60,
-              fontStyle: "normal",
-              letterSpacing: "-0.025em",
-              color: "white",
-              marginTop: 30,
-              padding: "0 120px",
-              lineHeight: 1.4,
-              whiteSpace: "pre-wrap",
-            }}
-          >
+          <span tw="text-6xl font-semibold tracking-tight text-[#FAFAFA] pt-10 px-10">
             {title}
-          </div>
+          </span>
         )}
       </div>
     ),
