@@ -4,7 +4,7 @@ import type { MetadataRoute } from "next";
 const url = "https://silenced.life";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const list = await getGistList();
+  const list = await getGistList('articles');
   const articleSitemap: MetadataRoute.Sitemap = list.map(
     ({ slug, updated_at }) => {
       return {

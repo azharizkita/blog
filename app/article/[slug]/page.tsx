@@ -53,14 +53,13 @@ export default async function Blog({
   if (!repoData) notFound();
 
   const content = repoData.files?.["index.md"]?.content;
-
-  if (!content) {
-    notFound();
-  }
-
   const {
     entry: { type, title, description },
   } = repoData;
+
+  if (!content || type === "Beep") {
+    notFound();
+  }
 
   const isPoetry = type === "Poetry";
 
