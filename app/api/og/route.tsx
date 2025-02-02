@@ -1,4 +1,3 @@
-import { Inter } from "next/font/google";
 import { ImageResponse } from "next/og";
 
 export async function GET(request: Request) {
