@@ -4,7 +4,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { CategoryTab } from "@/components/category-tab";
-import { Suspense } from "react";
 
 import "./globals.css";
 
@@ -56,9 +55,7 @@ export default function RootLayout({
             </div>
           </header>
           <div className="flex flex-1 w-full flex-col px-4 mt-4 max-w-2xl self-center sticky top-0 z-20">
-            <Suspense>
-              <CategoryTab />
-            </Suspense>
+            <CategoryTab />
             <div className="flex w-full h-2 bg-background z-10" />
             <div className="flex w-full h-4 bg-gradient-to-b from-background via-background/50 to-background/0 sticky top-[104px] z-10" />
           </div>
