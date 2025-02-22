@@ -4,8 +4,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { createQueryString } from "@/lib/create-query-string";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-export function CategoryToggle() {
-  const pathname = usePathname();
+export function CategoryToggle({ pathname: _pathname }: { pathname: string }) {
+  const pathname = usePathname() ?? _pathname;
   const searchParams = useSearchParams();
   const router = useRouter();
   const type = searchParams.get("type");
