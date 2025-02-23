@@ -9,15 +9,16 @@ import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 interface PostEntryProps {
-  description: string;
   createdAt: string;
   slug: string;
+  pathname: string;
+  type: string;
   entry: ReturnType<typeof parseEntry>;
 }
 
-export function ArticleItem({ createdAt, entry, slug }: PostEntryProps) {
-  const pathname = usePathname();
-  const type = useSearchParams().get("type");
+export function ArticleItem({ createdAt, entry, slug, pathname: _pathname, type: _type }: PostEntryProps) {
+  const pathname = usePathname() ?? _pathname;
+  const type = useSearchParams().get("type") ?? _type;
 
   if (type && type !== entry.type) return null;
 
@@ -46,7 +47,8 @@ export function ArticleItem({ createdAt, entry, slug }: PostEntryProps) {
           <TimeAgo time={createdAt} />
         </CardDescription>
         <CardTitle className="flex items-center gap-2">
-          <Badge variant="secondary">{entry.type}</Badge> {entry.title}
+          <Badge variant="secondary">{entry.type}</Badge>
+          <h2 className="scroll-m-2 text-lg font-semibold tracking-tight first:mt-0 w-full">{entry.title}</h2>
         </CardTitle>
         <CardDescription>{entry.description}</CardDescription>
       </Link>
