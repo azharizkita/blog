@@ -5,7 +5,7 @@ import { getGistDetails, getGistList } from "@/repositories/gist";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Script from "next/script";
-import { WithContext, BlogPosting } from "schema-dts";
+import { WithContext, Article } from "schema-dts";
 
 export async function generateMetadata({
   params,
@@ -25,6 +25,8 @@ export async function generateMetadata({
     title: `Silenced | ${title}`,
     description: description,
     openGraph: {
+      url: `https://silenced.life/article/${slug}`,
+      siteName: `Silenced | ${title}`,
       images: [{ url: `/api/og?title=${title}` }],
     },
   };
@@ -63,12 +65,19 @@ export default async function Blog({
 
   const isPoetry = type === "Poetry";
 
-  const jsonLd: WithContext<BlogPosting> = {
+  const jsonLd: WithContext<Article> = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    name: `Silenced | ${title}`,
+    headline: title,
     image: `https://silenced.life/api/og?title=${title}`,
     description: description ?? "",
+    author: {
+      "@type": "Person",
+      name: process.env.GITHUB_USERNAME,
+      url: `https://github.com/${process.env.GITHUB_USERNAME}`,
+    },
+    datePublished: repoData.created_at,
+    dateModified: repoData.updated_at,
   };
 
   return (

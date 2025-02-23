@@ -20,9 +20,12 @@ const roboto_mono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://silenced.life'),
   title: "Silenced",
   description: `Personal dumps by ${process.env.GITHUB_USERNAME}`,
   openGraph: {
+    url: "https://silenced.life",
+    siteName: "Silenced",
     images: [{ url: "/api/og" }],
   },
 };
