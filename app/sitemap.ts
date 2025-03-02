@@ -4,14 +4,14 @@ import type { MetadataRoute } from "next";
 const url = "https://silenced.life";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const list = await getGistList('articles');
+  const list = await getGistList("articles");
   const articleSitemap: MetadataRoute.Sitemap = list.map(
     ({ slug, updated_at }) => {
       return {
-        url: `${url}/article/${slug}`,
+        url: `${url}/articles/${slug}`,
         lastModified: new Date(updated_at),
         changeFrequency: "weekly",
-        priority: 0.5,
+        priority: 0.75,
       };
     }
   );
@@ -22,6 +22,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.25,
+    },
+    {
+      url: `${url}/articles`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.5,
+    },
+    {
+      url: `${url}/beeps`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.5,
     },
     ...articleSitemap,
   ];

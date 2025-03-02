@@ -8,13 +8,15 @@ import placeholder from "./placeholder.png";
 import { CircleArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-export default async function ArticleContent({
-  content,
-  isPoetry,
-}: {
+interface ArticleContentProps {
   content: string;
-  isPoetry: boolean;
-}) {
+  isPoetry?: boolean;
+  withBackNavigation?: boolean;
+}
+
+export default async function ArticleContent(props: ArticleContentProps) {
+  const { content, withBackNavigation, isPoetry = false } = props;
+
   const { default: MDXContent } = await evaluate(content, {
     ...runtime,
     rehypePlugins: [
@@ -47,10 +49,21 @@ export default async function ArticleContent({
             );
           },
           h2: ({ children, ...rest }) => {
+            if (withBackNavigation) {
+              return (
+                <h2
+                  {...rest}
+                  className="scroll-m-2 text-2xl font-semibold tracking-tight first:mt-0 w-full"
+                >
+                  {children}
+                </h2>
+              );
+            }
+
             return (
               <div className="flex flex-col sticky top-[67px] z-20">
                 <span className="flex gap-2 items-center w-full bg-background">
-                  <Link href="/">
+                  <Link href="/articles">
                     <CircleArrowLeft />
                   </Link>
                   <h2
@@ -86,7 +99,12 @@ export default async function ArticleContent({
           },
           p: ({ children, ...rest }) => {
             return (
-              <p {...rest} className={`leading-7 [&:not(:first-child)]:mt-2 ${isPoetry && 'text-center'}`}>
+              <p
+                {...rest}
+                className={`leading-7 [&:not(:first-child)]:mt-2 ${
+                  isPoetry ? "text-center" : ""
+                }`}
+              >
                 {children}
               </p>
             );

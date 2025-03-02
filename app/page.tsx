@@ -1,29 +1,34 @@
-import { ArticleItem } from "@/components/article-item";
-import getParams from "@/lib/get-params";
-import getPathname from "@/lib/get-pathname";
-import { getGistList } from "@/repositories/gist";
+import ArticleContent from "@/components/article-content";
+import { Button } from "@/components/ui/button";
+import type { Metadata } from "next";
+import Link from "next/link";
+
+export const metadata: Metadata = {
+  description:
+    "Think of Silenced as a personal archive of my mind—from life updates, late-night thoughts, random realizations, or just rants about whatever’s on my plate",
+};
 
 export default async function Page() {
-  const list = await getGistList("articles");
-  const pathname = await getPathname()
-  const type = (await getParams()).get("type") ?? ''
+  const aboutInstance = await fetch("http://localhost:3000/api/about", {
+    cache: "force-cache",
+  });
+  const { content } = (await aboutInstance.json()) as { content: string };
 
   return (
-    <div className="grid auto-rows-min gap-6 ">
-      {list.map(({ description, slug, created_at, entry }, i) => {
-        if (!description) return null;
+    <div className="flex h-full flex-col flex-grow mt-[-160px] justify-center gap-4">
+      <ArticleContent content={content} withBackNavigation />
 
-        return (
-          <ArticleItem
-            key={i}
-            type={type}
-            pathname={pathname}
-            entry={entry}
-            createdAt={created_at}
-            slug={slug}
-          />
-        );
-      })}
+      <div className="flex gap-2 flex-col w-full justify-end items-center pt-4">
+        <p className="leading-7 text-gray-400">What are you looking for?</p>
+        <div className="flex w-full gap-4">
+          <Button asChild className="w-full">
+            <Link href="articles">Articles</Link>
+          </Button>
+          <Button asChild className="w-full">
+            <Link href="beeps">Beeps</Link>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

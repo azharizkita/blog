@@ -19,6 +19,7 @@ export default function Header() {
           gap: "0.5em",
           textDecoration: "none",
           color: "inherit",
+          cursor: "pointer",
         }}
       >
         <h1 style={{ margin: 0, lineHeight: "0.75em" }}>Silenced</h1>

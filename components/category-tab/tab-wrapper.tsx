@@ -5,13 +5,21 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createQueryString } from "@/lib/create-query-string";
 import type { ReactNode } from "react";
 
-export function TabWrapper({ children }: { children: ReactNode; }) {
+export function TabWrapper({
+  children,
+  pathname: _pathname,
+}: {
+  children: ReactNode;
+  pathname: string;
+}) {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname() ?? _pathname;
   const searchParams = useSearchParams();
 
+  if (pathname === "/") return null;
+
   const isAll = (() => {
-    if (pathname === "/" || pathname.includes("/article/")) {
+    if (pathname.includes("/articles")) {
       return true;
     }
 
@@ -20,22 +28,22 @@ export function TabWrapper({ children }: { children: ReactNode; }) {
 
   return (
     <Tabs
-      value={isAll ? "All" : "Beep"}
-      defaultValue="All"
+      value={isAll ? "Articles" : "Beep"}
+      defaultValue="Articles"
       className="flex flex-col gap-2 w-full self-center pt-4 bg-background z-10"
       onValueChange={(v) => {
         if (v === "Beep") {
           router.push("/beeps");
           return;
         }
-        if (v === "All") {
-          router.push("/");
+        if (v === "Articles") {
+          router.push("/articles");
           return;
         }
         router.push(
           pathname +
-          "?" +
-          createQueryString("type", v === "All" ? "" : v, searchParams)
+            "?" +
+            createQueryString("type", v === "Articles" ? "" : v, searchParams)
         );
       }}
     >
