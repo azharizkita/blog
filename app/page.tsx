@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const aboutInstance = await fetch("http://localhost:3000/api/about", {
+  const aboutInstance = await fetch("https://silenced.life/api/about", {
     cache: "force-cache",
   });
   const { content } = (await aboutInstance.json()) as { content: string };
