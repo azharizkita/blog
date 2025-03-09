@@ -5,7 +5,7 @@ import { getGistDetails, getGistList } from "@/repositories/gist";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Script from "next/script";
-import { WithContext, Article } from "schema-dts";
+import { WithContext, Article as ArticleType } from "schema-dts";
 
 export async function generateMetadata({
   params,
@@ -25,7 +25,7 @@ export async function generateMetadata({
     title: `Silenced | ${title}`,
     description: description,
     openGraph: {
-      url: `https://silenced.life/article/${slug}`,
+      url: `https://silenced.life/articles/${slug}`,
       siteName: `Silenced | ${title}`,
       images: [{ url: `/api/og?title=${title}` }],
     },
@@ -43,7 +43,7 @@ export async function generateStaticParams() {
   });
 }
 
-export default async function Blog({
+export default async function Article({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -65,7 +65,7 @@ export default async function Blog({
 
   const isPoetry = type === "Poetry";
 
-  const jsonLd: WithContext<Article> = {
+  const jsonLd: WithContext<ArticleType> = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: title,

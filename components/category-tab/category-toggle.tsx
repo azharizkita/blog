@@ -10,19 +10,19 @@ export function CategoryToggle({ pathname: _pathname }: { pathname: string }) {
   const router = useRouter();
   const type = searchParams.get("type");
 
-  if (pathname.includes("/article/")) {
+  if (pathname.includes("/articles/")) {
     return null;
   }
 
   return (
     <ToggleGroup
       type="single"
-      defaultValue="All"
+      defaultValue="Articles"
       variant="outline"
-      value={type ?? "All"}
+      value={type ?? "Articles"}
     >
       <ToggleGroupItem
-        value="All"
+        value="Articles"
         aria-label="Toggle all"
         onClick={() => {
           router.push(

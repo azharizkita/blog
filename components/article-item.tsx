@@ -16,7 +16,13 @@ interface PostEntryProps {
   entry: ReturnType<typeof parseEntry>;
 }
 
-export function ArticleItem({ createdAt, entry, slug, pathname: _pathname, type: _type }: PostEntryProps) {
+export function ArticleItem({
+  createdAt,
+  entry,
+  slug,
+  pathname: _pathname,
+  type: _type,
+}: PostEntryProps) {
   const pathname = usePathname() ?? _pathname;
   const type = useSearchParams().get("type") ?? _type;
 
@@ -40,7 +46,7 @@ export function ArticleItem({ createdAt, entry, slug, pathname: _pathname, type:
   if (entry.type !== "Beep") {
     return (
       <Link
-        href={`/article/${slug}`}
+        href={`/articles/${slug}`}
         className="w-full flex flex-col gap-2 cursor-pointer"
       >
         <CardDescription className="text-xs">
@@ -48,7 +54,9 @@ export function ArticleItem({ createdAt, entry, slug, pathname: _pathname, type:
         </CardDescription>
         <CardTitle className="flex items-center gap-2">
           <Badge variant="secondary">{entry.type}</Badge>
-          <h2 className="scroll-m-2 text-lg font-semibold tracking-tight first:mt-0 w-full">{entry.title}</h2>
+          <h2 className="scroll-m-2 text-lg font-semibold tracking-tight first:mt-0 w-full">
+            {entry.title}
+          </h2>
         </CardTitle>
         <CardDescription>{entry.description}</CardDescription>
       </Link>

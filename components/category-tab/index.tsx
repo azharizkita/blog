@@ -5,17 +5,18 @@ import { TabWrapper } from "./tab-wrapper";
 
 export async function CategoryTab() {
   const pathname = await getPathname();
+
   return (
-    <TabWrapper>
+    <TabWrapper pathname={pathname}>
       <TabsList className="w-full">
-        <TabsTrigger className="w-full" value="All">
+        <TabsTrigger className="w-full" value="Articles">
           Articles
         </TabsTrigger>
         <TabsTrigger className="w-full" value="Beep">
           Beeps
         </TabsTrigger>
       </TabsList>
-      <TabsContent value="All" className="self-start">
+      <TabsContent value="Articles" className="self-start">
         <CategoryToggle pathname={pathname} />
       </TabsContent>
       <TabsContent value="Blog" className="self-start">

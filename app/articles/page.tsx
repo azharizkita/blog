@@ -6,18 +6,18 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://silenced.life"),
-  title: "Silenced | Beeps",
+  title: "Silenced | Articles",
   description:
-    "Beeps is a space to express fleeting thoughts—when there's no one to talk to, when the mind feels heavy, or just to let things out. A personal stream of consciousness, without filters.",
+    "A collection of my thoughts, reflections, and stories. Unfiltered, personal, and real—this is where I write about life, experiences, and everything in between.",
   openGraph: {
-    url: "https://silenced.life/beeps",
-    siteName: "Silenced | Beeps",
-    images: [{ url: "/api/og?title=Beeps" }],
+    url: "https://silenced.life/articles",
+    siteName: "Silenced | Articles",
+    images: [{ url: "/api/og?title=Articles" }],
   },
 };
 
-export default async function Beeps() {
-  const list = await getGistList("beeps");
+export default async function Articles() {
+  const list = await getGistList("articles");
   const pathname = await getPathname();
   const type = (await getParams()).get("type") ?? "";
 
@@ -29,9 +29,9 @@ export default async function Beeps() {
         return (
           <ArticleItem
             key={i}
-            entry={entry}
-            pathname={pathname}
             type={type}
+            pathname={pathname}
+            entry={entry}
             createdAt={created_at}
             slug={slug}
           />
