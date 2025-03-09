@@ -3,16 +3,20 @@ import { Button } from "@/components/ui/button";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+const content = `
+## Hi there.
+
+Think of Silenced as a personal archive of my mind—from life updates, late-night thoughts, random realizations, or just rants about whatever’s on my plate. It’s not for everyone, but if you’re here, maybe you’ll find something that resonates.
+
+Read, scroll, lurk, or leave—it’s up to you.
+`;
+
 export const metadata: Metadata = {
   description:
     "Think of Silenced as a personal archive of my mind—from life updates, late-night thoughts, random realizations, or just rants about whatever’s on my plate",
 };
 
 export default async function Page() {
-  const aboutInstance = await fetch("https://silenced.life/api/about", {
-    cache: "force-cache",
-  });
-  const { content } = (await aboutInstance.json()) as { content: string };
 
   return (
     <div className="flex h-full flex-col flex-grow mt-[-160px] justify-center gap-4">
