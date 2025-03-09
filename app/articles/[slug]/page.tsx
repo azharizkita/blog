@@ -7,6 +7,8 @@ import { notFound } from "next/navigation";
 import Script from "next/script";
 import { WithContext, Article as ArticleType } from "schema-dts";
 
+export const dynamic = 'force-static'
+
 export async function generateMetadata({
   params,
 }: {
