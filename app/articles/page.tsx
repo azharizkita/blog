@@ -4,6 +4,8 @@ import getPathname from "@/lib/get-pathname";
 import { getGistList } from "@/repositories/gist";
 import type { Metadata } from "next";
 
+export const dynamic = 'force-static'
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://silenced.life"),
   title: "Silenced | Articles",
