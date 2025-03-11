@@ -1,6 +1,7 @@
-import TimeAgo from "@/components/time-ago";
 import { CardDescription } from "@/components/ui/card";
 import Link from "next/link";
+
+export const dynamic = 'force-static'
 
 export default function NotFound() {
   return (
@@ -15,9 +16,6 @@ export default function NotFound() {
             </Link>
           </CardDescription>
         </div>
-        <CardDescription className="text-xs pl-3">
-          <TimeAgo time={new Date().toISOString()} />
-        </CardDescription>
       </div>
     </div>
   );
