@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+export const dynamic = 'force-static'
+
 const content = `
 ## Hi there.
 
