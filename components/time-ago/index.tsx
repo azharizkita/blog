@@ -104,7 +104,7 @@ export default function TimeAgo({ time, className, updatedAt }: TimeAgoProps) {
       >
         {timeAgo}
       </span>
-      {updatedAt && (
+      {!!updatedAt && (
         <span
           ref={spanRef}
           className={`text-muted-foreground ${
