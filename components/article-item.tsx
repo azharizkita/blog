@@ -58,7 +58,7 @@ export function ArticleItem({
             {entry.title}
           </h2>
         </CardTitle>
-        <CardDescription>{entry.description}</CardDescription>
+        <CardDescription className="!line-clamp-2">{entry.description}</CardDescription>
       </Link>
     );
   }
