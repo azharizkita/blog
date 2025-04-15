@@ -20,6 +20,7 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: defaultCache,
+  precacheOptions: { concurrency: 20 },
 });
 
 serwist.addEventListeners();
