@@ -1,21 +1,27 @@
 import { withSentryConfig } from "@sentry/nextjs";
+import withSerwistInit from "@serwist/next";
 import type { NextConfig } from "next";
+
+const withSerwist = withSerwistInit({
+  swSrc: "app/sw.ts",
+  swDest: "public/sw.js",
+});
 
 const nextConfig: NextConfig = {
   redirects: async () => [
     {
-      source: '/article',
-      destination: '/articles',
+      source: "/article",
+      destination: "/articles",
       permanent: true,
     },
     {
-      source: '/article/:slug',
-      destination: '/articles/:slug',
+      source: "/article/:slug",
+      destination: "/articles/:slug",
       permanent: true,
     },
   ],
   experimental: {
-    optimizePackageImports: ['lucide-react'],
+    optimizePackageImports: ["lucide-react"],
   },
   images: {
     remotePatterns: [
@@ -26,9 +32,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+export default withSentryConfig(withSerwist(nextConfig), {
   // For all available options, see:
-  // https://github.com/getsentry/sentry-webpack-plugin#options
+  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
   org: "hexalts",
   project: "silenced-life",
@@ -36,29 +42,17 @@ export default withSentryConfig(nextConfig, {
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
 
-  sourcemaps: {
-    deleteSourcemapsAfterUpload: true,
-  },
-
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
 
-  // Automatically annotate React components to show their full name in breadcrumbs and session replay
-  reactComponentAnnotation: {
-    enabled: true,
-  },
-
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   // This can increase your server load as well as your hosting bill.
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
   // side errors will fail.
   tunnelRoute: "/monitoring",
-
-  // Hides source maps from generated client bundles
-  hideSourceMaps: true,
 
   // Automatically tree-shake Sentry logger statements to reduce bundle size
   disableLogger: true,

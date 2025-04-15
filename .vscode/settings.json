@@ -1,0 +1,23 @@
+{
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "css.lint.validProperties": ["composes"],
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
+  ],
+  "tailwindCSS.includeLanguages": {
+    "css": "css",
+    "html": "html",
+    "javascript": "javascript"
+  },
+  "typescript.tsdk": "node_modules/typescript/lib"
+}
