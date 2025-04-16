@@ -1,10 +1,10 @@
-import { ArticleItem } from "@/components/article-item";
-import getParams from "@/lib/get-params";
-import getPathname from "@/lib/get-pathname";
+import ArticleItem from "@/components/article-item";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getGistList } from "@/repositories/gist";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
-export const dynamic = 'force-static'
+export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://silenced.life"),
@@ -20,23 +20,24 @@ export const metadata: Metadata = {
 
 export default async function Articles() {
   const list = await getGistList("articles");
-  const pathname = await getPathname();
-  const type = (await getParams()).get("type") ?? "";
 
   return (
-    <div className="grid auto-rows-min gap-6 ">
-      {list.map(({ description, slug, created_at, entry }, i) => {
+    <div className="grid auto-rows-min gap-4">
+      {list.map(({ description, slug, created_at, entry, updated_at }, i) => {
         if (!description) return null;
 
         return (
-          <ArticleItem
+          <Suspense
             key={i}
-            type={type}
-            pathname={pathname}
-            entry={entry}
-            createdAt={created_at}
-            slug={slug}
-          />
+            fallback={<Skeleton className="h-[162px] w-full" />}
+          >
+            <ArticleItem
+              entry={entry}
+              createdAt={created_at}
+              slug={slug}
+              updatedAt={updated_at}
+            />
+          </Suspense>
         );
       })}
     </div>

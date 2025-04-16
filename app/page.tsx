@@ -1,9 +1,10 @@
 import ArticleContent from "@/components/article-content";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const dynamic = 'force-static'
+export const dynamic = "force-static";
 
 const content = `
 ## Hi there.
@@ -19,22 +20,26 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-
   return (
     <div className="flex h-full flex-col flex-grow mt-[-160px] justify-center gap-4">
-      <ArticleContent content={content} withBackNavigation />
-
-      <div className="flex gap-2 flex-col w-full justify-end items-center pt-4">
-        <p className="leading-7 text-gray-400">What are you looking for?</p>
-        <div className="flex w-full gap-4">
-          <Button asChild className="w-full">
-            <Link href="articles">Articles</Link>
-          </Button>
-          <Button asChild className="w-full">
-            <Link href="beeps">Beeps</Link>
-          </Button>
-        </div>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <ArticleContent content={content} withBackNavigation />
+        </CardContent>
+        <CardFooter className="flex w-full grow flex-col gap-4">
+          <p className="leading-7 text-muted-foreground">
+            So, what are you looking for?
+          </p>
+          <div className="flex gap-4 grow w-full">
+            <Button asChild className="flex grow">
+              <Link href="articles">Articles</Link>
+            </Button>
+            <Button asChild className="flex grow">
+              <Link href="beeps">Beeps</Link>
+            </Button>
+          </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

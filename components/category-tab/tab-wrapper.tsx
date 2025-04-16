@@ -4,48 +4,51 @@ import { Tabs } from "../ui/tabs";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createQueryString } from "@/lib/create-query-string";
 import type { ReactNode } from "react";
+import { useCallback, useMemo, useRef } from "react";
 
-export function TabWrapper({
-  children,
-  pathname: _pathname,
-}: {
-  children: ReactNode;
-  pathname: string;
-}) {
+export function TabWrapper({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const pathname = usePathname() ?? _pathname;
+  const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  if (pathname === "/") return null;
+  const isAll = useMemo(() => pathname.includes("/articles"), [pathname]);
 
-  const isAll = (() => {
-    if (pathname.includes("/articles")) {
-      return true;
-    }
+  const tabValue = useMemo(() => (isAll ? "Articles" : "Beep"), [isAll]);
 
-    return false;
-  })();
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  return (
-    <Tabs
-      value={isAll ? "Articles" : "Beep"}
-      defaultValue="Articles"
-      className="flex flex-col gap-2 w-full self-center pt-4 bg-background z-10"
-      onValueChange={(v) => {
+  const handleTabChange = useCallback(
+    (v: string) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+
+      debounceRef.current = setTimeout(() => {
         if (v === "Beep") {
           router.push("/beeps");
           return;
         }
+
         if (v === "Articles") {
           router.push("/articles");
           return;
         }
+
         router.push(
           pathname +
             "?" +
             createQueryString("type", v === "Articles" ? "" : v, searchParams)
         );
-      }}
+      }, 100);
+    },
+    [pathname, router, searchParams]
+  );
+
+  if (pathname === "/") return null;
+
+  return (
+    <Tabs
+      value={tabValue}
+      className="flex flex-col gap-2 w-full self-center pt-4 dark:bg-black bg-white z-10"
+      onValueChange={handleTabChange}
     >
       {children}
     </Tabs>

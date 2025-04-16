@@ -7,15 +7,16 @@ import rehypeStringify from "rehype-stringify";
 import placeholder from "./placeholder.png";
 import { CircleArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { Button } from "../ui/button";
 
 interface ArticleContentProps {
   content: string;
-  isPoetry?: boolean;
+  isPoem?: boolean;
   withBackNavigation?: boolean;
 }
 
 export default async function ArticleContent(props: ArticleContentProps) {
-  const { content, withBackNavigation, isPoetry = false } = props;
+  const { content, withBackNavigation, isPoem = false } = props;
 
   const { default: MDXContent } = await evaluate(content, {
     ...runtime,
@@ -34,10 +35,46 @@ export default async function ArticleContent(props: ArticleContentProps) {
   return (
     <article
       id="article"
-      className={`flex flex-col gap-6 ${isPoetry && "justify-center"}`}
+      className={`flex flex-col gap-6 ${isPoem && "justify-center"}`}
     >
       <MDXContent
         components={{
+          a: ({ href, children, ...rest }) => {
+            if (!href) return <span {...rest}>{children}</span>;
+
+            const isInternal = href.startsWith("/");
+
+            if (isInternal) {
+              return (
+                <Button
+                  asChild
+                  variant="link"
+                  className="!p-0 h-fit text-base font-normal"
+                >
+                  <Link href={href} {...rest}>
+                    {children}
+                  </Link>
+                </Button>
+              );
+            }
+
+            return (
+              <Button
+                asChild
+                variant="link"
+                className="!p-0 h-fit text-base font-normal"
+              >
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  {...rest}
+                >
+                  {children}
+                </a>
+              </Button>
+            );
+          },
           h1: ({ children, ...rest }) => {
             return (
               <h1
@@ -62,8 +99,11 @@ export default async function ArticleContent(props: ArticleContentProps) {
 
             return (
               <div className="flex flex-col sticky top-[67px] z-20">
-                <span className="flex gap-2 items-center w-full bg-background">
-                  <Link href="/articles">
+                <span className="flex gap-2 items-center w-full bg-white dark:bg-black">
+                  <Link
+                    href="/articles"
+                    className="cursor-pointer transition-all hover:text-muted-foreground duration-300"
+                  >
                     <CircleArrowLeft />
                   </Link>
                   <h2
@@ -73,7 +113,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
                     {children}
                   </h2>
                 </span>
-                <div className="flex w-full h-4 bg-gradient-to-b from-background via-background/50 to-background/0 z-10 sticky top-[107px]" />
+                <div className="flex w-full h-4 bg-gradient-to-b from-white via-white/50 to-white/0 dark:from-black dark:via-black/50 dark:to-black/0 z-10 sticky top-[107px]" />
               </div>
             );
           },
@@ -102,7 +142,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
               <p
                 {...rest}
                 className={`leading-7 [&:not(:first-child)]:mt-2 ${
-                  isPoetry ? "text-center" : ""
+                  isPoem ? "text-center" : ""
                 }`}
               >
                 {children}
@@ -140,6 +180,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
               </ol>
             );
           },
+
           img: ({ src, alt }) => {
             if (!src || !alt) return null;
 

@@ -1,13 +1,10 @@
-import getPathname from "@/lib/get-pathname";
 import { TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { CategoryToggle } from "./category-toggle";
 import { TabWrapper } from "./tab-wrapper";
 
-export async function CategoryTab() {
-  const pathname = await getPathname();
-
+export function CategoryTab() {
   return (
-    <TabWrapper pathname={pathname}>
+    <TabWrapper>
       <TabsList className="w-full">
         <TabsTrigger className="w-full" value="Articles">
           Articles
@@ -17,16 +14,16 @@ export async function CategoryTab() {
         </TabsTrigger>
       </TabsList>
       <TabsContent value="Articles" className="self-start">
-        <CategoryToggle pathname={pathname} />
+        <CategoryToggle />
       </TabsContent>
       <TabsContent value="Blog" className="self-start">
-        <CategoryToggle pathname={pathname} />
+        <CategoryToggle />
       </TabsContent>
-      <TabsContent value="Poetry" className="self-start">
-        <CategoryToggle pathname={pathname} />
+      <TabsContent value="Poem" className="self-start">
+        <CategoryToggle />
       </TabsContent>
       <TabsContent value="Sharing" className="self-start">
-        <CategoryToggle pathname={pathname} />
+        <CategoryToggle />
       </TabsContent>
     </TabWrapper>
   );

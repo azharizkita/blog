@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import Script from "next/script";
 import { WithContext, Article as ArticleType } from "schema-dts";
 
-export const dynamic = 'force-static'
+export const dynamic = "force-static";
 
 export async function generateMetadata({
   params,
@@ -65,7 +65,7 @@ export default async function Article({
     notFound();
   }
 
-  const isPoetry = type === "Poetry";
+  const isPoem = type === "Poem";
 
   const jsonLd: WithContext<ArticleType> = {
     "@context": "https://schema.org",
@@ -91,11 +91,11 @@ export default async function Article({
       {repoData?.created_at && (
         <TimeAgo
           time={repoData.created_at}
-          updatedAt={!isPoetry ? repoData.updated_at : ""}
+          updatedAt={!isPoem ? repoData.updated_at : ""}
           className="flex flex-col"
         />
       )}
-      <ArticleContent content={content} isPoetry={isPoetry} />
+      <ArticleContent content={content} isPoem={isPoem} />
     </>
   );
 }

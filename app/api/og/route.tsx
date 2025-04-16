@@ -24,15 +24,13 @@ export async function GET(request: Request) {
         }}
       >
         <div tw="flex flex-col items-center gap-0">
-          <span tw="text-5xl font-semibold tracking-tight text-[#FAFAFA]">
+          <span tw="text-5xl font-semibold tracking-tight text-[#ffebec]">
             Silenced
           </span>
-          <span tw="text-lg tracking-tight text-orange-600">
-            personal dumps
-          </span>
+          <span tw="text-lg tracking-tight text-[#db264f]">personal dumps</span>
         </div>
         {title && (
-          <span tw="text-6xl font-semibold tracking-tight text-[#FAFAFA] pt-10 px-10">
+          <span tw="text-6xl font-semibold tracking-tight text-[#ffebec] pt-10 px-10">
             {title}
           </span>
         )}

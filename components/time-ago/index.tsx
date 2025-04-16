@@ -1,119 +1,93 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { Skeleton } from "../ui/skeleton";
 
 interface TimeAgoProps {
   time: string;
   className?: string;
   updatedAt?: string;
+  compact?: boolean;
 }
 
-export default function TimeAgo({ time, className, updatedAt }: TimeAgoProps) {
-  const [timeAgo, setTimeAgo] = useState(
-    Intl.DateTimeFormat("en-US", {
-      dateStyle: "medium",
-    }).format(new Date(time))
-  );
-  const [formattedUpdatedAt, setFormattedUpdatedAt] = useState("");
-  const [isSpanVisible, setIsSpanVisible] = useState(false);
-  const [isTimeAgoVisible, setIsTimeAgoVisible] = useState(true);
-  const spanRef = useRef<HTMLSpanElement>(null);
+export default function TimeAgo({
+  time: _time,
+  className,
+  updatedAt: _updatedAt,
+  compact = false,
+}: TimeAgoProps) {
+  const [time, setTime] = useState("");
+  const [updatedAt, setUpdatedAt] = useState("");
+  const [mode, setMode] = useState<"time" | "updated-at">("time");
+
+  const toggleDisplay = () => {
+    if (!updatedAt || !time || _time === _updatedAt) return;
+    setMode((prev) => (prev === "time" ? "updated-at" : "time"));
+  };
 
   useEffect(() => {
-    const updateTimeAgo = () => {
-      const now = new Date();
-      const createdDate = new Date(time);
-      const timeDifference = now.getTime() - createdDate.getTime();
+    if (_time) {
+      const formattedTime = Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(new Date(_time));
+      setTime(formattedTime);
+    }
 
-      const seconds = Math.floor(timeDifference / 1000);
-      const minutes = Math.floor(seconds / 60);
-      const hours = Math.floor(minutes / 60);
-      const days = Math.floor(hours / 24);
+    if (_updatedAt) {
+      const formattedTime = Intl.DateTimeFormat("en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(new Date(_updatedAt));
+      setUpdatedAt(formattedTime);
+    }
+  }, [_time, _updatedAt]);
 
-      let newTimeAgo = "";
-      if (days > 1) {
-        newTimeAgo = Intl.DateTimeFormat("en-US", {
-          dateStyle: "medium",
-        }).format(createdDate);
-      } else if (hours >= 1) {
-        newTimeAgo = `${hours} hour${hours > 1 ? "s" : ""} ago`;
-        setIsTimeAgoVisible(false);
-      } else if (minutes >= 1) {
-        newTimeAgo = `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
-        setIsTimeAgoVisible(false);
-      } else {
-        newTimeAgo = `${seconds} second${seconds > 1 ? "s" : ""} ago`;
-        setIsTimeAgoVisible(false);
-      }
-
-      setTimeout(() => {
-        setTimeAgo(newTimeAgo);
-        setIsTimeAgoVisible(true);
-      }, 500);
-
-      if (updatedAt && time !== updatedAt) {
-        const updatedDate = new Date(updatedAt);
-        const updatedDay = Intl.DateTimeFormat("en-US", {
-          dateStyle: "medium",
-        }).format(updatedDate);
-        const updatedTime = Intl.DateTimeFormat("en-US", {
-          timeStyle: "short",
-        }).format(updatedDate);
-        setFormattedUpdatedAt(`${updatedTime}, ${updatedDay}`);
-      } else {
-        setFormattedUpdatedAt("");
-      }
-    };
-
-    const intervalId = setInterval(updateTimeAgo, 50000);
-    const timeoutId = setTimeout(updateTimeAgo, 500);
-
-    return () => {
-      clearInterval(intervalId);
-      clearTimeout(timeoutId);
-    };
-  }, [time, updatedAt]);
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout | null = null;
-    const spanRefCurrent = spanRef.current;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          timeoutId = setTimeout(() => setIsSpanVisible(true), 500);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (spanRefCurrent) observer.observe(spanRefCurrent);
-
-    return () => {
-      if (spanRefCurrent) observer.unobserve(spanRefCurrent);
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, []);
+  const compactness = compact ? "h-5 text-sm" : "h-6 text-base";
 
   return (
-    <time dateTime={time} className={className}>
-      <span
-        className={`${
-          isTimeAgoVisible ? "opacity-100" : "opacity-0"
-        } transition-opacity duration-500`}
-      >
-        {timeAgo}
-      </span>
-      {!!updatedAt && (
-        <span
-          ref={spanRef}
-          className={`text-muted-foreground ${
-            isSpanVisible ? "opacity-100" : "opacity-0 invisible"
-          } text-xs transition-opacity duration-1000`}
-        >
-          Updated at {formattedUpdatedAt}
-        </span>
+    <time
+      dateTime={_time}
+      className={cn(
+        "relative flex shrink-0 w-full overflow-hidden",
+        compactness,
+        className
       )}
+    >
+      <span
+        onClick={toggleDisplay}
+        className={cn(
+          "min-w-44 absolute flex w-fit shrink-0 transition-all duration-300",
+          compactness,
+          mode === "time"
+            ? "translate-y-0 z-10"
+            : "-translate-y-full z-0 opacity-0",
+          _time !== _updatedAt &&
+            _updatedAt &&
+            "cursor-pointer underline underline-offset-4"
+        )}
+      >
+        {time || (
+          <Skeleton
+            className={cn("w-full min-w-44 rounded-full", compactness)}
+          />
+        )}
+      </span>
+
+      <span
+        onClick={toggleDisplay}
+        className={cn(
+          "absolute flex w-fit shrink-0 transition-all duration-300 underline underline-offset-4",
+          compactness,
+          mode === "updated-at"
+            ? "translate-y-0 z-10"
+            : "translate-y-full z-0 opacity-0",
+          "cursor-pointer"
+        )}
+      >
+        Updated at {_time !== _updatedAt ? updatedAt : "-"}
+      </span>
     </time>
   );
 }

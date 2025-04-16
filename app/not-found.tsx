@@ -8,7 +8,7 @@ export default function NotFound() {
     <div className="grid auto-rows-min gap-6 ">
       <div className="flex flex-col gap-1">
         <div className="w-fit flex flex-col gap-2 bg-[#26252A] p-4 rounded-xl">
-          <CardDescription className="text-white">
+          <CardDescription>
             Umm, I think you are getting lost along the
             road.{" "}
             <Link href="/" className="underline">

@@ -4,8 +4,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { createQueryString } from "@/lib/create-query-string";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-export function CategoryToggle({ pathname: _pathname }: { pathname: string }) {
-  const pathname = usePathname() ?? _pathname;
+export function CategoryToggle() {
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
   const type = searchParams.get("type");
@@ -44,15 +44,15 @@ export function CategoryToggle({ pathname: _pathname }: { pathname: string }) {
         Blog
       </ToggleGroupItem>
       <ToggleGroupItem
-        value="Poetry"
-        aria-label="Toggle poetry"
+        value="Poem"
+        aria-label="Toggle poem"
         onClick={() => {
           router.push(
-            pathname + "?" + createQueryString("type", "Poetry", searchParams)
+            pathname + "?" + createQueryString("type", "Poem", searchParams)
           );
         }}
       >
-        Poetry
+        Poem
       </ToggleGroupItem>
       <ToggleGroupItem
         value="Sharing"
