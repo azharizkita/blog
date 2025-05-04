@@ -28,6 +28,9 @@ const nextConfig: NextConfig = {
       {
         hostname: "gist.github.com",
       },
+      {
+        hostname: "github.com",
+      },
     ],
   },
 };

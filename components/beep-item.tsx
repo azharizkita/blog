@@ -10,8 +10,8 @@ interface BeepItemProps {
 
 export default function BeepItem({ createdAt, entry }: BeepItemProps) {
   return (
-    <div className="flex flex-col gap-1">
-      <Card className="py-4">
+    <div className="flex flex-col gap-1 w-fit">
+      <Card className="py-4 bg-secondary">
         <CardContent className="px-4">
           <CardDescription className="text-foreground">
             {entry.description}

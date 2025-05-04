@@ -21,7 +21,7 @@ export default async function Beeps() {
 
   return (
     <div className="grid auto-rows-min gap-4">
-      {list.map(({ description, slug, created_at, entry }, i) => {
+      {list.reverse().map(({ description, slug, created_at, entry }, i) => {
         if (!description) return null;
 
         return (

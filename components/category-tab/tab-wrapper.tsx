@@ -47,7 +47,7 @@ export function TabWrapper({ children }: { children: ReactNode }) {
   return (
     <Tabs
       value={tabValue}
-      className="flex flex-col gap-2 w-full self-center pt-4 dark:bg-black bg-white z-10"
+      className="flex flex-col gap-2 w-full self-center"
       onValueChange={handleTabChange}
     >
       {children}

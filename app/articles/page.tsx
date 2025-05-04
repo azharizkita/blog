@@ -22,24 +22,26 @@ export default async function Articles() {
   const list = await getGistList("articles");
 
   return (
-    <div className="grid auto-rows-min gap-4">
-      {list.map(({ description, slug, created_at, entry, updated_at }, i) => {
-        if (!description) return null;
+    <>
+      <div className="grid auto-rows-min gap-4">
+        {list.map(({ description, slug, created_at, entry, updated_at }, i) => {
+          if (!description) return null;
 
-        return (
-          <Suspense
-            key={i}
-            fallback={<Skeleton className="h-[162px] w-full" />}
-          >
-            <ArticleItem
-              entry={entry}
-              createdAt={created_at}
-              slug={slug}
-              updatedAt={updated_at}
-            />
-          </Suspense>
-        );
-      })}
-    </div>
+          return (
+            <Suspense
+              key={i}
+              fallback={<Skeleton className="h-[162px] w-full" />}
+            >
+              <ArticleItem
+                entry={entry}
+                createdAt={created_at}
+                slug={slug}
+                updatedAt={updated_at}
+              />
+            </Suspense>
+          );
+        })}
+      </div>
+    </>
   );
 }
