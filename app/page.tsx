@@ -19,12 +19,12 @@ export const metadata: Metadata = {
     "Think of Silenced as a personal archive of my mind—from life updates, late-night thoughts, random realizations, or just rants about whatever’s on my plate",
 };
 
-export default async function Page() {
+export default function Page() {
   return (
     <div className="flex h-full flex-col flex-grow md:mt-0 -mt-4 gap-4">
       <Card>
         <CardContent className="p-6">
-          <ArticleContent content={content} withBackNavigation />
+          <ArticleContent content={content} />
         </CardContent>
         <CardFooter className="flex w-full grow flex-col gap-4">
           <p className="leading-7 text-muted-foreground">

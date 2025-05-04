@@ -1,5 +1,4 @@
 import ArticleContent from "@/components/article-content";
-import ScrollToHash from "@/components/scroll-to-hash";
 import TimeAgo from "@/components/time-ago";
 import { getGistDetails, getGistList } from "@/repositories/gist";
 import type { Metadata } from "next";
@@ -65,8 +64,6 @@ export default async function Article({
     notFound();
   }
 
-  const isPoem = type === "Poem";
-
   const jsonLd: WithContext<ArticleType> = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -87,15 +84,14 @@ export default async function Article({
       <Script type="application/ld+json" id="schema">
         {JSON.stringify(jsonLd)}
       </Script>
-      <ScrollToHash />
       {repoData?.created_at && (
         <TimeAgo
           time={repoData.created_at}
-          updatedAt={!isPoem ? repoData.updated_at : ""}
+          updatedAt={repoData.updated_at}
           className="flex flex-col"
         />
       )}
-      <ArticleContent content={content} isPoem={isPoem} />
+      <ArticleContent content={content} withBackNavigation />
     </>
   );
 }

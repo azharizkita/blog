@@ -42,18 +42,17 @@ export default function RootLayout({
       className={`${inter.variable} ${roboto_mono.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body className="flex flex-1 flex-col w-full min-h-[100svh]">
+      <body className="flex flex-1 flex-col w-full">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <header className="dark:bg-black bg-white flex h-20 shrink-0 items-center justify-center">
-            <HeadBar />
-          </header>
-          <div className="flex w-full flex-col px-4 mt-4 max-w-2xl self-center sticky top-0 z-20">
-            <CategoryTab />
-            <div className="flex w-full h-2 dark:bg-black bg-white z-10" />
-            <div className="flex w-full h-4 bg-gradient-to-b from-white via-white/50 to-white/0 sticky top-[104px] z-10 dark:from-black dark:via-black/50 dark:to-black/0" />
-          </div>
-          <div className="flex flex-1 w-full flex-col gap-4 p-4 max-w-2xl self-center">
-            {children}
+          <div className="grid grid-cols-12 w-full min-h-svh">
+            <header className="dark:bg-black bg-white col-span-12 lg:col-span-2 flex flex-row lg:flex-col gap-4 lg:h-svh h-[70px] shrink-0 p-3 lg:border-r-1 lg:w-[225px] w-full justify-center lg:justify-start">
+              <HeadBar />
+            </header>
+            <div className="lg:col-span-10 col-span-12 flex w-full flex-col gap-4 p-4 h-svh overflow-y-auto">
+              <div className="flex max-w-3xl flex-col gap-4 p-4 self-center">
+                {children}
+              </div>
+            </div>
           </div>
         </ThemeProvider>
         <SpeedInsights />

@@ -5,14 +5,6 @@ import { TabWrapper } from "./tab-wrapper";
 export function CategoryTab() {
   return (
     <TabWrapper>
-      <TabsList className="w-full">
-        <TabsTrigger className="w-full" value="Articles">
-          Articles
-        </TabsTrigger>
-        <TabsTrigger className="w-full" value="Beep">
-          Beeps
-        </TabsTrigger>
-      </TabsList>
       <TabsContent value="Articles" className="self-start">
         <CategoryToggle />
       </TabsContent>

@@ -5,21 +5,23 @@ import * as runtime from "react/jsx-runtime";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeStringify from "rehype-stringify";
 import placeholder from "./placeholder.png";
-import { CircleArrowLeft } from "lucide-react";
+import { CircleArrowLeft, LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
+import remarkGfm from "remark-gfm";
+import getSlug from "@/lib/get-slug";
 
 interface ArticleContentProps {
   content: string;
-  isPoem?: boolean;
   withBackNavigation?: boolean;
 }
 
 export default async function ArticleContent(props: ArticleContentProps) {
-  const { content, withBackNavigation, isPoem = false } = props;
+  const { content, withBackNavigation } = props;
 
   const { default: MDXContent } = await evaluate(content, {
     ...runtime,
+    remarkPlugins: [remarkGfm],
     rehypePlugins: [
       [
         rehypePrettyCode,
@@ -33,10 +35,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
   });
 
   return (
-    <article
-      id="article"
-      className={`flex flex-col gap-6 ${isPoem && "justify-center"}`}
-    >
+    <article id="article" className="flex flex-col gap-6">
       <MDXContent
         components={{
           a: ({ href, children, ...rest }) => {
@@ -44,35 +43,62 @@ export default async function ArticleContent(props: ArticleContentProps) {
 
             const isInternal = href.startsWith("/");
 
-            if (isInternal) {
-              return (
-                <Button
-                  asChild
-                  variant="link"
-                  className="!p-0 h-fit text-base font-normal"
-                >
-                  <Link href={href} {...rest}>
-                    {children}
-                  </Link>
-                </Button>
-              );
-            }
-
             return (
               <Button
                 asChild
                 variant="link"
                 className="!p-0 h-fit text-base font-normal"
               >
-                <a
+                <Link
                   href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  {...(!isInternal && { target: "_blank" })}
                   {...rest}
                 >
                   {children}
-                </a>
+                </Link>
               </Button>
+            );
+          },
+          table: ({ children, ...rest }) => {
+            return (
+              <div className="overflow-x-auto pb-4">
+                <table {...rest} className="w-full min-w-[620px]">
+                  {children}
+                </table>
+              </div>
+            );
+          },
+          thead: ({ children, ...rest }) => {
+            return <thead {...rest}>{children}</thead>;
+          },
+          tr: ({ children, ...rest }) => {
+            return (
+              <tr {...rest} className="m-0 border-t p-0 even:bg-muted">
+                {children}
+              </tr>
+            );
+          },
+          th: ({ children, ...rest }) => {
+            return (
+              <th
+                {...rest}
+                className="border px-4 py-2 text-left font-bold [&[align=center]]:text-center [&[align=right]]:text-right"
+              >
+                {children}
+              </th>
+            );
+          },
+          tbody: ({ children, ...rest }) => {
+            return <tbody {...rest}>{children}</tbody>;
+          },
+          td: ({ children, ...rest }) => {
+            return (
+              <td
+                {...rest}
+                className="border px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right"
+              >
+                {children}
+              </td>
             );
           },
           h1: ({ children, ...rest }) => {
@@ -86,7 +112,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
             );
           },
           h2: ({ children, ...rest }) => {
-            if (withBackNavigation) {
+            if (!withBackNavigation) {
               return (
                 <h2
                   {...rest}
@@ -98,7 +124,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
             }
 
             return (
-              <div className="flex flex-col sticky top-[67px] z-20">
+              <div className="flex flex-col">
                 <span className="flex gap-2 items-center w-full bg-white dark:bg-black">
                   <Link
                     href="/articles"
@@ -113,18 +139,29 @@ export default async function ArticleContent(props: ArticleContentProps) {
                     {children}
                   </h2>
                 </span>
-                <div className="flex w-full h-4 bg-gradient-to-b from-white via-white/50 to-white/0 dark:from-black dark:via-black/50 dark:to-black/0 z-10 sticky top-[107px]" />
               </div>
             );
           },
           h3: ({ children, ...rest }) => {
+            const content = String(children);
+            const slug = getSlug(content);
             return (
-              <h3
-                {...rest}
-                className="scroll-m-20 text-xl font-semibold tracking-tight"
+              <Button
+                id={slug}
+                asChild
+                variant="link"
+                className="w-fit text-foreground cursor-pointer px-0"
               >
-                {children}
-              </h3>
+                <Link href={`#${slug}`}>
+                  <h3
+                    {...rest}
+                    className="scroll-m-20 text-xl font-semibold tracking-tight flex gap-2 items-center"
+                  >
+                    <LinkIcon size={16} />
+                    {children}
+                  </h3>
+                </Link>
+              </Button>
             );
           },
           h4: ({ children, ...rest }) => {
@@ -139,19 +176,14 @@ export default async function ArticleContent(props: ArticleContentProps) {
           },
           p: ({ children, ...rest }) => {
             return (
-              <p
-                {...rest}
-                className={`leading-7 [&:not(:first-child)]:mt-2 ${
-                  isPoem ? "text-center" : ""
-                }`}
-              >
+              <p {...rest} className="leading-7 [&:not(:first-child)]:mt-2">
                 {children}
               </p>
             );
           },
           blockquote: ({ children, ...rest }) => {
             return (
-              <blockquote {...rest} className="mt-6 border-l-2 pl-6 italic">
+              <blockquote {...rest} className="border-l-2 pl-6 italic">
                 {children}
               </blockquote>
             );

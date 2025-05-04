@@ -1,4 +1,5 @@
 import ArticleItem from "@/components/article-item";
+import { CategoryTab } from "@/components/category-tab";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getGistList } from "@/repositories/gist";
 import type { Metadata } from "next";
@@ -22,24 +23,27 @@ export default async function Articles() {
   const list = await getGistList("articles");
 
   return (
-    <div className="grid auto-rows-min gap-4">
-      {list.map(({ description, slug, created_at, entry, updated_at }, i) => {
-        if (!description) return null;
+    <>
+      <CategoryTab />
+      <div className="grid auto-rows-min gap-4">
+        {list.map(({ description, slug, created_at, entry, updated_at }, i) => {
+          if (!description) return null;
 
-        return (
-          <Suspense
-            key={i}
-            fallback={<Skeleton className="h-[162px] w-full" />}
-          >
-            <ArticleItem
-              entry={entry}
-              createdAt={created_at}
-              slug={slug}
-              updatedAt={updated_at}
-            />
-          </Suspense>
-        );
-      })}
-    </div>
+          return (
+            <Suspense
+              key={i}
+              fallback={<Skeleton className="h-[162px] w-full" />}
+            >
+              <ArticleItem
+                entry={entry}
+                createdAt={created_at}
+                slug={slug}
+                updatedAt={updated_at}
+              />
+            </Suspense>
+          );
+        })}
+      </div>
+    </>
   );
 }
