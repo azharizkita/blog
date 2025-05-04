@@ -1,6 +1,6 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis, ResponsiveContainer } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 import {
   ChartContainer,
@@ -12,7 +12,7 @@ import {
 import { languageMapper } from "./language-mapper";
 
 interface StatsChartProps {
-  data: {}[];
+  data: Record<string, unknown>[];
 }
 
 export function Content(props: StatsChartProps) {

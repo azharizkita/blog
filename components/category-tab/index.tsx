@@ -1,4 +1,4 @@
-import { TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { TabsContent } from "../ui/tabs";
 import { CategoryToggle } from "./category-toggle";
 import { TabWrapper } from "./tab-wrapper";
 

@@ -1,20 +1,4 @@
-import { getGistList } from "@/repositories/gist";
 import Link from "next/link";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../ui/collapsible";
-import { Button } from "../ui/button";
-import {
-  ChartColumn,
-  ChevronsUpDown,
-  Link2,
-  MessageCircle,
-  Newspaper,
-  UserRound,
-} from "lucide-react";
-import Content from "./content";
 import { Sidenav } from "./sidenav";
 
 export default function HeadBar() {
