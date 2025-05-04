@@ -43,12 +43,12 @@ export default function RootLayout({
     >
       <body className="flex flex-1 flex-col w-full">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <div className="grid grid-cols-12 w-full min-h-svh">
-            <header className="dark:bg-black bg-white col-span-12 lg:col-span-2 flex flex-row lg:flex-col gap-4 lg:h-svh h-[70px] shrink-0 p-3 lg:border-r-1 lg:w-[225px] w-full justify-center lg:justify-start">
+          <div className="w-full">
+            <header className="dark:bg-black z-30 sticky top-0 bg-white flex flex-row gap-4 h-[70px] shrink-0 p-3 w-full justify-center">
               <HeadBar />
             </header>
-            <div className="lg:col-span-10 col-span-12 flex w-full flex-col gap-4 p-4 h-svh overflow-y-auto">
-              <div className="flex max-w-3xl flex-col gap-4 p-4 self-center">
+            <div className="flex w-full flex-col gap-4 p-4 overflow-y-auto">
+              <div className="flex max-w-3xl flex-col gap-4 p-4 mx-auto">
                 {children}
               </div>
             </div>

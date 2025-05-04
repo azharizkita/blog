@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Sidenav } from "./sidenav";
-import Content from "./content";
 
 export default function HeadBar() {
   return (
@@ -14,9 +13,6 @@ export default function HeadBar() {
           </h1>
         </div>
       </Link>
-      <div className="hidden lg:block">
-        <Content />
-      </div>
     </>
   );
 }
