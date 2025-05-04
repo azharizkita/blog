@@ -6,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import "./globals.css";
 import HeadBar from "@/components/head-bar";
+import { CategoryTab } from "@/components/category-tab";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -43,15 +44,13 @@ export default function RootLayout({
     >
       <body className="flex flex-1 flex-col w-full">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <div className="w-full">
-            <header className="dark:bg-black z-30 sticky top-0 bg-white flex flex-row gap-4 h-[70px] shrink-0 p-3 w-full justify-center">
+          <div className="w-full max-w-2xl px-6 pb-6 flex flex-col gap-4 mx-auto">
+            <header className="dark:bg-black z-30 sticky top-0 bg-white flex flex-col shrink-0 pt-3 w-full justify-center">
               <HeadBar />
+              <CategoryTab />
             </header>
-            <div className="flex w-full flex-col gap-4 p-4 overflow-y-auto">
-              <div className="flex max-w-3xl flex-col gap-4 p-4 mx-auto">
-                {children}
-              </div>
-            </div>
+
+            {children}
           </div>
         </ThemeProvider>
         <SpeedInsights />

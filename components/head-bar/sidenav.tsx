@@ -28,7 +28,7 @@ export async function Sidenav() {
       <SheetTrigger asChild className="cursor-pointer">
         <Button
           variant="outline"
-          className="top-4 left-4 absolute h-[42px] w-[42px] block"
+          className="top-4 left-0 absolute h-[42px] w-[42px] block"
         >
           <Menu />
         </Button>

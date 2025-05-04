@@ -124,7 +124,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
             }
 
             return (
-              <div className="flex flex-col">
+              <div className="flex flex-col sticky top-[70px] z-50">
                 <span className="flex gap-2 items-center w-full bg-white dark:bg-black">
                   <Link
                     href="/articles"
