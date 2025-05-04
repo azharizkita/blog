@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="flex h-full flex-col flex-grow md:mt-0 -mt-4 gap-4">
+    <div className="flex h-full flex-col flex-grow gap-4">
       <Card>
         <CardContent className="p-6">
           <ArticleContent content={content} />

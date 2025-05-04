@@ -27,7 +27,7 @@ const pinnedContent = `
 A few repos I genuinely enjoy building. If something feels off, open a PR. I don’t bite.
 `;
 
-export default async function Me() {
+export default async function Stats() {
   const repos = await getPinnedRepos();
   return (
     <>

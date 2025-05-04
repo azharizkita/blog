@@ -124,7 +124,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
             }
 
             return (
-              <div className="flex flex-col sticky top-[70px] z-50">
+              <div className="flex flex-col sticky top-[68px] z-50">
                 <span className="flex gap-2 items-center w-full bg-white dark:bg-black">
                   <Link
                     href="/articles"
@@ -139,6 +139,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
                     {children}
                   </h2>
                 </span>
+                <div className="flex w-full h-4 -mt-[0.5px] bg-gradient-to-b from-white via-white/50 to-white/0 sticky top-[116px] z-10 dark:from-black dark:via-black/50 dark:to-black/0" />
               </div>
             );
           },
@@ -150,7 +151,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
                 id={slug}
                 asChild
                 variant="link"
-                className="w-fit text-foreground cursor-pointer px-0"
+                className="w-fit text-foreground cursor-pointer px-0 scroll-m-30"
               >
                 <Link href={`#${slug}`}>
                   <h3
