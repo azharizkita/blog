@@ -44,7 +44,7 @@ export default function RootLayout({
     >
       <body className="flex flex-1 flex-col w-full">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <div className="w-full max-w-2xl px-6 pb-6 flex flex-col mx-auto h-full">
+          <div className="w-full max-w-2xl px-6 pb-6 gap-4 flex flex-col mx-auto h-full">
             <header className="z-30 sticky top-0 flex flex-col shrink-0 w-full justify-center">
               <div className="dark:bg-black bg-white pt-3 flex flex-col gap-2">
                 <HeadBar />
