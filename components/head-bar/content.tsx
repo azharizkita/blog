@@ -24,12 +24,12 @@ export default async function Content() {
       <Collapsible>
         <CollapsibleTrigger
           asChild
-          className="bg-background w-full flex justify-start"
+          className="w-full flex justify-start"
         >
           <Button
             variant="link"
             size="sm"
-            className="!p-0 font-bold cursor-pointer text-foreground sticky top-0"
+            className="!p-0 font-bold cursor-pointer text-foreground"
           >
             <Newspaper />
             <Link href="/articles">Articles ({articles.length})</Link>

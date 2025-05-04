@@ -26,7 +26,7 @@ export function Content(props: StatsChartProps) {
           color: "var(--primary)",
         },
       }}
-      className="w-full"
+      className="w-full max-h-[360px]"
     >
       <BarChart accessibilityLayer data={data}>
         <ChartLegend content={<ChartLegendContent />} />
