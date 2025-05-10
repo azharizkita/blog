@@ -1,12 +1,20 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Roboto_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-
-import "./globals.css";
 import HeadBar from "@/components/head-bar";
 import { CategoryTab } from "@/components/category-tab";
+
+import "./globals.css";
+
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  userScalable: false,
+  width: "device-width",
+  initialScale: 1,
+  minimumScale: 1,
+};
 
 const inter = Inter({
   subsets: ["latin"],
