@@ -42,7 +42,7 @@ export function TabWrapper({ children }: { children: ReactNode }) {
     [pathname, router, searchParams]
   );
 
-  if (pathname === "/") return null;
+  if (pathname === "/" || pathname.includes('/articles/')) return null;
 
   return (
     <Tabs

@@ -43,13 +43,13 @@ export default function SearchContent(props: SearchContentProps) {
     <>
       <Button
         variant="outline"
-        className="h-[42px] w-[42px] top-4 left-0 absolute"
+        className="h-[42px] w-[42px]"
         onClick={() => setOpen(true)}
       >
         <Search />
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Type a command or search..." />
+        <CommandInput placeholder="Type to search..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Articles">
