@@ -30,6 +30,8 @@ export const getGistList = cache(
   { revalidate: DEFAULT_CACHE_TIME }
 );
 
+export type GistList = Awaited<ReturnType<typeof getGistList>>;
+
 export const getGistDetails = cache(
   async (slug: string) => {
     const list = await getGistList();

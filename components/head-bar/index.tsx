@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { Sidenav } from "./sidenav";
+import Search from "./search";
 
 export default function HeadBar() {
   return (
     <>
-      <Sidenav />
+      <Search />
       <Link href="/">
         <div className="flex flex-col gap-0 items-center">
           <h1 className="text-3xl font-semibold tracking-tight">Silenced</h1>
