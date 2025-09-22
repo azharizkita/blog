@@ -1,3 +1,4 @@
+import { config } from "@/lib/config";
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
@@ -7,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: "/api/",
     },
-    sitemap: "https://silenced.life/sitemap.xml",
+    sitemap: `${config.site.url}/sitemap.xml`,
   };
 }

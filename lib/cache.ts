@@ -1,4 +1,4 @@
-import { DEFAULT_CACHE_TIME } from "@/constants";
+import { config } from "@/lib/config";
 import { unstable_cache } from "next/cache";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,7 +13,7 @@ export default function cache<T extends Callback>(
   }
 ): T {
   return unstable_cache(cb, keyParts, {
-    revalidate: DEFAULT_CACHE_TIME,
+    revalidate: config.cache.defaultTime,
     ...options,
   });
 }

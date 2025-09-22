@@ -1,19 +1,25 @@
 "use client";
 
 import { Tabs } from "../ui/tabs";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { createQueryString } from "@/lib/create-query-string";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useRef } from "react";
 
 export function TabWrapper({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const params = useParams();
 
-  const isAll = useMemo(() => pathname.includes("/articles"), [pathname]);
+  const isBeepsPage = useMemo(() => pathname.includes("/beeps"), [pathname]);
 
-  const tabValue = useMemo(() => (isAll ? "Articles" : "Beep"), [isAll]);
+  const tabValue = useMemo(() => {
+    if (isBeepsPage) return "Beep";
+    if (pathname === "/articles") return "All";
+    if (pathname === "/articles/blog") return "Blog";
+    if (pathname === "/articles/poem") return "Poem";
+    if (pathname === "/articles/sharing") return "Sharing";
+    return "All";
+  }, [pathname, isBeepsPage]);
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -27,22 +33,32 @@ export function TabWrapper({ children }: { children: ReactNode }) {
           return;
         }
 
-        if (v === "Articles") {
+        if (v === "All") {
           router.push("/articles");
           return;
         }
 
-        router.push(
-          pathname +
-            "?" +
-            createQueryString("type", v === "Articles" ? "" : v, searchParams)
-        );
+        if (v === "Blog") {
+          router.push("/articles/blog");
+          return;
+        }
+
+        if (v === "Poem") {
+          router.push("/articles/poem");
+          return;
+        }
+
+        if (v === "Sharing") {
+          router.push("/articles/sharing");
+          return;
+        }
       }, 100);
     },
-    [pathname, router, searchParams]
+    [router]
   );
 
-  if (pathname === "/" || pathname.includes('/articles/')) return null;
+  // Hide on home page and individual article pages (when slug param exists)
+  if (pathname === "/" || params.slug || isBeepsPage) return null;
 
   return (
     <Tabs

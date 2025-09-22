@@ -8,21 +8,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getPinnedRepos } from "@/repositories/pinned-repos";
+import { createPageMetadata } from "@/lib/metadata";
 import { SquareArrowOutUpRight } from "lucide-react";
-import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://silenced.life"),
-  title: "Silenced | Stats",
-  description:
-    "If you've scrolled this far, I guess you're a little curious. So here’s a peek into how I write code—and the languages I’ve used the most.",
-  openGraph: {
-    url: "https://silenced.life/stats",
-    siteName: "Silenced | Stats",
-    images: [{ url: "/api/og?title=Stats" }],
-  },
-};
+export const metadata = createPageMetadata({
+  title: "Stats",
+  description: "If you've scrolled this far, I guess you're a little curious. So here's a peek into how I write code—and the languages I've used the most.",
+  path: "/stats"
+});
 
 const topContent = `
 ## Personal Stats

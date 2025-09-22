@@ -1,13 +1,19 @@
-import { DEFAULT_CACHE_TIME } from "@/constants";
+import { config } from "@/lib/config";
 import cache from "@/lib/cache";
 import getSlug from "@/lib/get-slug";
 import octokit from "@/lib/octokit";
 import parseEntry from "@/lib/parse-entry";
 
+type GistOptions = {
+  topic: "Blog" | "Poem" | "Sharing";
+};
+
 export const getGistList = cache(
-  async (type?: "beeps" | "articles") => {
+  async (type?: "beeps" | "articles", options?: GistOptions) => {
+    const { topic } = options ?? {};
+
     const { data } = await octokit.rest.gists.listForUser({
-      username: "azharizkita",
+      username: config.github.username,
     });
 
     const _data = data.map(({ description, ...rest }) => {
@@ -20,14 +26,16 @@ export const getGistList = cache(
       return _data.filter((gist) => gist.entry.type === "Beep");
     }
 
-    if (type === "articles") {
-      return _data.filter((gist) => gist.entry.type !== "Beep");
+    const articles = _data.filter((gist) => gist.entry.type !== "Beep");
+
+    if (!!topic) {
+      return articles.filter((gist) => gist.entry.type === topic);
     }
 
-    return _data;
+    return articles;
   },
   ["gist-list"],
-  { revalidate: DEFAULT_CACHE_TIME }
+  { revalidate: config.cache.defaultTime }
 );
 
 export type GistList = Awaited<ReturnType<typeof getGistList>>;
@@ -48,5 +56,5 @@ export const getGistDetails = cache(
     return { ...data, entry: { title, ...restEntryData } };
   },
   ["gist-details"],
-  { revalidate: DEFAULT_CACHE_TIME }
+  { revalidate: config.cache.defaultTime }
 );

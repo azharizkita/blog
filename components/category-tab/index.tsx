@@ -7,7 +7,7 @@ export function CategoryTab() {
   return (
     <Suspense>
       <TabWrapper>
-        <TabsContent value="Articles" className="self-start">
+        <TabsContent value="All" className="self-start">
           <CategoryToggle />
         </TabsContent>
         <TabsContent value="Blog" className="self-start">

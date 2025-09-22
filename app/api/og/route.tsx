@@ -25,7 +25,7 @@ export async function GET(request: Request) {
       >
         <div tw="flex flex-col items-center gap-0">
           <span tw="text-5xl font-semibold tracking-tight text-[#ffebec]">
-            Silenced
+            Lokey
           </span>
           <span tw="text-lg tracking-tight text-[#db264f]">personal dumps</span>
         </div>
