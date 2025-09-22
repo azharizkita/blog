@@ -1,13 +1,14 @@
 "use client";
 
 import { Tabs } from "../ui/tabs";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useRef } from "react";
 
 export function TabWrapper({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
 
   const isBeepsPage = useMemo(() => pathname.includes("/beeps"), [pathname]);
 
@@ -56,8 +57,8 @@ export function TabWrapper({ children }: { children: ReactNode }) {
     [router]
   );
 
-  // Only hide on home page and individual article pages (with slug)
-  if (pathname === "/" || (pathname.includes('/articles/') && pathname.split("/").length > 3)) return null;
+  // Hide on home page and individual article pages (when slug param exists)
+  if (pathname === "/" || params.slug || isBeepsPage) return null;
 
   return (
     <Tabs
