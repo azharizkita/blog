@@ -4,8 +4,14 @@ import getSlug from "@/lib/get-slug";
 import octokit from "@/lib/octokit";
 import parseEntry from "@/lib/parse-entry";
 
+type GistOptions = {
+  topic: "Blog" | "Poem" | "Sharing";
+};
+
 export const getGistList = cache(
-  async (type?: "beeps" | "articles") => {
+  async (type?: "beeps" | "articles", options?: GistOptions) => {
+    const { topic } = options ?? {};
+
     const { data } = await octokit.rest.gists.listForUser({
       username: config.github.username,
     });
@@ -20,11 +26,13 @@ export const getGistList = cache(
       return _data.filter((gist) => gist.entry.type === "Beep");
     }
 
-    if (type === "articles") {
-      return _data.filter((gist) => gist.entry.type !== "Beep");
+    const articles = _data.filter((gist) => gist.entry.type !== "Beep");
+
+    if (!!topic) {
+      return articles.filter((gist) => gist.entry.type === topic);
     }
 
-    return _data;
+    return articles;
   },
   ["gist-list"],
   { revalidate: config.cache.defaultTime }

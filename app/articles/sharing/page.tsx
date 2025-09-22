@@ -5,14 +5,14 @@ import { createPageMetadata } from "@/lib/metadata";
 export const dynamic = "force-static";
 
 export const metadata = createPageMetadata({
-  title: "Articles",
+  title: "Sharings",
   description:
     "A collection of my thoughts, reflections, and stories. Unfiltered, personal, and real—this is where I write about life, experiences, and everything in between.",
-  path: "/articles",
+  path: "/sharing",
 });
 
-export default async function Articles() {
-  const list = await getGistList("articles");
+export default async function Sharings() {
+  const list = await getGistList("articles", { topic: "Sharing" });
 
   return (
     <div className="grid auto-rows-min gap-4">

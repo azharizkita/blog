@@ -1,33 +1,36 @@
 "use client";
 
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { createQueryString } from "@/lib/create-query-string";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export function CategoryToggle() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const type = searchParams.get("type");
 
-  if (pathname.includes("/articles/")) {
+  // Don't show on individual article pages
+  if (pathname.includes("/articles/") && pathname.split("/").length > 3) {
     return null;
   }
+
+  const currentValue = (() => {
+    if (pathname === "/articles") return "All";
+    if (pathname === "/articles/blog") return "Blog";
+    if (pathname === "/articles/poem") return "Poem";
+    if (pathname === "/articles/sharing") return "Sharing";
+    return "All";
+  })();
 
   return (
     <ToggleGroup
       type="single"
-      defaultValue="Articles"
       variant="outline"
-      value={type ?? "Articles"}
+      value={currentValue}
     >
       <ToggleGroupItem
-        value="Articles"
+        value="All"
         aria-label="Toggle all"
         onClick={() => {
-          router.push(
-            pathname + "?" + createQueryString("type", "", searchParams)
-          );
+          router.push("/articles");
         }}
       >
         All
@@ -36,9 +39,7 @@ export function CategoryToggle() {
         value="Blog"
         aria-label="Toggle blog"
         onClick={() => {
-          router.push(
-            pathname + "?" + createQueryString("type", "Blog", searchParams)
-          );
+          router.push("/articles/blog");
         }}
       >
         Blog
@@ -47,9 +48,7 @@ export function CategoryToggle() {
         value="Poem"
         aria-label="Toggle poem"
         onClick={() => {
-          router.push(
-            pathname + "?" + createQueryString("type", "Poem", searchParams)
-          );
+          router.push("/articles/poem");
         }}
       >
         Poem
@@ -58,9 +57,7 @@ export function CategoryToggle() {
         value="Sharing"
         aria-label="Toggle sharing"
         onClick={() => {
-          router.push(
-            pathname + "?" + createQueryString("type", "Sharing", searchParams)
-          );
+          router.push("/articles/sharing");
         }}
       >
         Sharing
