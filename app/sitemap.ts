@@ -1,7 +1,8 @@
 import { getGistList } from "@/repositories/gist";
+import { config } from "@/lib/config";
 import type { MetadataRoute } from "next";
 
-const url = "https://silenced.life";
+const url = config.site.url;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const list = await getGistList("articles");

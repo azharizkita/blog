@@ -1,4 +1,4 @@
-import { DEFAULT_CACHE_TIME } from "@/constants";
+import { config } from "@/lib/config";
 import cache from "@/lib/cache";
 import octokit from "@/lib/octokit";
 
@@ -59,5 +59,5 @@ export const getPinnedRepos = cache(
     return pinned;
   },
   ["pinned-repos"],
-  { revalidate: DEFAULT_CACHE_TIME }
+  { revalidate: config.cache.defaultTime }
 );

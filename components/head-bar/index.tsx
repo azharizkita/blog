@@ -6,7 +6,7 @@ export default function HeadBar() {
     <div className="flex gap-4 items-center">
       <Search />
       <Link href="/">
-        <h1 className="text-3xl font-semibold tracking-tight">Silenced</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Lokey</h1>
       </Link>
     </div>
   );

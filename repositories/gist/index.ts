@@ -1,4 +1,4 @@
-import { DEFAULT_CACHE_TIME } from "@/constants";
+import { config } from "@/lib/config";
 import cache from "@/lib/cache";
 import getSlug from "@/lib/get-slug";
 import octokit from "@/lib/octokit";
@@ -7,7 +7,7 @@ import parseEntry from "@/lib/parse-entry";
 export const getGistList = cache(
   async (type?: "beeps" | "articles") => {
     const { data } = await octokit.rest.gists.listForUser({
-      username: "azharizkita",
+      username: config.github.username,
     });
 
     const _data = data.map(({ description, ...rest }) => {
@@ -27,7 +27,7 @@ export const getGistList = cache(
     return _data;
   },
   ["gist-list"],
-  { revalidate: DEFAULT_CACHE_TIME }
+  { revalidate: config.cache.defaultTime }
 );
 
 export type GistList = Awaited<ReturnType<typeof getGistList>>;
@@ -48,5 +48,5 @@ export const getGistDetails = cache(
     return { ...data, entry: { title, ...restEntryData } };
   },
   ["gist-details"],
-  { revalidate: DEFAULT_CACHE_TIME }
+  { revalidate: config.cache.defaultTime }
 );

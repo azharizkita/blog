@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import HeadBar from "@/components/head-bar";
 import { CategoryTab } from "@/components/category-tab";
+import { defaultMetadata } from "@/lib/metadata";
 
 import "./globals.css";
 
@@ -28,16 +29,7 @@ const roboto_mono = Roboto_Mono({
   variable: "--font-roboto-mono",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://silenced.life"),
-  title: "Silenced | Welcome",
-  description: `Personal dumps by ${process.env.GITHUB_USERNAME}`,
-  openGraph: {
-    url: "https://silenced.life",
-    siteName: "Silenced | Welcome",
-    images: [{ url: "/api/og?title=Welcome" }],
-  },
-};
+export const metadata: Metadata = defaultMetadata;
 
 export default function RootLayout({
   children,
