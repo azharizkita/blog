@@ -1,16 +1,21 @@
 "use client";
 
 import { Tabs } from "../ui/tabs";
-import { usePathname, useRouter, useParams } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import type { ReactNode } from "react";
-import { useCallback, useMemo, useRef } from "react";
+import { useMemo } from "react";
 
 export function TabWrapper({ children }: { children: ReactNode }) {
-  const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
 
-  const isBeepsPage = useMemo(() => pathname.includes("/beeps"), [pathname]);
+  const isBeepsPage = useMemo(
+    () =>
+      pathname.includes("/beeps") ||
+      pathname.includes("/who-am-i") ||
+      pathname.includes("/stats"),
+    [pathname]
+  );
 
   const tabValue = useMemo(() => {
     if (isBeepsPage) return "Beep";
@@ -21,51 +26,11 @@ export function TabWrapper({ children }: { children: ReactNode }) {
     return "All";
   }, [pathname, isBeepsPage]);
 
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleTabChange = useCallback(
-    (v: string) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-
-      debounceRef.current = setTimeout(() => {
-        if (v === "Beep") {
-          router.push("/beeps");
-          return;
-        }
-
-        if (v === "All") {
-          router.push("/articles");
-          return;
-        }
-
-        if (v === "Blog") {
-          router.push("/articles/blog");
-          return;
-        }
-
-        if (v === "Poem") {
-          router.push("/articles/poem");
-          return;
-        }
-
-        if (v === "Sharing") {
-          router.push("/articles/sharing");
-          return;
-        }
-      }, 100);
-    },
-    [router]
-  );
-
   // Hide on home page and individual article pages (when slug param exists)
   if (pathname === "/" || params.slug || isBeepsPage) return null;
 
   return (
-    <Tabs
-      value={tabValue}
-      className="flex flex-col gap-2 w-full self-center"
-      onValueChange={handleTabChange}
-    >
+    <Tabs value={tabValue} className="flex flex-col gap-2 w-full self-center">
       {children}
     </Tabs>
   );

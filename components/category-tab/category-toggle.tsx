@@ -1,11 +1,11 @@
 "use client";
 
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 export function CategoryToggle() {
   const pathname = usePathname();
-  const router = useRouter();
 
   // Don't show on individual article pages
   if (pathname.includes("/articles/") && pathname.split("/").length > 3) {
@@ -29,38 +29,30 @@ export function CategoryToggle() {
       <ToggleGroupItem
         value="All"
         aria-label="Toggle all"
-        onClick={() => {
-          router.push("/articles");
-        }}
+        asChild
       >
-        All
+        <Link href="/articles">All</Link>
       </ToggleGroupItem>
       <ToggleGroupItem
         value="Blog"
         aria-label="Toggle blog"
-        onClick={() => {
-          router.push("/articles/blog");
-        }}
+        asChild
       >
-        Blog
+        <Link href="/articles/blog">Blog</Link>
       </ToggleGroupItem>
       <ToggleGroupItem
         value="Poem"
         aria-label="Toggle poem"
-        onClick={() => {
-          router.push("/articles/poem");
-        }}
+        asChild
       >
-        Poem
+        <Link href="/articles/poem">Poem</Link>
       </ToggleGroupItem>
       <ToggleGroupItem
         value="Sharing"
         aria-label="Toggle sharing"
-        onClick={() => {
-          router.push("/articles/sharing");
-        }}
+        asChild
       >
-        Sharing
+        <Link href="/articles/sharing">Sharing</Link>
       </ToggleGroupItem>
     </ToggleGroup>
   );
