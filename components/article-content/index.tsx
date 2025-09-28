@@ -147,22 +147,18 @@ export default async function ArticleContent(props: ArticleContentProps) {
             const content = String(children);
             const slug = getSlug(content);
             return (
-              <Button
-                id={slug}
-                asChild
-                variant="link"
-                className="w-fit text-foreground cursor-pointer px-0 scroll-m-36"
-              >
-                <Link href={`#${slug}`}>
+              <div className="w-full">
+                <Link href={`#${slug}`} className="group inline-block w-full">
                   <h3
+                    id={slug}
                     {...rest}
-                    className="scroll-m-20 text-xl font-semibold tracking-tight flex gap-2 items-center"
+                    className="scroll-m-36 text-xl font-semibold tracking-tight cursor-pointer hover:text-muted-foreground transition-colors w-full break-words"
                   >
-                    <LinkIcon size={16} />
+                    <LinkIcon size={16} className="inline mr-2 mb-1" />
                     {children}
                   </h3>
                 </Link>
-              </Button>
+              </div>
             );
           },
           h4: ({ children, ...rest }) => {
