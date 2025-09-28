@@ -10,4 +10,10 @@ export const config = {
     url: "https://lokey.bio",
     name: "Lokey",
   },
+  author: {
+    name: process.env.AUTHOR_NAME || "Azhari Rizkita",
+    email: process.env.AUTHOR_EMAIL || "reuses_reeds.0m@icloud.com",
+    username: process.env.AUTHOR_USERNAME || "azharizkita",
+    url: process.env.AUTHOR_URL || `https://github.com/${process.env.GITHUB_USERNAME || "azharizkita"}`,
+  },
 } as const;

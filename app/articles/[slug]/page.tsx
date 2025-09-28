@@ -27,6 +27,9 @@ export async function generateMetadata({
     metadataBase: new URL(config.site.url),
     title: `${config.site.name} | ${title}`,
     description: description || undefined,
+    alternates: {
+      canonical: `${config.site.url}/articles/${slug}`,
+    },
     openGraph: {
       url: `${config.site.url}/articles/${slug}`,
       siteName: `${config.site.name} | ${title}`,
@@ -72,8 +75,21 @@ export default async function Article({
     description: description || "",
     author: {
       "@type": "Person",
-      name: config.github.username,
-      url: `https://github.com/${config.github.username}`,
+      name: config.author.name,
+      email: config.author.email,
+      url: config.author.url,
+      sameAs: [
+        config.author.url,
+      ],
+    },
+    publisher: {
+      "@type": "Person",
+      name: config.author.name,
+      url: config.author.url,
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${config.site.url}/articles/${slug}`,
     },
     datePublished: repoData.created_at,
     dateModified: repoData.updated_at,

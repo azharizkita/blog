@@ -18,6 +18,9 @@ export function createPageMetadata({
     metadataBase: new URL(config.site.url),
     title: `${config.site.name} | ${title}`,
     description,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       url,
       siteName: `${config.site.name} | ${title}`,
@@ -28,5 +31,5 @@ export function createPageMetadata({
 
 export const defaultMetadata = createPageMetadata({
   title: "Welcome",
-  description: `Personal dumps by ${process.env.GITHUB_USERNAME}`,
+  description: `Personal dumps by ${config.author.name}`,
 });
