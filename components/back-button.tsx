@@ -2,12 +2,14 @@
 
 import { CircleArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useNavigation } from "./navigation-provider";
 
 export default function BackButton() {
   const router = useRouter();
+  const { checkInternalHistory } = useNavigation();
 
   const handleBack = () => {
-    if (window.history.length > 1) {
+    if (checkInternalHistory()) {
       window.history.back();
     } else {
       router.push("/articles");
