@@ -5,7 +5,7 @@ import octokit from "@/lib/octokit";
 import parseEntry from "@/lib/parse-entry";
 
 type GistOptions = {
-  topic: "Blog" | "Poem" | "Sharing";
+  topic: "Blog" | "Poem" | "Sharing" | "Literature";
 };
 
 export const getGistList = cache(

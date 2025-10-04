@@ -17,41 +17,29 @@ export function CategoryToggle() {
     if (pathname === "/articles/blog") return "Blog";
     if (pathname === "/articles/poem") return "Poem";
     if (pathname === "/articles/sharing") return "Sharing";
+    if (pathname === "/articles/literature") return "Literature";
     return "All";
   })();
 
   return (
-    <ToggleGroup
-      type="single"
-      variant="outline"
-      value={currentValue}
-    >
+    <ToggleGroup type="single" variant="outline" value={currentValue}>
       <ToggleGroupItem
-        value="All"
-        aria-label="Toggle all"
+        value="Literature"
+        aria-label="Toggle literature"
         asChild
       >
+        <Link href="/articles/literature">Literature</Link>
+      </ToggleGroupItem>
+      <ToggleGroupItem value="All" aria-label="Toggle all" asChild>
         <Link href="/articles">All</Link>
       </ToggleGroupItem>
-      <ToggleGroupItem
-        value="Blog"
-        aria-label="Toggle blog"
-        asChild
-      >
+      <ToggleGroupItem value="Blog" aria-label="Toggle blog" asChild>
         <Link href="/articles/blog">Blog</Link>
       </ToggleGroupItem>
-      <ToggleGroupItem
-        value="Poem"
-        aria-label="Toggle poem"
-        asChild
-      >
+      <ToggleGroupItem value="Poem" aria-label="Toggle poem" asChild>
         <Link href="/articles/poem">Poem</Link>
       </ToggleGroupItem>
-      <ToggleGroupItem
-        value="Sharing"
-        aria-label="Toggle sharing"
-        asChild
-      >
+      <ToggleGroupItem value="Sharing" aria-label="Toggle sharing" asChild>
         <Link href="/articles/sharing">Sharing</Link>
       </ToggleGroupItem>
     </ToggleGroup>

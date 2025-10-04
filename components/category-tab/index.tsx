@@ -19,6 +19,9 @@ export function CategoryTab() {
         <TabsContent value="Sharing" className="self-start">
           <CategoryToggle />
         </TabsContent>
+        <TabsContent value="Literature" className="self-start">
+          <CategoryToggle />
+        </TabsContent>
       </TabWrapper>
     </Suspense>
   );

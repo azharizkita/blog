@@ -1,4 +1,4 @@
-type EntryType = "Blog" | "Poem" | "Sharing" | "Beep";
+type EntryType = "Blog" | "Poem" | "Sharing" | "Beep" | "Literature";
 
 interface BlogEntry {
   type: "Blog";
@@ -25,7 +25,13 @@ interface SharingEntry {
   description: string;
 }
 
-type Entry = BlogEntry | PoetEntry | SharingEntry | BeepEntry;
+interface LiteratureEntry {
+  type: "Literature";
+  title: string;
+  description: string;
+}
+
+type Entry = BlogEntry | PoetEntry | SharingEntry | BeepEntry | LiteratureEntry;
 
 export default function parseEntry(entry: string): Entry {
   const parts = entry.split(" - ");
@@ -56,6 +62,12 @@ export default function parseEntry(entry: string): Entry {
         languageTag: parts[1].trim(),
         title: parts[2].trim(),
         description: parts[3].trim(),
+      };
+    case "Literature":
+      return {
+        type: "Literature",
+        title: parts[1].trim(),
+        description: parts[2].trim(),
       };
     default:
       throw new Error(`Post type haven't handled: ${type}`);

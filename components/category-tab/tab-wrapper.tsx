@@ -23,6 +23,7 @@ export function TabWrapper({ children }: { children: ReactNode }) {
     if (pathname === "/articles/blog") return "Blog";
     if (pathname === "/articles/poem") return "Poem";
     if (pathname === "/articles/sharing") return "Sharing";
+    if (pathname === "/articles/literature") return "Literature";
     return "All";
   }, [pathname, isBeepsPage]);
 
