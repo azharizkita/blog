@@ -23,15 +23,15 @@ export function CategoryToggle() {
 
   return (
     <ToggleGroup type="single" variant="outline" value={currentValue}>
+      <ToggleGroupItem value="All" aria-label="Toggle all" asChild>
+        <Link href="/articles">All</Link>
+      </ToggleGroupItem>
       <ToggleGroupItem
         value="Literature"
         aria-label="Toggle literature"
         asChild
       >
         <Link href="/articles/literature">Literature</Link>
-      </ToggleGroupItem>
-      <ToggleGroupItem value="All" aria-label="Toggle all" asChild>
-        <Link href="/articles">All</Link>
       </ToggleGroupItem>
       <ToggleGroupItem value="Blog" aria-label="Toggle blog" asChild>
         <Link href="/articles/blog">Blog</Link>
