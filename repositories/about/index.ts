@@ -13,8 +13,9 @@ export const getAbout = cache(
       const content = Buffer.from(data.content, "base64").toString("utf-8");
 
       return content;
-    } catch (err: any) {
-      if (err.status === 404) return null;
+    } catch (err) {
+      if (err instanceof Error && "status" in err && err.status === 404)
+        return null;
       throw err;
     }
   },

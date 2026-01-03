@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore, useState } from "react";
 import { Skeleton } from "../ui/skeleton";
 
 interface TimeAgoProps {
@@ -11,38 +11,38 @@ interface TimeAgoProps {
   compact?: boolean;
 }
 
+const formatTime = (dateString: string) =>
+  Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(dateString));
+
+const emptySubscribe = () => () => {};
+
 export default function TimeAgo({
   time: _time,
   className,
   updatedAt: _updatedAt,
   compact = false,
 }: TimeAgoProps) {
-  const [time, setTime] = useState("");
-  const [updatedAt, setUpdatedAt] = useState("");
   const [mode, setMode] = useState<"time" | "updated-at">("time");
+
+  const time = useSyncExternalStore(
+    emptySubscribe,
+    () => (_time ? formatTime(_time) : ""),
+    () => ""
+  );
+
+  const updatedAt = useSyncExternalStore(
+    emptySubscribe,
+    () => (_updatedAt ? formatTime(_updatedAt) : ""),
+    () => ""
+  );
 
   const toggleDisplay = () => {
     if (!updatedAt || !time || _time === _updatedAt) return;
     setMode((prev) => (prev === "time" ? "updated-at" : "time"));
   };
-
-  useEffect(() => {
-    if (_time) {
-      const formattedTime = Intl.DateTimeFormat("en-US", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(_time));
-      setTime(formattedTime);
-    }
-
-    if (_updatedAt) {
-      const formattedTime = Intl.DateTimeFormat("en-US", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(_updatedAt));
-      setUpdatedAt(formattedTime);
-    }
-  }, [_time, _updatedAt]);
 
   const compactness = compact ? "h-5 text-sm" : "h-6 text-base";
 

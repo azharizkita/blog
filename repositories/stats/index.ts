@@ -28,7 +28,8 @@ export const getProfileStats = cache(
       }
     );
 
-    const repoLanguages: Promise<any>[] = [];
+    const repoLanguages: ReturnType<typeof octokit.rest.repos.listLanguages>[] =
+      [];
 
     for (const repo of repos) {
       if (repo.fork) continue;
