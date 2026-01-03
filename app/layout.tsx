@@ -47,7 +47,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <NavigationProvider>
             <div className="w-full max-w-2xl px-6 pb-6 gap-3 flex flex-col mx-auto h-full">
-              <header className="z-30 sticky top-0 flex flex-col shrink-0 w-full justify-center">
+              <header className="z-30 sticky top-0 flex flex-col shrink-0 w-full justify-center pt-[env(safe-area-inset-top)] dark:bg-black bg-white">
                 <div className="dark:bg-black bg-white pt-6 flex flex-col gap-3 pb-1">
                   <HeadBar />
                   <CategoryTab />
