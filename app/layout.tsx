@@ -43,17 +43,19 @@ export default function RootLayout({
       className={`${inter.variable} ${roboto_mono.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body className="flex flex-1 flex-col w-full">
+      <body className="flex flex-1 flex-col w-full pt-32">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <NavigationProvider>
-            <div className="w-full max-w-2xl px-6 pb-6 gap-3 flex flex-col mx-auto h-full">
-              <header className="z-30 sticky top-0 flex flex-col shrink-0 w-full justify-center pt-[env(safe-area-inset-top)] dark:bg-black bg-white">
-                <div className="dark:bg-black bg-white pt-6 flex flex-col gap-3 pb-1">
+            <header className="z-30 fixed top-0 left-0 right-0 flex flex-col w-full">
+              <div className="dark:bg-black bg-white w-full">
+                <div className="w-full max-w-2xl mx-auto px-6 pt-6 flex flex-col gap-3 pb-1">
                   <HeadBar />
                   <CategoryTab />
                 </div>
-                <div className="flex w-full h-4 -mt-[0.5px] bg-gradient-to-b from-white via-white/50 to-white/0 sticky top-[116px] z-10 dark:from-black dark:via-black/50 dark:to-black/0" />
-              </header>
+              </div>
+              <div className="w-full h-8 bg-gradient-to-b from-white via-white/60 via-40% to-white/0 dark:from-black dark:via-black/60 dark:via-40% dark:to-black/0" />
+            </header>
+            <div className="w-full max-w-2xl px-6 p-6 gap-3 flex flex-col mx-auto h-full">
               {children}
             </div>
           </NavigationProvider>
