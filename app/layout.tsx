@@ -4,7 +4,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import HeadBar from "@/components/head-bar";
-import { CategoryTab } from "@/components/category-tab";
 import { NavigationProvider } from "@/components/navigation-provider";
 import { defaultMetadata } from "@/lib/metadata";
 
