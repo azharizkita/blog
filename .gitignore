@@ -13,6 +13,7 @@ public/swe-worker*
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+.pat
 
 # testing
 /coverage
