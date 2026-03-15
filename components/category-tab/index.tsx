@@ -1,11 +1,11 @@
 import { Suspense } from "react";
-import { TabsContent } from "../ui/tabs";
+import { TabsContent } from "@/shadcn/components/ui/tabs";
 import { CategoryToggle } from "./category-toggle";
 import { TabWrapper } from "./tab-wrapper";
 
 export function CategoryTab() {
   return (
-    <Suspense>
+    <Suspense fallback={null}>
       <TabWrapper>
         <TabsContent value="All" className="self-start">
           <CategoryToggle />

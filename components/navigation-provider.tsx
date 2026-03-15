@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useCallback, useContext, useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 const NavigationContext = createContext<{
@@ -33,7 +33,7 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
     }
   }, [pathname]);
 
-  const checkInternalHistory = () => {
+  const checkInternalHistory = useCallback(() => {
     const NAVIGATION_KEY = "nav_history";
     const history = localStorage.getItem(NAVIGATION_KEY);
 
@@ -43,7 +43,7 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
 
     // Check if we have more than just the current page in our internal history
     return parsedHistory.length > 1;
-  };
+  }, []);
 
   return (
     <NavigationContext.Provider value={{ checkInternalHistory }}>

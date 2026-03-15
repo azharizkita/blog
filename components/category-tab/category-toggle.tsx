@@ -1,6 +1,6 @@
 "use client";
 
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ToggleGroup, ToggleGroupItem } from "@/shadcn/components/ui/toggle-group";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 

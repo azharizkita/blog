@@ -8,7 +8,7 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+} from "@/shadcn/components/ui/chart";
 import { languageMapper } from "./language-mapper";
 
 interface StatsChartProps {

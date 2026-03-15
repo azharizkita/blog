@@ -1,12 +1,12 @@
 import ArticleContent from "@/components/article-content";
 import StatsChart from "@/components/stats-chart";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shadcn/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/shadcn/components/ui/card";
 import { getPinnedRepos } from "@/repositories/pinned-repos";
 import { createPageMetadata } from "@/lib/metadata";
 import { SquareArrowOutUpRight } from "lucide-react";

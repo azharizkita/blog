@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/shadcn/lib/utils";
 import { useSyncExternalStore, useState } from "react";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@/shadcn/components/ui/skeleton";
 
 interface TimeAgoProps {
   time: string;

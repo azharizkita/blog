@@ -12,8 +12,8 @@ import {
   CardContent,
   CardFooter,
   CardHeader,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from "@/shadcn/components/ui/card";
+import { Button } from "@/shadcn/components/ui/button";
 import Link from "next/link";
 
 const inter = Inter({
@@ -39,20 +39,20 @@ export default function Error() {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="flex flex-1 w-full flex-col gap-4 p-4 max-w-2xl self-center">
             <div className="flex h-full flex-col flex-grow justify-center gap-4">
-              <Card>
+              <Card className="prose">
                 <CardHeader>
-                  <h2 className="scroll-m-2 text-2xl font-semibold tracking-tight first:mt-0 w-full">
+                  <h2>
                     Uh, something went wrong...
                   </h2>
                 </CardHeader>
                 <CardContent className="px-6 py-0">
-                  <p className="leading-7 [&:not(:first-child)]:mt-2">
+                  <p>
                     Don&apos;t worry, I have been notified regarding this error and
                     will take action as soon as I am free. Cheers!
                   </p>
                 </CardContent>
                 <CardFooter className="flex w-full grow flex-col gap-4">
-                  <p className="leading-7 text-muted-foreground">
+                  <p className="text-muted-foreground">
                     Meanwhile, let&apos;s get you outta here
                   </p>
                   <div className="flex flex-col gap-2 grow w-full">

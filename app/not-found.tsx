@@ -1,4 +1,4 @@
-import { CardDescription } from "@/components/ui/card";
+import { CardDescription } from "@/shadcn/components/ui/card";
 import Link from "next/link";
 
 export const dynamic = 'force-static'

@@ -6,9 +6,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "@/shadcn/components/ui/card";
+import { Badge } from "@/shadcn/components/ui/badge";
+import { Button } from "@/shadcn/components/ui/button";
 import TimeAgo from "@/components/time-ago";
 import { ChevronRight } from "lucide-react";
 import type { GistList } from "@/repositories/gist";

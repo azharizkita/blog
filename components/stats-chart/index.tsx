@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import StatsWrapper from "./stats-wrapper";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@/shadcn/components/ui/skeleton";
 
 export default async function StatsChart() {
   return (
