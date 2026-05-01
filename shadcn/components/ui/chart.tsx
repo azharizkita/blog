@@ -8,7 +8,7 @@ import { cn } from "@/shadcn/lib/utils"
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
 
-export type ChartConfig = {
+type ChartConfig = {
   [k in string]: {
     label?: React.ReactNode
     icon?: React.ComponentType
@@ -352,5 +352,4 @@ export {
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
-  ChartStyle,
 }
