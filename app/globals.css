@@ -128,3 +128,66 @@
     @apply font-sans;
   }
 }
+
+/* Reusable typography utilities (shadcn/ui prose scale).
+   Defined via @utility so the Tailwind CSS IntelliSense extension
+   autocompletes them anywhere in the project. */
+
+@utility prose-h1 {
+  @apply scroll-m-20 text-4xl font-extrabold tracking-tight text-balance;
+}
+
+@utility prose-h2 {
+  @apply scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0;
+}
+
+@utility prose-h3 {
+  @apply scroll-m-20 text-2xl font-semibold tracking-tight;
+}
+
+@utility prose-h4 {
+  @apply scroll-m-20 text-xl font-semibold tracking-tight;
+}
+
+@utility prose-p {
+  @apply leading-7 not-first:mt-6;
+}
+
+@utility prose-lead {
+  @apply text-xl text-muted-foreground;
+}
+
+@utility prose-large {
+  @apply text-lg font-semibold;
+}
+
+@utility prose-small {
+  @apply text-sm leading-none font-medium;
+}
+
+@utility prose-muted {
+  @apply text-sm text-muted-foreground;
+}
+
+@utility prose-blockquote {
+  @apply mt-6 border-l-2 pl-6 italic;
+}
+
+@utility prose-code {
+  @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold;
+}
+
+@utility prose-list {
+  @apply my-6 ml-6 list-disc [&>li]:mt-2;
+}
+
+@utility prose-table {
+  @apply w-full;
+  & tr {
+    @apply m-0 border-t p-0 even:bg-muted;
+  }
+  & th,
+  & td {
+    @apply border px-4 py-2 text-left;
+  }
+}
