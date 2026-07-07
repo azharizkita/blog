@@ -1,31 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  redirects: async () => [
-    {
-      source: "/article",
-      destination: "/articles",
-      permanent: true,
-    },
-    {
-      source: "/article/:slug",
-      destination: "/articles/:slug",
-      permanent: true,
-    },
-  ],
-  experimental: {
-    optimizePackageImports: ["lucide-react", "recharts"],
-  },
-  images: {
-    remotePatterns: [
-      {
-        hostname: "gist.github.com",
-      },
-      {
-        hostname: "github.com",
-      },
-    ],
-  },
+  /* config options here */
 };
 
 export default nextConfig;
