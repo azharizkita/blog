@@ -1,0 +1,171 @@
+import { getImageData } from "@/lib/get-image-size";
+import { evaluate } from "@mdx-js/mdx";
+import Image from "next/image";
+import * as runtime from "react/jsx-runtime";
+import rehypePrettyCode from "rehype-pretty-code";
+import rehypeStringify from "rehype-stringify";
+import placeholder from "./placeholder.png";
+import { LinkIcon } from "lucide-react";
+import Link from "next/link";
+import remarkGfm from "remark-gfm";
+import getSlug from "@/lib/get-slug";
+import { cn } from "@/lib/utils";
+import { cacheLife } from "next/cache";
+
+interface ArticleContentProps {
+  content: string;
+  withBackNavigation?: boolean;
+}
+
+export default async function ArticleContent(props: ArticleContentProps) {
+  "use cache";
+  cacheLife("max"); // article markdown is static; cache the MDX/shiki compile
+
+  const { content, withBackNavigation } = props;
+
+  const { default: MDXContent } = await evaluate(content, {
+    ...runtime,
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [
+      [
+        rehypePrettyCode,
+        {
+          keepBackground: false,
+          theme: { dark: "github-dark-dimmed", light: "github-light" },
+        },
+      ],
+      rehypeStringify,
+    ],
+  });
+
+  return (
+    <article id="article" className="isolate space-y-6 px-0 z-0">
+      <MDXContent
+        components={{
+          a: ({ href, children, ...rest }) => {
+            if (!href) return <span {...rest}>{children}</span>;
+
+            const isInternal = href.startsWith("/");
+
+            return (
+              <Link
+                href={href}
+                {...(!isInternal && { target: "_blank" })}
+                {...rest}
+              >
+                {children}
+              </Link>
+            );
+          },
+          p: ({ children, ...rest }) => (
+            <p {...rest} className="prose-p">
+              {children}
+            </p>
+          ),
+          h1: ({ children, ...rest }) => (
+            <h1 {...rest} className="prose-h1 mt-8 first:mt-0">
+              {children}
+            </h1>
+          ),
+          h4: ({ children, ...rest }) => (
+            <h4 {...rest} className="prose-h4 mt-6 first:mt-0">
+              {children}
+            </h4>
+          ),
+          ul: ({ children, ...rest }) => (
+            <ul {...rest} className="prose-list">
+              {children}
+            </ul>
+          ),
+          ol: ({ children, ...rest }) => (
+            <ol {...rest} className="prose-list list-decimal">
+              {children}
+            </ol>
+          ),
+          blockquote: ({ children, ...rest }) => (
+            <blockquote {...rest} className="prose-blockquote">
+              {children}
+            </blockquote>
+          ),
+          code: ({ children, className, ...rest }) => {
+            // rehype-pretty-code marks fenced code blocks with data-language;
+            // only style inline code with prose-code (blocks keep their theme).
+            const isInline = !("data-language" in rest);
+            return (
+              <code
+                {...rest}
+                className={cn(className, isInline && "prose-code")}
+              >
+                {children}
+              </code>
+            );
+          },
+          table: ({ children, ...rest }) => {
+            return (
+              <div className="overflow-x-auto pb-4">
+                <table {...rest} className="prose-table min-w-155">
+                  {children}
+                </table>
+              </div>
+            );
+          },
+          h2: ({ children, ...rest }) => {
+            if (!withBackNavigation) {
+              return (
+                <h2 {...rest} className="prose-h2">
+                  {children}
+                </h2>
+              );
+            }
+
+            return (
+              <h2 {...rest} className="prose-h2">
+                {children}
+              </h2>
+            );
+          },
+          h3: ({ children, ...rest }) => {
+            const content = String(children);
+            const slug = getSlug(content);
+            return (
+              <div className="w-full">
+                <Link href={`#${slug}`} className="group inline-block w-full">
+                  <h3
+                    id={slug}
+                    {...rest}
+                    className="prose-h3 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"
+                  >
+                    <LinkIcon size={16} className="inline mr-2 mb-1" />
+                    {children}
+                  </h3>
+                </Link>
+              </div>
+            );
+          },
+          img: ({ src, alt }) => {
+            if (!src || !alt) return null;
+
+            const { height, width, alt: _alt } = getImageData(alt);
+
+            return (
+              <Image
+                src={src}
+                alt={_alt ?? ""}
+                sizes="100vw"
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  borderRadius: "8px",
+                }}
+                width={width}
+                height={height}
+                placeholder="blur"
+                blurDataURL={placeholder.src}
+              />
+            );
+          },
+        }}
+      />
+    </article>
+  );
+}

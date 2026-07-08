@@ -124,6 +124,33 @@
   body {
     @apply bg-background text-foreground;
   }
+  pre {
+    overflow-x: auto;
+    max-height: 30em;
+    @apply rounded-md border w-full py-2 bg-card;
+  }
+
+  figure {
+    @apply flex flex-1;
+  }
+
+  span[data-line] {
+    @apply px-2;
+  }
+
+  /* safer attribute selector - match known values if possible */
+  code[data-theme],
+  code[data-theme] span {
+    color: var(--shiki-light);
+    background-color: transparent !important;
+  }
+
+  /* dark mode overrides — class-based to match next-themes */
+  .dark code[data-theme],
+  .dark code[data-theme] span {
+    color: var(--shiki-dark);
+    background-color: var(--card) !important;
+  }
   html {
     @apply font-sans;
   }
