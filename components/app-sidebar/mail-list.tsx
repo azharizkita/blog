@@ -1,18 +1,7 @@
 import { getGistList } from "@/repositories/gist";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDate } from "@/lib/format-date";
 import Link from "next/link";
-
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-});
-
-function formatDate(value?: string | null) {
-  if (!value) return "";
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? "" : dateFormatter.format(parsed);
-}
 
 /**
  * Async server component: fetches the gist list on the server and renders it

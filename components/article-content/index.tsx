@@ -39,7 +39,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
   });
 
   return (
-    <article id="article" className="isolate space-y-6 px-0 z-0">
+    <article id="article" className="isolate space-y-8 px-0 z-0">
       <MDXContent
         components={{
           a: ({ href, children, ...rest }) => {
