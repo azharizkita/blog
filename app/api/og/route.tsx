@@ -29,7 +29,17 @@ export async function GET(request: Request) {
           <span tw="text-5xl font-semibold tracking-tight text-[#ffebec]">
             {config.site.name}
           </span>
-          <span tw="text-lg tracking-tight text-[#db264f]">personal dumps</span>
+          <span
+            tw="max-w-[720px] pt-2 text-center text-lg leading-snug tracking-tight text-white"
+            style={{
+              display: "-webkit-box",
+              WebkitBoxOrient: "vertical",
+              WebkitLineClamp: 2,
+              overflow: "hidden",
+            }}
+          >
+            {config.site.description}
+          </span>
         </div>
         {title && (
           <span tw="text-6xl font-semibold tracking-tight text-[#ffebec] pt-10 px-10">

@@ -9,7 +9,7 @@ export const config = {
   site: {
     url: "https://lokey.bio",
     name: "Lokey",
-    description: "Lokey's personal dumps",
+    description: "I shares thoughts, ideas, and creations through blog posts, articles, and other forms of content which hopefully inspire others.",
   },
   author: {
     name: process.env.AUTHOR_NAME || "Azhari Rizkita",

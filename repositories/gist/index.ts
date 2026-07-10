@@ -22,10 +22,16 @@ export const getGistList = async (
     username: config.github.username,
   });
 
-  const _data = data.map(({ description, ...rest }) => {
-    const { title, ...restEntryData } = parseEntry(description ?? "");
-    const slug = getSlug(title);
-    return { ...rest, description, entry: { title, ...restEntryData }, slug };
+  // Skip gists whose description can't be parsed (e.g. an unknown type) so a
+  // single malformed entry doesn't break the whole list.
+  const _data = data.flatMap(({ description, ...rest }) => {
+    try {
+      const { title, ...restEntryData } = parseEntry(description ?? "");
+      const slug = getSlug(title);
+      return [{ ...rest, description, entry: { title, ...restEntryData }, slug }];
+    } catch {
+      return [];
+    }
   });
 
   if (type === "beeps") {

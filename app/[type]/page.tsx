@@ -16,6 +16,15 @@ const TYPE_TOPICS = {
 
 type TypeSegment = keyof typeof TYPE_TOPICS;
 
+// Lead blurb shown under each type heading (and reused as the meta
+// description). Draft copy — tweak the wording to taste.
+const TYPE_LEADS: Record<TypeSegment, string> = {
+  blog: "Long-form dumps from my head—work, tech, life, and the odd late-night rant. Read at your own risk.",
+  poem: "The things I couldn't say out loud, so I broke them into lines instead.",
+  sharing: "Stuff I found too good to keep to myself—snippets, tricks, and ideas worth passing on.",
+  literature: "Slower pieces. Stories and reflections I sat with long enough to actually write down.",
+};
+
 function isTypeSegment(value: string): value is TypeSegment {
   return value in TYPE_TOPICS;
 }
@@ -36,7 +45,7 @@ export async function generateMetadata({
 
   const topic = TYPE_TOPICS[type];
   const url = `/${type}`;
-  const description = `${topic} entries on ${config.site.name} — ${config.site.description}.`;
+  const description = TYPE_LEADS[type];
   const image = `/api/og?title=${encodeURIComponent(topic)}`;
 
   return {
@@ -79,35 +88,39 @@ export default async function TypeListing({
   );
 
   return (
-    <section className="space-y-6">
-      <h1 className="prose-h1">{topic}</h1>
-
-      {sorted.length === 0 ? (
-        <p className="prose-muted">No entries yet.</p>
-      ) : (
-        <ul className="space-y-8">
-          {sorted.map((gist) => (
-            <li key={gist.id}>
-              <Link
-                href={`/${type}/${gist.slug}`}
-                className="group block space-y-1"
-              >
-                <p className="prose-muted text-xs uppercase tracking-wide">
-                  {formatDate(gist.created_at)}
-                </p>
-                <h2 className="prose-h3 transition-colors group-hover:text-muted-foreground">
-                  {gist.entry.title}
-                </h2>
-                {gist.entry.description ? (
-                  <p className="prose-muted line-clamp-2">
-                    {gist.entry.description}
+    <>
+      <section className="space-y-2">
+        <h1 className="prose-h1">{topic}</h1>
+        <p className="prose-lead">{TYPE_LEADS[type]}</p>
+      </section>
+      <section className="space-y-6">
+        {sorted.length === 0 ? (
+          <p className="prose-muted">No entries yet.</p>
+        ) : (
+          <ul className="space-y-8">
+            {sorted.map((gist) => (
+              <li key={gist.id}>
+                <Link
+                  href={`/${type}/${gist.slug}`}
+                  className="group block space-y-1"
+                >
+                  <p className="prose-muted text-xs uppercase tracking-wide">
+                    {formatDate(gist.created_at)}
                   </p>
-                ) : null}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+                  <h2 className="prose-h3 transition-colors group-hover:text-muted-foreground">
+                    {gist.entry.title}
+                  </h2>
+                  {gist.entry.description ? (
+                    <p className="prose-muted line-clamp-2">
+                      {gist.entry.description}
+                    </p>
+                  ) : null}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </>
   );
 }

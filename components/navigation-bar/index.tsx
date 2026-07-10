@@ -19,7 +19,14 @@ import {
 const TYPE_ORDER = ["Blog", "Poem", "Sharing", "Literature"] as const;
 
 export async function NavigationBar() {
-  const articles = await getGistList("articles");
+  // The nav lives in the root layout, so a throw here would escape the page
+  // error boundary. Degrade to the shell (just Home) if the API is unavailable.
+  let articles: GistList = [];
+  try {
+    articles = await getGistList("articles");
+  } catch {
+    articles = [];
+  }
 
   // Group entries by their type so each becomes a nav dropdown.
   const byType = new Map<string, GistList>();
