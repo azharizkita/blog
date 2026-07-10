@@ -2,72 +2,35 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+@AGENTS.md
+
+> **Read AGENTS.md first.** This is Next.js 16 — APIs and conventions differ from older versions. Consult `node_modules/next/dist/docs/` before writing framework code.
+
 ## Commands
 
-- `npm run dev` — Start development server
-- `npm run build` — Production build
-- `npm run start` — Start production server
-- `npm run lint` — Run ESLint
-
-No test framework is configured.
-
-## Architecture
-
-Next.js 16 App Router blog using **GitHub Gists as a headless CMS** — no database. Content is fetched via Octokit, cached with `unstable_cache` (12-hour TTL), and rendered as static pages.
-
-### Content Model
-
-Gist descriptions encode content metadata: `Type - Title - Description`. Parsing logic lives in `lib/parse-entry.ts`.
-
-Content types and their description formats:
-- **Blog/Beep/Literature**: `Type - Title - Description`
-- **Poem**: `Poem - Title` (description optional)
-- **Sharing**: `Sharing - LanguageTag - Title - Description`
-
-Markdown content is stored in `index.md` within each gist.
-
-### Data Flow
-
-```
-GitHub Gists API → repositories/ (data access + caching) → Server Components → Static HTML
+```bash
+npm run dev        # start dev server (http://localhost:3000)
+npm run build      # production build
+npm run start      # serve the production build
+npm run lint       # eslint (flat config)
+npm run lint:fix   # eslint --fix
 ```
 
-- **`repositories/`** — Data access layer wrapping Octokit calls with `unstable_cache`. Modules: `gist/`, `about/`, `stats/`, `pinned-repos/`.
-- **`lib/octokit.ts`** — Shared GitHub API client authenticated via `GITHUB_PAT`.
-- **`lib/config.ts`** — Centralized config (GitHub credentials, site metadata, author info).
+There is no test runner or typecheck script configured. Type errors surface via `npm run build` (or the editor's Next.js TS plugin).
 
-### Routing
+## State of the repo
 
-- `/articles/[slug]` — Dynamic article pages (static params generated from gist list)
-- `/articles/blog`, `/articles/poem`, `/articles/sharing`, `/articles/literature` — Category filters
-- `/beeps` — Short-form content
-- `/stats` — GitHub language stats and pinned repos
-- `/who-am-i` — Profile (fetches GitHub profile README)
-- `/api/og` — Dynamic Open Graph image generation
+The `chore/major-housekeeping` branch has stripped this project back to a near-fresh `create-next-app` scaffold — the previous blog (articles, stats charts, GitHub/gist integrations, `repositories/`, old `lib/`) has been deleted. `git status` shows many `D` entries reflecting that removal. The app is now being rebuilt on top of shadcn/ui. Treat this as a blank slate under construction, not an existing app to extend.
 
-Most pages use `export const dynamic = "force-static"`.
+## Stack & conventions
 
-### Components
+- **Next.js 16.2 App Router** + **React 19.2**, TypeScript in `strict` mode.
+- **Tailwind CSS v4** — configured CSS-first in `app/globals.css` via `@import "tailwindcss"` and `@theme inline`. There is no `tailwind.config.*`; add design tokens as CSS custom properties in `globals.css`.
+- **shadcn/ui** (`base-rhea` style, `neutral` base color) built on **base-ui** (`@base-ui/react`), with **lucide-react** icons. Config is in `components.json`. Add components with `npx shadcn@latest add <name>`; they land in `components/ui/`. Theme tokens (`--primary`, `--muted`, etc.) are OKLCH CSS variables defined for `:root` and `.dark` in `globals.css` — restyle via those variables, don't hardcode colors.
+- Dark mode is class-based via **next-themes** — `ThemeProvider` wraps the app in `app/layout.tsx` and toggles the `.dark` class (`@custom-variant dark` in `globals.css`).
+- Path alias `@/*` maps to the **repo root** (`./*`). shadcn aliases: `@/components`, `@/components/ui`, `@/lib`, `@/lib/utils` (exports the `cn` helper), `@/hooks`.
+- Fonts: **Inter** (`--font-sans`) and **Roboto Mono** (`--font-roboto-mono` → `--font-mono`) via `next/font/google` in `app/layout.tsx`.
 
-- **`components/ui/`** — shadcn/ui components (New York style, RSC-enabled, Lucide icons)
-- **`components/article-content/`** — MDX rendering with custom element handlers and syntax highlighting via rehype-pretty-code
-- Client components used sparingly: search, theme toggle, navigation context
+## Rules
 
-### Key Utilities
-
-- **`lib/metadata.ts`** — SEO metadata factory for pages
-- **`lib/cache.ts`** — Wrapper around `unstable_cache`
-- **`lib/utils.ts`** — `cn()` helper (clsx + tailwind-merge)
-
-## Conventions
-
-- TypeScript strict mode; path alias `@/*` maps to project root
-- File naming: kebab-case; component naming: PascalCase
-- Server components by default; `"use client"` only when interactivity is needed
-- Git commits: conventional commits (`feat:`, `fix:`, `chore:`)
-- Styling: Tailwind CSS 4 with CSS variables for theming (light/dark via next-themes)
-
-## Environment Variables
-
-- `GITHUB_PAT` — GitHub Personal Access Token (required)
-- `GITHUB_USERNAME` — GitHub username (defaults to `azharizkita`)
+- **NEVER touch `components/ui/`.** That folder is generated by the shadcn CLI (`npx shadcn@latest add <name>`) and is overwritten on regeneration — hand edits will be lost. To change a shadcn component, re-run the CLI or wrap/compose it elsewhere. Any new, custom, or app-specific components go in the root `components/` folder (e.g. `components/providers/`), never in `components/ui/`.

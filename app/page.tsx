@@ -1,39 +1,69 @@
-import ArticleContent from "@/components/article-content";
-import { Button } from "@/shadcn/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/shadcn/components/ui/card";
+import type { Metadata } from "next";
 import Link from "next/link";
+import { getGistList } from "@/repositories/gist";
+import { formatDate } from "@/lib/format-date";
+import { config } from "@/lib/config";
 
-export const dynamic = "force-static";
+const LATEST_COUNT = 3;
 
-const content = `
-## Hi there.
+// Title/description/openGraph are inherited from the root layout, whose
+// openGraph.url already points at the site root (this page). Only the
+// canonical needs to be pinned here.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
-This is a curated personal archive of my mind—from life updates, late-night thoughts, random realizations, or just rants about whatever's on my plate. It's not for everyone, but if you're here, maybe you'll find something that resonates.
+export default async function Home() {
+  const articles = await getGistList("articles");
 
-Read, scroll, lurk, or leave—it's up to you.
-`;
+  const latest = [...articles]
+    .sort(
+      (a, b) =>
+        new Date(b.created_at ?? 0).getTime() -
+        new Date(a.created_at ?? 0).getTime(),
+    )
+    .slice(0, LATEST_COUNT);
 
-export default function Page() {
   return (
-    <div className="flex h-full flex-col flex-grow gap-4">
-      <Card className="prose">
-        <CardContent className="p-6">
-          <ArticleContent content={content} />
-        </CardContent>
-        <CardFooter className="flex w-full grow flex-col gap-4">
-          <p className="text-muted-foreground">
-            So, what are you looking for?
-          </p>
-          <div className="flex gap-4 grow w-full">
-            <Button asChild className="flex grow">
-              <Link href="articles">Articles</Link>
-            </Button>
-            <Button asChild className="flex grow">
-              <Link href="beeps">Beeps</Link>
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
-    </div>
+    <>
+      <section className="space-y-2">
+        <h1 className="prose-h1">{config.site.name}</h1>
+        <p className="prose-lead">{config.site.description}</p>
+      </section>
+
+      <section className="space-y-6">
+        <h2 className="prose-h2">Latest</h2>
+
+        {latest.length === 0 ? (
+          <p className="prose-muted">No entries yet.</p>
+        ) : (
+          <ul className="space-y-8">
+            {latest.map((gist) => {
+              const type = gist.entry.type.toLowerCase();
+              return (
+                <li key={gist.id}>
+                  <Link
+                    href={`/${type}/${gist.slug}`}
+                    className="group block space-y-1"
+                  >
+                    <p className="prose-muted text-xs uppercase tracking-wide">
+                      {gist.entry.type} &middot; {formatDate(gist.created_at)}
+                    </p>
+                    <h3 className="prose-h3 transition-colors group-hover:text-muted-foreground">
+                      {gist.entry.title}
+                    </h3>
+                    {gist.entry.description ? (
+                      <p className="prose-muted line-clamp-2">
+                        {gist.entry.description}
+                      </p>
+                    ) : null}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    </>
   );
 }

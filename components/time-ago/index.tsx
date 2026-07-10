@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/shadcn/lib/utils";
 import { useSyncExternalStore, useState } from "react";
-import { Skeleton } from "@/shadcn/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { Skeleton } from "../ui/skeleton";
 
 interface TimeAgoProps {
   time: string;
@@ -30,13 +30,13 @@ export default function TimeAgo({
   const time = useSyncExternalStore(
     emptySubscribe,
     () => (_time ? formatTime(_time) : ""),
-    () => ""
+    () => "",
   );
 
   const updatedAt = useSyncExternalStore(
     emptySubscribe,
     () => (_updatedAt ? formatTime(_updatedAt) : ""),
-    () => ""
+    () => "",
   );
 
   const toggleDisplay = () => {
@@ -44,7 +44,9 @@ export default function TimeAgo({
     setMode((prev) => (prev === "time" ? "updated-at" : "time"));
   };
 
-  const compactness = compact ? "h-5 text-sm" : "h-6 text-base";
+  // Typography comes from the `prose-muted` token (text-sm + muted color);
+  // `compact` only tweaks the height of the toggle window.
+  const compactness = compact ? "h-5" : "h-6";
 
   return (
     <time
@@ -52,20 +54,20 @@ export default function TimeAgo({
       className={cn(
         "relative flex shrink-0 w-full overflow-hidden",
         compactness,
-        className
+        className,
       )}
     >
       <span
         onClick={toggleDisplay}
         className={cn(
-          "min-w-44 absolute flex w-fit shrink-0 transition-all duration-300",
+          "prose-muted min-w-44 absolute flex w-fit shrink-0 transition-all duration-300",
           compactness,
           mode === "time"
             ? "translate-y-0 z-10"
             : "-translate-y-full z-0 opacity-0",
           _time !== _updatedAt &&
             _updatedAt &&
-            "cursor-pointer underline underline-offset-4"
+            "cursor-pointer underline underline-offset-4",
         )}
       >
         {time || (
@@ -78,12 +80,12 @@ export default function TimeAgo({
       <span
         onClick={toggleDisplay}
         className={cn(
-          "absolute flex w-fit shrink-0 transition-all duration-300 underline underline-offset-4",
+          "prose-muted absolute flex w-fit shrink-0 transition-all duration-300 underline underline-offset-4",
           compactness,
           mode === "updated-at"
             ? "translate-y-0 z-10"
             : "translate-y-full z-0 opacity-0",
-          "cursor-pointer"
+          "cursor-pointer",
         )}
       >
         Updated at {_time !== _updatedAt ? updatedAt : "-"}

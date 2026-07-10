@@ -10,7 +10,7 @@ interface PageMetadataOptions {
 export function createPageMetadata({
   title,
   description,
-  path
+  path,
 }: PageMetadataOptions): Metadata {
   const url = path ? `${config.site.url}${path}` : config.site.url;
 

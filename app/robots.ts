@@ -1,13 +1,14 @@
-import { config } from "@/lib/config";
 import type { MetadataRoute } from "next";
+
+import { config } from "@/lib/config";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: "/api/",
     },
     sitemap: `${config.site.url}/sitemap.xml`,
+    host: config.site.url,
   };
 }

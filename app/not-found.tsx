@@ -1,22 +1,32 @@
-import { CardDescription } from "@/shadcn/components/ui/card";
 import Link from "next/link";
+import { FileQuestionIcon } from "lucide-react";
 
-export const dynamic = 'force-static'
+import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 
 export default function NotFound() {
   return (
-    <div className="grid auto-rows-min gap-6 ">
-      <div className="flex flex-col gap-1">
-        <div className="w-fit flex flex-col gap-2 bg-[#26252A] p-4 rounded-xl">
-          <CardDescription>
-            Umm, I think you are getting lost along the
-            road.{" "}
-            <Link href="/" className="underline">
-              Click here to get back.
-            </Link>
-          </CardDescription>
-        </div>
-      </div>
-    </div>
+    <Empty className="my-8 border">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <FileQuestionIcon />
+        </EmptyMedia>
+        <EmptyTitle>Page not found</EmptyTitle>
+        <EmptyDescription>
+          This page doesn&apos;t exist. The entry may have been moved, renamed,
+          or removed.
+        </EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <Button render={<Link href="/">Back home</Link>} />
+      </EmptyContent>
+    </Empty>
   );
 }

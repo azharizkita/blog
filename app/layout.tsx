@@ -1,32 +1,16 @@
-import type { Metadata, Viewport } from "next";
-import { Inter, Roboto_Mono, Geist } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
-import HeadBar from "@/components/head-bar";
-import { NavigationProvider } from "@/components/navigation-provider";
-import { defaultMetadata } from "@/lib/metadata";
-
+import type { Metadata } from "next";
+import { Inter, Roboto_Mono } from "next/font/google";
 import "./globals.css";
-import { TooltipProvider } from "@/shadcn/components/ui/tooltip";
-import { cn } from "@/shadcn/lib/utils";
+import { cn } from "@/lib/utils";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { NavigationBar } from "@/components/navigation-bar";
+import { Footer } from "@/components/footer";
+import { config } from "@/lib/config";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
-
-export const viewport: Viewport = {
-  viewportFit: "cover",
-  userScalable: false,
-  width: "device-width",
-  initialScale: 1,
-  minimumScale: 1,
-  colorScheme: "light dark",
-};
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-});
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const roboto_mono = Roboto_Mono({
   subsets: ["latin"],
@@ -34,7 +18,62 @@ const roboto_mono = Roboto_Mono({
   variable: "--font-roboto-mono",
 });
 
-export const metadata: Metadata = defaultMetadata;
+const baseClass = cn(
+  "h-full",
+  "antialiased",
+  inter.variable,
+  roboto_mono.variable,
+  "font-sans",
+);
+
+export const metadata: Metadata = {
+  metadataBase: new URL(config.site.url),
+  title: {
+    default: config.site.name,
+    template: `%s | ${config.site.name}`,
+  },
+  description: config.site.description,
+  applicationName: config.site.name,
+  authors: [{ name: config.author.name, url: config.author.url }],
+  creator: config.author.name,
+  publisher: config.author.name,
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    siteName: config.site.name,
+    title: config.site.name,
+    description: config.site.description,
+    url: config.site.url,
+    locale: "en_US",
+    images: [
+      {
+        url: "/api/og",
+        width: 1200,
+        height: 630,
+        alt: config.site.name,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: config.site.name,
+    description: config.site.description,
+    images: ["/api/og"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
+};
 
 export default function RootLayout({
   children,
@@ -42,27 +81,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={cn("antialiased", inter.variable, roboto_mono.variable, "font-sans", geist.variable)}
-      suppressHydrationWarning
-    >
-      <body className="flex flex-1 flex-col w-full">
+    <html lang="en" suppressHydrationWarning className={baseClass}>
+      <body className="min-h-full no-scrollbar">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <TooltipProvider delayDuration={200}>
-            <NavigationProvider>
-              <header className="z-30 sticky top-0 left-0 right-0 flex flex-col w-full">
-                <div className="dark:bg-black bg-white w-full">
-                  <div className="w-full max-w-2xl mx-auto px-6 pt-6 flex flex-col gap-3 pb-1">
-                    <HeadBar />
-                  </div>
-                </div>
-                <div className="w-full h-8 bg-gradient-to-b from-white via-white/60 via-40% to-white/0 dark:from-black dark:via-black/60 dark:via-40% dark:to-black/0" />
+          <TooltipProvider>
+            {/* App shell owns the flex column so base-ui popups (portaled to
+                <body>) don't become flex items and shift the layout. */}
+            <div className="flex min-h-dvh flex-col gap-4">
+              <header className="w-full max-w-3xl mx-auto flex-none pt-4">
+                <NavigationBar />
               </header>
-              <div className="w-full max-w-2xl px-6 pb-6 gap-3 flex flex-col mx-auto h-full">
+
+              <main className="isolate flex w-full flex-1 flex-col gap-8 px-4 max-w-3xl mx-auto">
                 {children}
+              </main>
+
+              <div className="w-full max-w-3xl mx-auto px-4 pt-4 pb-8">
+                <Footer />
               </div>
-            </NavigationProvider>
+            </div>
           </TooltipProvider>
         </ThemeProvider>
         <SpeedInsights />

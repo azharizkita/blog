@@ -7,10 +7,10 @@ import rehypeStringify from "rehype-stringify";
 import placeholder from "./placeholder.png";
 import { LinkIcon } from "lucide-react";
 import Link from "next/link";
-import BackButton from "../back-button";
-import { Button } from "@/shadcn/components/ui/button";
 import remarkGfm from "remark-gfm";
 import getSlug from "@/lib/get-slug";
+import { cn } from "@/lib/utils";
+import { cacheLife } from "next/cache";
 
 interface ArticleContentProps {
   content: string;
@@ -18,7 +18,10 @@ interface ArticleContentProps {
 }
 
 export default async function ArticleContent(props: ArticleContentProps) {
-  const { content, withBackNavigation } = props;
+  "use cache";
+  cacheLife("max"); // article markdown is static; cache the MDX/shiki compile
+
+  const { content } = props;
 
   const { default: MDXContent } = await evaluate(content, {
     ...runtime,
@@ -36,7 +39,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
   });
 
   return (
-    <article id="article" className="prose flex flex-col gap-6">
+    <article id="article" className="isolate space-y-8 px-0 z-0">
       <MDXContent
         components={{
           a: ({ href, children, ...rest }) => {
@@ -45,59 +48,90 @@ export default async function ArticleContent(props: ArticleContentProps) {
             const isInternal = href.startsWith("/");
 
             return (
-              <Button
-                asChild
-                variant="link"
-                className="!p-0 h-fit text-base font-normal"
+              <Link
+                href={href}
+                {...(!isInternal && { target: "_blank" })}
+                {...rest}
               >
-                <Link
-                  href={href}
-                  {...(!isInternal && { target: "_blank" })}
-                  {...rest}
-                >
-                  {children}
-                </Link>
-              </Button>
+                {children}
+              </Link>
+            );
+          },
+          p: ({ children, ...rest }) => (
+            <p {...rest} className="prose-p">
+              {children}
+            </p>
+          ),
+          h1: ({ children, ...rest }) => (
+            <h1 {...rest} className="prose-h1 mt-8 first:mt-0">
+              {children}
+            </h1>
+          ),
+          // Headings are promoted one level so the markdown "## Title" becomes
+          // the page's single <h1>: ## -> h1, ### -> h2, #### -> h3.
+          h4: ({ children, ...rest }) => (
+            <h3 {...rest} className="prose-h3 mt-6 first:mt-0">
+              {children}
+            </h3>
+          ),
+          ul: ({ children, ...rest }) => (
+            <ul {...rest} className="prose-list">
+              {children}
+            </ul>
+          ),
+          ol: ({ children, ...rest }) => (
+            <ol {...rest} className="prose-list list-decimal">
+              {children}
+            </ol>
+          ),
+          blockquote: ({ children, ...rest }) => (
+            <blockquote {...rest} className="prose-blockquote">
+              {children}
+            </blockquote>
+          ),
+          code: ({ children, className, ...rest }) => {
+            // rehype-pretty-code marks fenced code blocks with data-language;
+            // only style inline code with prose-code (blocks keep their theme).
+            const isInline = !("data-language" in rest);
+            return (
+              <code
+                {...rest}
+                className={cn(className, isInline && "prose-code")}
+              >
+                {children}
+              </code>
             );
           },
           table: ({ children, ...rest }) => {
             return (
               <div className="overflow-x-auto pb-4">
-                <table {...rest} className="w-full min-w-[620px]">
+                <table {...rest} className="prose-table min-w-155">
                   {children}
                 </table>
               </div>
             );
           },
-          h2: ({ children, ...rest }) => {
-            if (!withBackNavigation) {
-              return <h2 {...rest}>{children}</h2>;
-            }
-
-            return (
-              <div className="flex flex-col sticky top-17 z-50">
-                <span className="flex gap-2 items-center w-full bg-white dark:bg-black pt-4 pb-2">
-                  <BackButton />
-                  <h2 {...rest}>{children}</h2>
-                </span>
-                <div className="flex w-full h-4 -mt-[0.5px] bg-gradient-to-b from-white via-white/50 to-white/0 sticky top-[116px] z-10 dark:from-black dark:via-black/50 dark:to-black/0" />
-              </div>
-            );
-          },
+          // "## Title" -> the page's single <h1>.
+          h2: ({ children, ...rest }) => (
+            <h1 {...rest} className="prose-h1 mt-8 first:mt-0">
+              {children}
+            </h1>
+          ),
+          // "### Section" -> <h2>, keeping the anchor-link affordance.
           h3: ({ children, ...rest }) => {
             const content = String(children);
             const slug = getSlug(content);
             return (
               <div className="w-full">
                 <Link href={`#${slug}`} className="group inline-block w-full">
-                  <h3
+                  <h2
                     id={slug}
                     {...rest}
-                    className="cursor-pointer hover:text-muted-foreground transition-colors w-full break-words"
+                    className="prose-h2 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"
                   >
                     <LinkIcon size={16} className="inline mr-2 mb-1" />
                     {children}
-                  </h3>
+                  </h2>
                 </Link>
               </div>
             );

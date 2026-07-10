@@ -1,29 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  redirects: async () => [
-    {
-      source: "/article",
-      destination: "/articles",
-      permanent: true,
-    },
-    {
-      source: "/article/:slug",
-      destination: "/articles/:slug",
-      permanent: true,
-    },
-  ],
-  experimental: {
-    optimizePackageImports: ["lucide-react", "recharts"],
-  },
+  cacheComponents: true,
+  allowedDevOrigins: ['lokey-mac.gate-scylla.ts.net'],
   images: {
     remotePatterns: [
-      {
-        hostname: "gist.github.com",
-      },
-      {
-        hostname: "github.com",
-      },
+      // Gist markdown attachments (e.g. gist.github.com/user-attachments/assets/…)
+      { protocol: "https", hostname: "gist.github.com" },
+      { protocol: "https", hostname: "github.com" },
+      // Attachment/avatar/raw CDNs those URLs redirect to
+      { protocol: "https", hostname: "**.githubusercontent.com" },
     ],
   },
 };
