@@ -21,7 +21,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
   "use cache";
   cacheLife("max"); // article markdown is static; cache the MDX/shiki compile
 
-  const { content, withBackNavigation } = props;
+  const { content } = props;
 
   const { default: MDXContent } = await evaluate(content, {
     ...runtime,
@@ -67,10 +67,12 @@ export default async function ArticleContent(props: ArticleContentProps) {
               {children}
             </h1>
           ),
+          // Headings are promoted one level so the markdown "## Title" becomes
+          // the page's single <h1>: ## -> h1, ### -> h2, #### -> h3.
           h4: ({ children, ...rest }) => (
-            <h4 {...rest} className="prose-h4 mt-6 first:mt-0">
+            <h3 {...rest} className="prose-h3 mt-6 first:mt-0">
               {children}
-            </h4>
+            </h3>
           ),
           ul: ({ children, ...rest }) => (
             <ul {...rest} className="prose-list">
@@ -109,35 +111,27 @@ export default async function ArticleContent(props: ArticleContentProps) {
               </div>
             );
           },
-          h2: ({ children, ...rest }) => {
-            if (!withBackNavigation) {
-              return (
-                <h2 {...rest} className="prose-h2">
-                  {children}
-                </h2>
-              );
-            }
-
-            return (
-              <h2 {...rest} className="prose-h2">
-                {children}
-              </h2>
-            );
-          },
+          // "## Title" -> the page's single <h1>.
+          h2: ({ children, ...rest }) => (
+            <h1 {...rest} className="prose-h1 mt-8 first:mt-0">
+              {children}
+            </h1>
+          ),
+          // "### Section" -> <h2>, keeping the anchor-link affordance.
           h3: ({ children, ...rest }) => {
             const content = String(children);
             const slug = getSlug(content);
             return (
               <div className="w-full">
                 <Link href={`#${slug}`} className="group inline-block w-full">
-                  <h3
+                  <h2
                     id={slug}
                     {...rest}
-                    className="prose-h3 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"
+                    className="prose-h2 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"
                   >
                     <LinkIcon size={16} className="inline mr-2 mb-1" />
                     {children}
-                  </h3>
+                  </h2>
                 </Link>
               </div>
             );

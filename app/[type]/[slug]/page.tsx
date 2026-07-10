@@ -4,7 +4,6 @@ import { getGistDetails, getGistList } from "@/repositories/gist";
 import { config } from "@/lib/config";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Script from "next/script";
 import { WithContext, Article as ArticleType } from "schema-dts";
 
 // The article types getGistList("articles") can return, lowercased for the URL.
@@ -40,19 +39,32 @@ export async function generateMetadata({
     entry: { title, description },
   } = repoData;
 
-  const url = `${config.site.url}/${type}/${slug}`;
+  const url = `/${type}/${slug}`;
+  const image = `/api/og?title=${encodeURIComponent(title)}`;
 
   return {
-    metadataBase: new URL(config.site.url),
-    title: `${config.site.name} | ${title}`,
+    title,
     description: description || undefined,
     alternates: {
       canonical: url,
     },
     openGraph: {
+      type: "article",
+      siteName: config.site.name,
+      title,
+      description: description || undefined,
       url,
-      siteName: `${config.site.name} | ${title}`,
-      images: [{ url: `/api/og?title=${encodeURIComponent(title)}` }],
+      locale: "en_US",
+      publishedTime: repoData.created_at ?? undefined,
+      modifiedTime: repoData.updated_at ?? undefined,
+      authors: [config.author.url],
+      images: [{ url: image, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: description || undefined,
+      images: [image],
     },
   };
 }
@@ -108,9 +120,13 @@ export default async function Article({
 
   return (
     <>
-      <Script type="application/ld+json" id="schema">
-        {JSON.stringify(jsonLd)}
-      </Script>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          // Escape "<" so a "</script>" in any field can't break out of the tag.
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <ArticleContent content={content} withBackNavigation />
       {repoData.created_at && (
         <TimeAgo time={repoData.created_at} updatedAt={repoData.updated_at} />

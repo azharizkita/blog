@@ -1,5 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
+import { ArrowRightIcon } from "lucide-react";
 import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/navigation-menu";
 
 import { getGistList, type GistList } from "@/repositories/gist";
@@ -29,7 +30,7 @@ export async function NavigationBar() {
   }
 
   return (
-    <div className="w-full pl-2 flex-none overflow-x-auto">
+    <div className="no-scrollbar w-full pl-2 flex-none overflow-x-auto">
       <NavigationMenu>
         <NavigationMenuPrimitive.Backdrop className="fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 data-starting-style:opacity-0 data-ending-style:opacity-0 md:hidden" />
         <NavigationMenuList>
@@ -50,17 +51,31 @@ export async function NavigationBar() {
             <NavigationMenuItem key={type}>
               <NavigationMenuTrigger>{type}</NavigationMenuTrigger>
               <NavigationMenuContent>
-                <ul className="grid max-h-96 w-[min(25rem,calc(100vw-2rem))] gap-2 overflow-y-auto md:w-125 md:grid-cols-2">
-                  {entries.map((gist) => (
-                    <ListItem
-                      key={gist.id}
-                      title={gist.entry.title}
-                      href={`/${segment}/${gist.slug}`}
-                    >
-                      {gist.entry.description ?? ""}
-                    </ListItem>
-                  ))}
-                </ul>
+                <div className="w-[min(20rem,calc(100vw-2rem))]">
+                  <ul className="grid gap-2">
+                    {entries.slice(0, 2).map((gist) => (
+                      <ListItem
+                        key={gist.id}
+                        title={gist.entry.title}
+                        href={`/${segment}/${gist.slug}`}
+                      >
+                        {gist.entry.description ?? ""}
+                      </ListItem>
+                    ))}
+                  </ul>
+
+                  <div className="mt-1.5 border-t pt-1.5">
+                    <NavigationMenuLink
+                      className="justify-between text-muted-foreground"
+                      render={
+                        <Link href={`/${segment}`}>
+                          View all
+                          <ArrowRightIcon className="size-4" />
+                        </Link>
+                      }
+                    />
+                  </div>
+                </div>
               </NavigationMenuContent>
             </NavigationMenuItem>
           );

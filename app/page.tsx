@@ -1,14 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getGistList } from "@/repositories/gist";
 import { formatDate } from "@/lib/format-date";
-import ArticleContent from "@/components/article-content";
+import { config } from "@/lib/config";
 
 const LATEST_COUNT = 3;
 
-const content = `This is a curated personal archive of my mind—from life updates, late-night thoughts, random realizations, or just rants about whatever's on my plate. It's not for everyone, but if you're here, maybe you'll find something that resonates.
-
-Read, scroll, lurk, or leave—it's up to you.
-`;
+// Title/description/openGraph are inherited from the root layout, whose
+// openGraph.url already points at the site root (this page). Only the
+// canonical needs to be pinned here.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default async function Home() {
   const articles = await getGistList("articles");
@@ -23,6 +26,11 @@ export default async function Home() {
 
   return (
     <>
+      <section className="space-y-2">
+        <h1 className="prose-h1">{config.site.name}</h1>
+        <p className="prose-lead">{config.site.description}</p>
+      </section>
+
       <section className="space-y-6">
         <h2 className="prose-h2">Latest</h2>
 
@@ -56,8 +64,6 @@ export default async function Home() {
           </ul>
         )}
       </section>
-
-      <ArticleContent content={content} />
     </>
   );
 }

@@ -156,6 +156,19 @@
   }
 }
 
+@utility no-scrollbar {
+  /* Firefox */
+  scrollbar-width: none;
+
+  /* Internet Explorer and Edge */
+  -ms-overflow-style: none;
+
+  /* Chrome, Safari, and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Reusable typography utilities (shadcn/ui prose scale).
    Defined via @utility so the Tailwind CSS IntelliSense extension
    autocompletes them anywhere in the project. */
