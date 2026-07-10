@@ -3,6 +3,9 @@ import Link from "next/link";
 import { getGistList } from "@/repositories/gist";
 import { formatDate } from "@/lib/format-date";
 import { config } from "@/lib/config";
+import { JsonLd } from "@/components/json-ld";
+import { blogNode, graph, personNode, websiteNode } from "@/lib/structured-data";
+import { rssAlternate } from "@/lib/metadata";
 
 const LATEST_COUNT = 3;
 
@@ -10,7 +13,7 @@ const LATEST_COUNT = 3;
 // openGraph.url already points at the site root (this page). Only the
 // canonical needs to be pinned here.
 export const metadata: Metadata = {
-  alternates: { canonical: "/" },
+  alternates: { canonical: "/", types: rssAlternate },
 };
 
 export default async function Home() {
@@ -26,6 +29,8 @@ export default async function Home() {
 
   return (
     <>
+      <JsonLd data={graph(personNode(), websiteNode(), blogNode())} />
+
       <section className="space-y-2">
         <h1 className="prose-h1">{config.site.name}</h1>
         <p className="prose-lead">{config.site.description}</p>

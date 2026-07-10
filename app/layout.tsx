@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { NavigationBar } from "@/components/navigation-bar";
 import { Footer } from "@/components/footer";
 import { config } from "@/lib/config";
+import { rssAlternate } from "@/lib/metadata";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -72,6 +73,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.ico",
+  },
+  alternates: {
+    types: rssAlternate,
   },
 };
 

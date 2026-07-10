@@ -2,9 +2,20 @@ import ArticleContent from "@/components/article-content";
 import TimeAgo from "@/components/time-ago";
 import { getGistDetails, getGistList } from "@/repositories/gist";
 import { config } from "@/lib/config";
+import { formatDate } from "@/lib/format-date";
+import { JsonLd } from "@/components/json-ld";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import {
+  BLOG_ID,
+  PERSON_ID,
+  breadcrumbNode,
+  graph,
+} from "@/lib/structured-data";
+import { rssAlternate } from "@/lib/metadata";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { WithContext, Article as ArticleType } from "schema-dts";
+import type { BlogPosting } from "schema-dts";
 
 // The article types getGistList("articles") can return, lowercased for the URL.
 const SUPPORTED_TYPES = ["blog", "poem", "sharing", "literature"] as const;
@@ -47,6 +58,7 @@ export async function generateMetadata({
     description: description || undefined,
     alternates: {
       canonical: url,
+      types: rssAlternate,
     },
     openGraph: {
       type: "article",
@@ -92,45 +104,95 @@ export default async function Article({
     notFound();
   }
 
-  const jsonLd: WithContext<ArticleType> = {
-    "@context": "https://schema.org",
+  const url = `${config.site.url}/${type}/${slug}`;
+  const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
+
+  const crumbs = [
+    { name: "Home", href: "/" },
+    { name: entryType, href: `/${type}` },
+    { name: title, href: `/${type}/${slug}` },
+  ];
+
+  const blogPosting: BlogPosting = {
     "@type": "BlogPosting",
     headline: title,
+    url,
     image: `${config.site.url}/api/og?title=${encodeURIComponent(title)}`,
     description: description || "",
+    inLanguage: "en",
+    articleSection: entryType,
+    wordCount,
+    isPartOf: { "@id": BLOG_ID },
     author: {
       "@type": "Person",
+      "@id": PERSON_ID,
       name: config.author.name,
-      email: config.author.email,
       url: config.author.url,
       sameAs: [config.author.url],
     },
-    publisher: {
-      "@type": "Person",
-      name: config.author.name,
-      url: config.author.url,
-    },
-    mainEntityOfPage: {
-      "@type": "WebPage",
-      "@id": `${config.site.url}/${type}/${slug}`,
-    },
+    publisher: { "@id": PERSON_ID },
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
     datePublished: repoData.created_at,
     dateModified: repoData.updated_at,
   };
 
+  // Other entries of the same type, for internal linking (no dead-ends).
+  const siblings = (
+    await getGistList("articles", {
+      topic: entryType as "Blog" | "Poem" | "Sharing" | "Literature",
+    })
+  )
+    .filter((gist) => gist.slug !== slug)
+    .sort(
+      (a, b) =>
+        new Date(b.created_at ?? 0).getTime() -
+        new Date(a.created_at ?? 0).getTime(),
+    )
+    .slice(0, 4);
+
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          // Escape "<" so a "</script>" in any field can't break out of the tag.
-          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-        }}
+      <JsonLd
+        data={graph(
+          blogPosting,
+          breadcrumbNode(
+            crumbs.map((c) => ({
+              name: c.name,
+              url: `${config.site.url}${c.href}`,
+            })),
+          ),
+        )}
       />
+
       <ArticleContent content={content} withBackNavigation />
       {repoData.created_at && (
         <TimeAgo time={repoData.created_at} updatedAt={repoData.updated_at} />
       )}
+
+      {siblings.length > 0 ? (
+        <section className="space-y-4 border-t pt-8">
+          <h2 className="prose-h3">More in {entryType}</h2>
+          <ul className="space-y-4">
+            {siblings.map((sibling) => (
+              <li key={sibling.id}>
+                <Link
+                  href={`/${type}/${sibling.slug}`}
+                  className="group block space-y-1"
+                >
+                  <p className="prose-muted text-xs uppercase tracking-wide">
+                    {formatDate(sibling.created_at)}
+                  </p>
+                  <h3 className="prose-small font-medium transition-colors group-hover:text-muted-foreground">
+                    {sibling.entry.title}
+                  </h3>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <Breadcrumbs items={crumbs} />
     </>
   );
 }

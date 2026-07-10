@@ -5,6 +5,10 @@ import { notFound } from "next/navigation";
 import { getGistList } from "@/repositories/gist";
 import { config } from "@/lib/config";
 import { formatDate } from "@/lib/format-date";
+import { JsonLd } from "@/components/json-ld";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { breadcrumbNode, collectionPageNode, graph } from "@/lib/structured-data";
+import { rssAlternate } from "@/lib/metadata";
 
 // Lowercase URL segment -> the proper-cased topic getGistList expects.
 const TYPE_TOPICS = {
@@ -51,7 +55,7 @@ export async function generateMetadata({
   return {
     title: topic,
     description,
-    alternates: { canonical: url },
+    alternates: { canonical: url, types: rssAlternate },
     openGraph: {
       type: "website",
       siteName: config.site.name,
@@ -87,8 +91,29 @@ export default async function TypeListing({
       new Date(a.created_at ?? 0).getTime(),
   );
 
+  const crumbs = [
+    { name: "Home", href: "/" },
+    { name: topic, href: `/${type}` },
+  ];
+
   return (
     <>
+      <JsonLd
+        data={graph(
+          collectionPageNode({
+            name: topic,
+            description: TYPE_LEADS[type],
+            url: `${config.site.url}/${type}`,
+          }),
+          breadcrumbNode(
+            crumbs.map((c) => ({
+              name: c.name,
+              url: `${config.site.url}${c.href}`,
+            })),
+          ),
+        )}
+      />
+
       <section className="space-y-2">
         <h1 className="prose-h1">{topic}</h1>
         <p className="prose-lead">{TYPE_LEADS[type]}</p>
@@ -121,6 +146,8 @@ export default async function TypeListing({
           </ul>
         )}
       </section>
+
+      <Breadcrumbs items={crumbs} />
     </>
   );
 }
