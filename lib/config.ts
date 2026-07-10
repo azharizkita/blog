@@ -6,6 +6,12 @@ export const config = {
   cache: {
     defaultTime: 3600 * 12, // 12 hours
   },
+  indexNow: {
+    // Public ownership key, also hosted at /<key>.txt (not a secret — the
+    // whole point is that it's publicly readable). The trigger route is
+    // protected separately by the INDEXNOW_SECRET env var.
+    key: "c5f7f5b597300894f262a55236a68c83",
+  },
   site: {
     url: "https://lokey.bio",
     name: "Lokey",
