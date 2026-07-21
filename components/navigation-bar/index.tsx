@@ -37,9 +37,14 @@ export async function NavigationBar() {
     // px-1.5 + the trigger's own px-2.5 lines the nav text up with the
     // main column's px-4 left edge.
     <div className="no-scrollbar w-full px-1.5 flex-none overflow-x-auto">
-      <NavigationMenu>
+      {/* w-max + justify-start: the shadcn defaults (max-w-max justify-center)
+          center the list, so on narrow screens the overflow spills past the
+          scroll container's LEFT edge where it can't be scrolled to (Home gets
+          clipped). Sizing the nav to its content keeps all overflow on the
+          reachable right side. */}
+      <NavigationMenu className="w-max max-w-none justify-start">
         <NavigationMenuPrimitive.Backdrop className="fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 data-starting-style:opacity-0 data-ending-style:opacity-0 md:hidden" />
-        <NavigationMenuList>
+        <NavigationMenuList className="justify-start">
         <NavigationMenuItem>
           <NavigationMenuLink
             className={navigationMenuTriggerStyle()}
