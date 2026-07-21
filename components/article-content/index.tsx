@@ -8,6 +8,8 @@ import placeholder from "./placeholder.png";
 import { LinkIcon } from "lucide-react";
 import Link from "next/link";
 import remarkGfm from "remark-gfm";
+import { remarkMermaid } from "./remark-mermaid";
+import Mermaid from "@/components/mermaid";
 import getSlug from "@/lib/get-slug";
 import { cn } from "@/lib/utils";
 import { cacheLife } from "next/cache";
@@ -39,7 +41,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
 
   const { default: MDXContent } = await evaluate(content, {
     ...runtime,
-    remarkPlugins: [remarkGfm],
+    remarkPlugins: [remarkGfm, remarkMermaid],
     rehypePlugins: [
       [
         rehypePrettyCode,
@@ -55,6 +57,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
     <article id="article" className="isolate space-y-8 px-0 z-0">
       <MDXContent
         components={{
+          Mermaid,
           a: ({ href, children, ...rest }) => {
             if (!href) return <span {...rest}>{children}</span>;
 
