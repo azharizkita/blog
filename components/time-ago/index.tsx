@@ -1,14 +1,13 @@
 "use client";
 
-import { useSyncExternalStore, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 
 interface TimeAgoProps {
   time: string;
-  className?: string;
   updatedAt?: string;
-  compact?: boolean;
+  className?: string;
 }
 
 const formatTime = (dateString: string) =>
@@ -19,77 +18,74 @@ const formatTime = (dateString: string) =>
 
 const emptySubscribe = () => () => {};
 
-export default function TimeAgo({
-  time: _time,
-  className,
-  updatedAt: _updatedAt,
-  compact = false,
-}: TimeAgoProps) {
-  const [mode, setMode] = useState<"time" | "updated-at">("time");
-
-  const time = useSyncExternalStore(
+/**
+ * Formats on the client only (empty server snapshot) so the SSR HTML never
+ * disagrees with the visitor's locale and timezone.
+ */
+function useLocalTime(value?: string) {
+  return useSyncExternalStore(
     emptySubscribe,
-    () => (_time ? formatTime(_time) : ""),
+    () => (value ? formatTime(value) : ""),
     () => "",
   );
+}
 
-  const updatedAt = useSyncExternalStore(
-    emptySubscribe,
-    () => (_updatedAt ? formatTime(_updatedAt) : ""),
-    () => "",
-  );
+export default function TimeAgo({ time, updatedAt, className }: TimeAgoProps) {
+  const [mode, setMode] = useState<"published" | "updated">("published");
 
-  const toggleDisplay = () => {
-    if (!updatedAt || !time || _time === _updatedAt) return;
-    setMode((prev) => (prev === "time" ? "updated-at" : "time"));
-  };
+  const published = useLocalTime(time);
+  const updated = useLocalTime(updatedAt);
 
-  // Typography comes from the `prose-muted` token (text-sm + muted color);
-  // `compact` only tweaks the height of the toggle window.
-  const compactness = compact ? "h-5" : "h-6";
+  const canToggle = Boolean(updatedAt && updatedAt !== time);
+
+  if (!published) {
+    return <Skeleton className={cn("h-6 w-44 rounded-full", className)} />;
+  }
+
+  if (!canToggle) {
+    return (
+      <p className={cn("prose-muted flex h-6 items-center", className)}>
+        <time dateTime={time}>{published}</time>
+      </p>
+    );
+  }
 
   return (
-    <time
-      dateTime={_time}
+    <button
+      type="button"
+      onClick={() =>
+        setMode((prev) => (prev === "published" ? "updated" : "published"))
+      }
+      aria-live="polite"
       className={cn(
-        "relative flex shrink-0 w-full overflow-hidden",
-        compactness,
+        "relative block h-6 w-full cursor-pointer overflow-hidden rounded-sm text-left",
+        "focus-visible:outline-2 focus-visible:outline-offset-2",
         className,
       )}
     >
       <span
-        onClick={toggleDisplay}
+        aria-hidden={mode !== "published"}
         className={cn(
-          "prose-muted min-w-44 absolute flex w-fit shrink-0 transition-all duration-300",
-          compactness,
-          mode === "time"
-            ? "translate-y-0 z-10"
-            : "-translate-y-full z-0 opacity-0",
-          _time !== _updatedAt &&
-            _updatedAt &&
-            "cursor-pointer underline underline-offset-4",
+          "prose-muted absolute inset-y-0 left-0 flex items-center gap-1 underline underline-offset-4 transition-all duration-300",
+          mode === "published"
+            ? "translate-y-0 opacity-100"
+            : "-translate-y-full opacity-0",
         )}
       >
-        {time || (
-          <Skeleton
-            className={cn("w-full min-w-44 rounded-full", compactness)}
-          />
-        )}
+        <time dateTime={time}>{published}</time>
       </span>
 
       <span
-        onClick={toggleDisplay}
+        aria-hidden={mode !== "updated"}
         className={cn(
-          "prose-muted absolute flex w-fit shrink-0 transition-all duration-300 underline underline-offset-4",
-          compactness,
-          mode === "updated-at"
-            ? "translate-y-0 z-10"
-            : "translate-y-full z-0 opacity-0",
-          "cursor-pointer",
+          "prose-muted absolute inset-y-0 left-0 flex items-center gap-1 underline underline-offset-4 transition-all duration-300",
+          mode === "updated"
+            ? "translate-y-0 opacity-100"
+            : "translate-y-full opacity-0",
         )}
       >
-        Updated at {_time !== _updatedAt ? updatedAt : "-"}
+        Updated at <time dateTime={updatedAt}>{updated}</time>
       </span>
-    </time>
+    </button>
   );
 }

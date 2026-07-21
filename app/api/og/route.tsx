@@ -22,15 +22,14 @@ export async function GET(request: Request) {
           justifyContent: "center",
           flexDirection: "column",
           flexWrap: "nowrap",
-          fontFamily: "Inter",
         }}
       >
         <div tw="flex flex-col items-center gap-0">
-          <span tw="text-5xl font-semibold tracking-tight text-[#ffebec]">
+          <span tw="text-5xl font-semibold tracking-tight text-[#fafafa]">
             {config.site.name}
           </span>
           <span
-            tw="max-w-[720px] pt-2 text-center text-lg leading-snug tracking-tight text-white"
+            tw="max-w-[720px] pt-2 text-center text-lg leading-snug tracking-tight text-[#a3a3a3]"
             style={{
               display: "-webkit-box",
               WebkitBoxOrient: "vertical",
@@ -42,7 +41,7 @@ export async function GET(request: Request) {
           </span>
         </div>
         {title && (
-          <span tw="text-6xl font-semibold tracking-tight text-[#ffebec] pt-10 px-10">
+          <span tw="text-6xl font-semibold tracking-tight text-[#fafafa] pt-10 px-10">
             {title}
           </span>
         )}

@@ -1,9 +1,9 @@
+import { isValidElement, type ReactNode } from "react";
 import { getImageData } from "@/lib/get-image-size";
 import { evaluate } from "@mdx-js/mdx";
 import Image from "next/image";
 import * as runtime from "react/jsx-runtime";
 import rehypePrettyCode from "rehype-pretty-code";
-import rehypeStringify from "rehype-stringify";
 import placeholder from "./placeholder.png";
 import { LinkIcon } from "lucide-react";
 import Link from "next/link";
@@ -15,6 +15,20 @@ import { cacheLife } from "next/cache";
 interface ArticleContentProps {
   content: string;
   withBackNavigation?: boolean;
+}
+
+/**
+ * Flattens heading children (strings, numbers, nested elements like inline
+ * code or links) into plain text so getSlug never sees "[object Object]".
+ */
+function toText(node: ReactNode): string {
+  if (node == null || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(toText).join("");
+  if (isValidElement(node)) {
+    return toText((node.props as { children?: ReactNode }).children);
+  }
+  return "";
 }
 
 export default async function ArticleContent(props: ArticleContentProps) {
@@ -34,7 +48,6 @@ export default async function ArticleContent(props: ArticleContentProps) {
           theme: { dark: "github-dark-dimmed", light: "github-light" },
         },
       ],
-      rehypeStringify,
     ],
   });
 
@@ -119,8 +132,7 @@ export default async function ArticleContent(props: ArticleContentProps) {
           ),
           // "### Section" -> <h2>, keeping the anchor-link affordance.
           h3: ({ children, ...rest }) => {
-            const content = String(children);
-            const slug = getSlug(content);
+            const slug = getSlug(toText(children));
             return (
               <div className="w-full">
                 <Link href={`#${slug}`} className="group inline-block w-full">
@@ -137,15 +149,18 @@ export default async function ArticleContent(props: ArticleContentProps) {
             );
           },
           img: ({ src, alt }) => {
-            if (!src || !alt) return null;
+            if (!src) return null;
 
-            const { height, width, alt: _alt } = getImageData(alt);
+            // Missing alt renders as decorative (alt="") rather than
+            // silently dropping the image from the article.
+            const { height, width, alt: _alt } = getImageData(alt ?? "");
 
             return (
               <Image
                 src={src}
-                alt={_alt ?? ""}
-                sizes="100vw"
+                alt={_alt}
+                // Content column caps at max-w-3xl minus px-4 padding.
+                sizes="(min-width: 48rem) 736px, 100vw"
                 style={{
                   width: "100%",
                   height: "auto",

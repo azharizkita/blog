@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { TriangleAlertIcon } from "lucide-react";
 
@@ -14,11 +15,17 @@ import {
 } from "@/components/ui/empty";
 
 export default function Error({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    // Surface the failure in monitoring; the boundary UI hides it otherwise.
+    console.error(error);
+  }, [error]);
+
   return (
     <Empty className="my-8 border">
       <EmptyHeader>
@@ -31,6 +38,11 @@ export default function Error({
           source is temporarily unavailable or rate-limited. Give it a moment
           and try again.
         </EmptyDescription>
+        {error.digest ? (
+          <EmptyDescription className="font-mono text-xs">
+            Reference: {error.digest}
+          </EmptyDescription>
+        ) : null}
       </EmptyHeader>
       <EmptyContent>
         <div className="flex flex-wrap items-center justify-center gap-2">

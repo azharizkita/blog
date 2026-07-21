@@ -9,34 +9,26 @@ import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { breadcrumbNode, collectionPageNode, graph } from "@/lib/structured-data";
 import { rssAlternate } from "@/lib/metadata";
-
-// Lowercase URL segment -> the proper-cased topic getGistList expects.
-const TYPE_TOPICS = {
-  blog: "Blog",
-  poem: "Poem",
-  sharing: "Sharing",
-  literature: "Literature",
-} as const;
-
-type TypeSegment = keyof typeof TYPE_TOPICS;
+import {
+  CONTENT_SEGMENTS,
+  isContentSegment,
+  topicFromSegment,
+  type ContentSegment,
+} from "@/lib/content-types";
 
 // Lead blurb shown under each type heading (and reused as the meta
 // description). Draft copy — tweak the wording to taste.
-const TYPE_LEADS: Record<TypeSegment, string> = {
+const TYPE_LEADS: Record<ContentSegment, string> = {
   blog: "Long-form dumps from my head—work, tech, life, and the odd late-night rant. Read at your own risk.",
   poem: "The things I couldn't say out loud, so I broke them into lines instead.",
   sharing: "Stuff I found too good to keep to myself—snippets, tricks, and ideas worth passing on.",
   literature: "Slower pieces. Stories and reflections I sat with long enough to actually write down.",
 };
 
-function isTypeSegment(value: string): value is TypeSegment {
-  return value in TYPE_TOPICS;
-}
-
 type TypeParams = { type: string };
 
 export async function generateStaticParams() {
-  return Object.keys(TYPE_TOPICS).map((type) => ({ type }));
+  return CONTENT_SEGMENTS.map((type) => ({ type }));
 }
 
 export async function generateMetadata({
@@ -45,9 +37,9 @@ export async function generateMetadata({
   params: Promise<TypeParams>;
 }): Promise<Metadata> {
   const { type } = await params;
-  if (!isTypeSegment(type)) notFound();
+  if (!isContentSegment(type)) notFound();
 
-  const topic = TYPE_TOPICS[type];
+  const topic = topicFromSegment(type);
   const url = `/${type}`;
   const description = TYPE_LEADS[type];
   const image = `/api/og?title=${encodeURIComponent(topic)}`;
@@ -80,9 +72,9 @@ export default async function TypeListing({
   params: Promise<TypeParams>;
 }) {
   const { type } = await params;
-  if (!isTypeSegment(type)) notFound();
+  if (!isContentSegment(type)) notFound();
 
-  const topic = TYPE_TOPICS[type];
+  const topic = topicFromSegment(type);
   const entries = await getGistList("articles", { topic });
 
   const sorted = [...entries].sort(

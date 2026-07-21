@@ -4,6 +4,7 @@ import { ArrowRightIcon } from "lucide-react";
 import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/navigation-menu";
 
 import { getGistList, type GistList } from "@/repositories/gist";
+import { CONTENT_TOPICS } from "@/lib/content-types";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -13,10 +14,6 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-
-// Article types, in the order they appear in the nav. Matches the /[type]/[slug]
-// route segment (lowercased) and the types getGistList("articles") returns.
-const TYPE_ORDER = ["Blog", "Poem", "Sharing", "Literature"] as const;
 
 export async function NavigationBar() {
   // The nav lives in the root layout, so a throw here would escape the page
@@ -37,7 +34,9 @@ export async function NavigationBar() {
   }
 
   return (
-    <div className="no-scrollbar w-full pl-2 flex-none overflow-x-auto">
+    // px-1.5 + the trigger's own px-2.5 lines the nav text up with the
+    // main column's px-4 left edge.
+    <div className="no-scrollbar w-full px-1.5 flex-none overflow-x-auto">
       <NavigationMenu>
         <NavigationMenuPrimitive.Backdrop className="fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 data-starting-style:opacity-0 data-ending-style:opacity-0 md:hidden" />
         <NavigationMenuList>
@@ -48,7 +47,7 @@ export async function NavigationBar() {
           />
         </NavigationMenuItem>
 
-        {TYPE_ORDER.map((type) => {
+        {CONTENT_TOPICS.map((type) => {
           const entries = byType.get(type);
           if (!entries || entries.length === 0) return null;
 

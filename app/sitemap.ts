@@ -2,8 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { getGistList } from "@/repositories/gist";
 import { config } from "@/lib/config";
-
-const TYPES = ["blog", "poem", "sharing", "literature"] as const;
+import { CONTENT_SEGMENTS } from "@/lib/content-types";
 
 function toDate(value?: string | null) {
   if (!value) return undefined;
@@ -30,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 1,
   };
 
-  const typePages: MetadataRoute.Sitemap = TYPES.flatMap((type) => {
+  const typePages: MetadataRoute.Sitemap = CONTENT_SEGMENTS.flatMap((type) => {
     const entries = articles.filter(
       (gist) => gist.entry.type.toLowerCase() === type,
     );

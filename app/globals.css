@@ -153,6 +153,20 @@
   }
   html {
     @apply font-sans;
+    /* Reserve the scrollbar track so page length changes don't shift layout,
+       without hiding the scrollbar (it's a position/length affordance). */
+    scrollbar-gutter: stable;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 

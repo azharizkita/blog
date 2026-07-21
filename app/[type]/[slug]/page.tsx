@@ -12,18 +12,11 @@ import {
   graph,
 } from "@/lib/structured-data";
 import { rssAlternate } from "@/lib/metadata";
+import { isContentSegment, type ContentTopic } from "@/lib/content-types";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { BlogPosting } from "schema-dts";
-
-// The article types getGistList("articles") can return, lowercased for the URL.
-const SUPPORTED_TYPES = ["blog", "poem", "sharing", "literature"] as const;
-type SupportedType = (typeof SUPPORTED_TYPES)[number];
-
-function isSupportedType(value: string): value is SupportedType {
-  return (SUPPORTED_TYPES as readonly string[]).includes(value);
-}
 
 type ArticleParams = { type: string; slug: string };
 
@@ -88,7 +81,7 @@ export default async function Article({
 }) {
   const { type, slug } = await params;
 
-  if (!isSupportedType(type)) notFound();
+  if (!isContentSegment(type)) notFound();
 
   const repoData = await getGistDetails(slug);
 
@@ -139,7 +132,7 @@ export default async function Article({
   // Other entries of the same type, for internal linking (no dead-ends).
   const siblings = (
     await getGistList("articles", {
-      topic: entryType as "Blog" | "Poem" | "Sharing" | "Literature",
+      topic: entryType as ContentTopic,
     })
   )
     .filter((gist) => gist.slug !== slug)

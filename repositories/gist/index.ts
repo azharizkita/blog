@@ -1,11 +1,12 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { config } from "@/lib/config";
+import type { ContentTopic } from "@/lib/content-types";
 import getSlug from "@/lib/get-slug";
 import octokit from "@/lib/octokit";
 import parseEntry from "@/lib/parse-entry";
 
 type GistOptions = {
-  topic: "Blog" | "Poem" | "Sharing" | "Literature";
+  topic: ContentTopic;
 };
 
 export const getGistList = async (
@@ -18,8 +19,11 @@ export const getGistList = async (
 
   const { topic } = options ?? {};
 
-  const { data } = await octokit.rest.gists.listForUser({
+  // Paginate: listForUser caps at 30 gists per page, and past that limit
+  // older entries would silently vanish from the nav, sitemap, and feed.
+  const data = await octokit.paginate(octokit.rest.gists.listForUser, {
     username: config.github.username,
+    per_page: 100,
   });
 
   // Skip gists whose description can't be parsed (e.g. an unknown type) so a
