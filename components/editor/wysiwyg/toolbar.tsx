@@ -112,7 +112,7 @@ export function Toolbar({ editor }: ToolbarProps) {
   };
 
   return (
-    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 rounded-md border bg-background/95 p-1 backdrop-blur">
+    <div className="sticky top-14 z-20 flex flex-wrap items-center gap-1 rounded-2xl border bg-background/95 p-1 backdrop-blur">
       <ToolbarButton label="Bold (⌘B)" active={state.bold} onClick={() => chain().toggleBold().run()}>
         <Bold />
       </ToolbarButton>

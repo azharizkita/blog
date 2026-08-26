@@ -38,25 +38,20 @@ class PreviewErrorBoundary extends Component<
   }
 }
 
+/**
+ * The exact server-rendered article, flowing in the page like the published
+ * page does — the parent column already matches the article column, so no
+ * frame, no inner scroll region.
+ */
 export function PreviewPane({ node, error, isPending, version }: PreviewPaneProps) {
   return (
-    <div className="rounded-md border">
+    <div className={cn("pb-8 transition-opacity", isPending && "opacity-60")}>
       {error && (
-        <p className="border-b bg-destructive/10 px-4 py-2 font-mono text-xs whitespace-pre-wrap text-destructive">
+        <p className="mb-6 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-2 font-mono text-xs whitespace-pre-wrap text-destructive">
           {error}
         </p>
       )}
-      <div
-        className={cn(
-          "h-[70vh] overflow-y-auto py-6 transition-opacity",
-          isPending && "opacity-60",
-        )}
-      >
-        {/* Mirror the real article column: max-w-3xl + px-4, per app/layout.tsx. */}
-        <div className="mx-auto w-full max-w-3xl px-4">
-          <PreviewErrorBoundary key={version}>{node}</PreviewErrorBoundary>
-        </div>
-      </div>
+      <PreviewErrorBoundary key={version}>{node}</PreviewErrorBoundary>
     </div>
   );
 }

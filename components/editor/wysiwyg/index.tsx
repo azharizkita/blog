@@ -270,9 +270,12 @@ export function WysiwygEditor({
   if (!editor) return null;
 
   return (
-    <div className="space-y-4">
+    // The parent column already is the article column (max-w-3xl with px-4
+    // from the root layout), so the editor renders in place — no inner
+    // centering. The toolbar sticks just below the screen's h-12 action bar.
+    <div className="space-y-6">
       <Toolbar editor={editor} />
-      <div className="wysiwyg mx-auto w-full max-w-3xl px-4 py-6">
+      <div className="wysiwyg pb-8">
         <EditorContent editor={editor} />
       </div>
     </div>

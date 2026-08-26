@@ -7,7 +7,9 @@ import {
   useTransition,
   type ReactNode,
 } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import {
   publishGist,
   renderPreview,
@@ -15,7 +17,8 @@ import {
   updatePublished,
   type SaveResult,
 } from "@/app/editor/actions";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   WysiwygEditor,
   type WysiwygFlushResult,
@@ -184,44 +187,90 @@ export function EditorScreen(props: EditorScreenProps) {
     });
   };
 
-  const gistStatus = !gistId ? "new" : isPublic ? "published" : "draft";
+  const gistStatus = !gistId ? "New" : isPublic ? "Published" : "Draft";
+  const slug = getSlug(entry.title);
+  // Beep pages don't exist (app/[type]/[slug]/page.tsx 404s them) — no path.
+  const slugPath =
+    entry.type !== "Beep"
+      ? `/${entry.type.toLowerCase()}/${slug || "…"}`
+      : null;
 
   return (
-    // Full-bleed breakout: the root layout caps <main> at max-w-3xl, which is
-    // too narrow for a split view. The preview column re-applies the real
-    // article width internally, so fidelity is unaffected.
-    <div className="relative left-1/2 w-dvw -translate-x-1/2 space-y-4 px-4">
-      <MetadataBar
-        value={entry}
-        onChange={setEntry}
-        slug={getSlug(entry.title)}
-        status={gistStatus}
-      />
-
-      <div className="flex items-center gap-1">
-        {(["write", "source", "preview"] as const).map((m) => (
-          <Button
-            key={m}
-            variant={mode === m ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => {
-              // A stale banner (and a disarmed guard) must not survive a
-              // mode switch: if the underlying document is still broken,
-              // WysiwygEditor's mount-time round-trip check will simply set
-              // both again as soon as Write is entered. If the user fixed
-              // it in Source first, this is what actually clears the
-              // now-false "would rewrite" message instead of leaving it (and
-              // a permanently-disarmed "Edit visually anyway" landmine)
-              // around forever.
-              setRoundTripBroken(false);
-              forceWriteRef.current = false;
-              setMode(m);
-            }}
+    // Everything shares the root layout's max-w-3xl column — the document is
+    // the layout's only spine, so the chrome always aligns with the text it
+    // acts on.
+    <div className="space-y-6">
+      {/* Sticky action bar: status on the left, mode switch + save actions on
+          the right. -mx-4 stretches its hairline across the column's px-4
+          gutter so it reads as a bar, not a floating strip. */}
+      <div className="sticky top-0 z-30 -mx-4 flex h-12 items-center justify-between gap-3 border-b bg-background/95 px-4 backdrop-blur">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Link
+            href="/editor"
+            aria-label="Back to editor"
+            className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
           >
-            {m === "write" ? "Write" : m === "source" ? "Source" : "Preview"}
+            <ArrowLeft />
+          </Link>
+          <p className="prose-muted truncate text-xs">
+            {gistStatus}
+            {slugPath && ` · ${slugPath}`}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <div
+            role="group"
+            aria-label="Editor mode"
+            className="flex items-center gap-0.5 rounded-2xl bg-muted p-0.5"
+          >
+            {(["write", "source", "preview"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                aria-pressed={mode === m}
+                className={cn(
+                  "h-6 rounded-[calc(1rem-2px)] px-2.5 text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                  mode === m
+                    ? "bg-background text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+                onClick={() => {
+                  // A stale banner (and a disarmed guard) must not survive a
+                  // mode switch: if the underlying document is still broken,
+                  // WysiwygEditor's mount-time round-trip check will simply
+                  // set both again as soon as Write is entered. If the user
+                  // fixed it in Source first, this is what actually clears
+                  // the now-false "would rewrite" message instead of leaving
+                  // it (and a permanently-disarmed "Edit visually anyway"
+                  // landmine) around forever.
+                  setRoundTripBroken(false);
+                  forceWriteRef.current = false;
+                  setMode(m);
+                }}
+              >
+                {m === "write" ? "Write" : m === "source" ? "Source" : "Preview"}
+              </button>
+            ))}
+          </div>
+
+          {!isPublic && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSaveDraft}
+              disabled={isSaving}
+            >
+              Save draft
+            </Button>
+          )}
+          <Button size="sm" onClick={handlePublish} disabled={isSaving}>
+            {isPublic ? "Save & rebuild" : "Publish"}
           </Button>
-        ))}
+        </div>
       </div>
+
+      {status && <p className="prose-muted text-sm">{status}</p>}
 
       {roundTripBroken && (
         <div className="flex flex-wrap items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm">
@@ -250,6 +299,8 @@ export function EditorScreen(props: EditorScreenProps) {
         </div>
       )}
 
+      <MetadataBar value={entry} onChange={setEntry} />
+
       {mode === "write" && (
         <WysiwygEditor
           value={content}
@@ -274,22 +325,6 @@ export function EditorScreen(props: EditorScreenProps) {
           version={previewVersion}
         />
       )}
-
-      <div className="flex flex-wrap items-center gap-2">
-        {!isPublic && (
-          <Button
-            variant="outline"
-            onClick={handleSaveDraft}
-            disabled={isSaving}
-          >
-            Save draft
-          </Button>
-        )}
-        <Button onClick={handlePublish} disabled={isSaving}>
-          {isPublic ? "Save & rebuild" : "Publish"}
-        </Button>
-        {status && <p className="prose-muted text-sm">{status}</p>}
-      </div>
     </div>
   );
 }
