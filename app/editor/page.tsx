@@ -11,6 +11,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+// Deliberately-uncached IO (listAllGists) runs outside Suspense here; opt
+// this dev-only page out of instant-navigation validation instead of
+// restructuring it around Suspense/`use cache`. See instant route segment
+// config docs.
+export const instant = false;
+
 export default async function EditorPage() {
   assertDevEditorPage();
 

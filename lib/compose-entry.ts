@@ -1,3 +1,5 @@
+import parseEntry from "@/lib/parse-entry";
+
 export const ENTRY_TYPES = [
   "Blog",
   "Poem",
@@ -60,5 +62,28 @@ export default function composeEntry(entry: EntryInput): string {
     parts.push(trimmedDescription);
   }
 
-  return parts.join(ENTRY_DELIMITER);
+  const composed = parts.join(ENTRY_DELIMITER);
+
+  // Round-trip guard: a value ending/starting with a bare "-" can form a
+  // new " - " delimiter at the join (e.g. title "Foo -" + description
+  // "desc" composes to "Blog - Foo - - desc", which parses back with
+  // title "Foo" and description "- desc"). Catch that silent corruption
+  // here instead of letting it reach GitHub.
+  const roundTripped = parseEntry(composed);
+  const expectedDescription =
+    type === "Poem" && !trimmedDescription ? null : trimmedDescription;
+  const roundTripFailed =
+    roundTripped.type !== type ||
+    roundTripped.title !== title.trim() ||
+    roundTripped.description !== expectedDescription ||
+    (type === "Sharing" &&
+      roundTripped.type === "Sharing" &&
+      roundTripped.languageTag !== (languageTag ?? "").trim());
+  if (roundTripFailed) {
+    throw new Error(
+      'Metadata doesn\'t survive the " - " encoding — remove stray "-" from the edges of your fields.',
+    );
+  }
+
+  return composed;
 }

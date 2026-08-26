@@ -66,8 +66,9 @@ export function MetadataBar({ value, onChange, slug, status }: MetadataBarProps)
       </div>
 
       <p className="prose-muted pb-2 text-xs whitespace-nowrap">
-        {status === "new" ? "New" : status === "draft" ? "Draft" : "Published"} ·
-        /{value.type.toLowerCase()}/{slug || "…"}
+        {status === "new" ? "New" : status === "draft" ? "Draft" : "Published"}
+        {/* Beep pages don't exist (app/[type]/[slug]/page.tsx 404s them) — no path to show. */}
+        {value.type !== "Beep" && ` · /${value.type.toLowerCase()}/${slug || "…"}`}
       </p>
     </div>
   );

@@ -77,6 +77,14 @@ export function EditorScreen(props: EditorScreenProps) {
     }
   };
 
+  const requireContent = (): boolean => {
+    if (!content.trim()) {
+      setStatus("Content is required.");
+      return false;
+    }
+    return true;
+  };
+
   const reportSave = (result: SaveResult, verb: string) => {
     if (!result.ok) {
       setStatus(result.error);
@@ -93,6 +101,7 @@ export function EditorScreen(props: EditorScreenProps) {
   const handleSaveDraft = () => {
     startSaving(async () => {
       setStatus(null);
+      if (!requireContent()) return;
       const description = composeOrReport();
       if (description === null) return;
       const result = reportSave(
@@ -108,6 +117,7 @@ export function EditorScreen(props: EditorScreenProps) {
   const handlePublish = () => {
     startSaving(async () => {
       setStatus(null);
+      if (!requireContent()) return;
       const description = composeOrReport();
       if (description === null) return;
 
