@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { EditorContent, Extension, useEditor } from "@tiptap/react";
+import { EditorContent, Extension, useEditor, type Editor } from "@tiptap/react";
 import type { MarkdownStorage } from "tiptap-markdown";
 import { createExtensions } from "./extensions";
 import { roundTrips } from "./round-trip";
@@ -44,6 +44,12 @@ export function WysiwygEditor({
   onRoundTripFail,
 }: WysiwygEditorProps) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Latest-value refs for the unmount-flush effect below, which is declared
+  // with `[]` deps and therefore only ever sees the bindings from the very
+  // first render (before `editor` even exists, since immediatelyRender is
+  // false) unless it reads through refs kept current on every render.
+  const editorRef = useRef<Editor | null>(null);
+  const onChangeRef = useRef(onChange);
 
   const editor = useEditor(
     {
@@ -93,6 +99,11 @@ export function WysiwygEditor({
       onUpdate({ editor }) {
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
+          // Reset to null once the timer actually fires, not just when it's
+          // cleared — the unmount-flush effect below treats "non-null" as
+          // "an edit is pending" and would otherwise re-flush a change
+          // that's already been delivered.
+          debounceRef.current = null;
           onChange(editor.storage.markdown.getMarkdown());
         }, CHANGE_DEBOUNCE_MS);
       },
@@ -107,9 +118,32 @@ export function WysiwygEditor({
     [],
   );
 
+  // No deps: runs after every render, purely to keep the refs current for
+  // the mount-only effect below.
+  useEffect(() => {
+    editorRef.current = editor;
+    onChangeRef.current = onChange;
+  });
+
   useEffect(() => {
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
+      // A pending debounce timer means the last edit hasn't reached the
+      // parent yet. Task 3 fully unmounts this component on every mode
+      // switch away from Write (required by the value-is-parsed-once
+      // contract above), and useEditor defers the actual editor.destroy()
+      // call by one macrotask past this synchronous cleanup (see the
+      // effect-ordering note in the fix report), so `editorRef.current` is
+      // still a live, readable editor here — flush the latest markdown to
+      // the parent instead of discarding it. An unmount with nothing
+      // pending must not call onChange at all.
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+        const currentEditor = editorRef.current;
+        if (currentEditor && !currentEditor.isDestroyed) {
+          onChangeRef.current(currentEditor.storage.markdown.getMarkdown());
+        }
+      }
     };
   }, []);
 
