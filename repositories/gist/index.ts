@@ -71,3 +71,65 @@ export const getGistDetails = async (slug: string) => {
 
   return { ...data, entry: { title, ...restEntryData } };
 };
+
+// ---------------------------------------------------------------------------
+// Editor-only helpers. Deliberately uncached: the editor must see fresh state,
+// including secret drafts, which the public site's listForUser never returns.
+
+export const listAllGists = async () => {
+  // gists.list = the authenticated user's gists, secret ones included.
+  const data = await octokit.paginate(octokit.rest.gists.list, {
+    per_page: 100,
+  });
+
+  return data.flatMap(({ description, ...rest }) => {
+    try {
+      const { title, ...restEntryData } = parseEntry(description ?? "");
+      return [
+        {
+          ...rest,
+          description,
+          entry: { title, ...restEntryData },
+          slug: getSlug(title),
+        },
+      ];
+    } catch {
+      // Non-article gists (code snippets etc.) don't belong in the editor.
+      return [];
+    }
+  });
+};
+
+export const getGistById = async (gistId: string) => {
+  const { data } = await octokit.rest.gists.get({ gist_id: gistId });
+  return data;
+};
+
+export const createGist = async (args: {
+  description: string;
+  content: string;
+  isPublic: boolean;
+}) => {
+  const { data } = await octokit.rest.gists.create({
+    description: args.description,
+    public: args.isPublic,
+    files: { "index.md": { content: args.content } },
+  });
+  return data;
+};
+
+export const updateGist = async (
+  gistId: string,
+  args: { description: string; content: string },
+) => {
+  const { data } = await octokit.rest.gists.update({
+    gist_id: gistId,
+    description: args.description,
+    files: { "index.md": { content: args.content } },
+  });
+  return data;
+};
+
+export const deleteGist = async (gistId: string) => {
+  await octokit.rest.gists.delete({ gist_id: gistId });
+};
