@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useRef,
   useState,
   useTransition,
   type ReactNode,
@@ -44,13 +45,16 @@ export function EditorScreen(props: EditorScreenProps) {
   const [status, setStatus] = useState<string | null>(null);
   const [isPreviewPending, startPreview] = useTransition();
   const [isSaving, startSaving] = useTransition();
+  const previewRequestRef = useRef(0);
 
   // Debounced exact-pipeline preview: the server action renders the real
   // ArticleContent component, so the preview can't drift from production.
   useEffect(() => {
     const handle = setTimeout(() => {
+      const requestId = ++previewRequestRef.current;
       startPreview(async () => {
         const result = await renderPreview(content);
+        if (previewRequestRef.current !== requestId) return;
         if (result.ok) {
           setPreview(result.node);
           setPreviewVersion((version) => version + 1);
