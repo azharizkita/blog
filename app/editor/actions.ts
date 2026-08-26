@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { updateTag } from "next/cache";
-import ArticleContent from "@/components/article-content";
+import { ArticleContentUncached } from "@/components/article-content";
 import { createGist, deleteGist, updateGist } from "@/repositories/gist";
 
 export type PreviewResult =
@@ -28,10 +28,11 @@ function errorMessage(error: unknown): string {
 export async function renderPreview(content: string): Promise<PreviewResult> {
   assertDevAction();
   try {
-    // Calling the real ArticleContent server component keeps the preview
-    // byte-identical to the published pipeline (MDX + shiki + mermaid +
-    // prose-* mappings). MDX compile errors throw here and are surfaced.
-    const node = await ArticleContent({ content });
+    // The uncached pipeline keeps the preview byte-identical to the published
+    // article while staying callable from an action ("use cache" functions
+    // can't execute during a server-action render). MDX compile errors throw
+    // here and are surfaced as a structured error.
+    const node = await ArticleContentUncached({ content });
     return { ok: true, node };
   } catch (error) {
     return { ok: false, error: errorMessage(error) };
