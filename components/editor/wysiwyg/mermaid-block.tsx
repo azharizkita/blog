@@ -59,11 +59,21 @@ export const MermaidBlock = Node.create({
     return {
       markdown: {
         serialize(state, node) {
+          // A backtick run inside the diagram source could otherwise close
+          // the fence early. Mirror prosemirror-markdown's stock code_block
+          // serializer: use a fence one backtick longer than the longest
+          // run already in the content (minimum 3).
+          const backtickRuns = node.attrs.code.match(/`{3,}/gm) as
+            | string[]
+            | null;
+          const fence = backtickRuns
+            ? backtickRuns.sort().slice(-1)[0] + "`"
+            : "```";
           const meta = node.attrs.height ? ` height=${node.attrs.height}` : "";
-          state.write("```mermaid" + meta + "\n");
+          state.write(fence + "mermaid" + meta + "\n");
           state.text(node.attrs.code, false);
           state.ensureNewLine();
-          state.write("```");
+          state.write(fence);
           state.closeBlock(node);
         },
         parse: {

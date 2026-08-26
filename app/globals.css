@@ -302,3 +302,18 @@
   color: var(--shiki-dark) !important;
   background-color: var(--shiki-dark-bg) !important;
 }
+
+/* Table fidelity with the published article: ArticleContent wraps every
+   table in an `overflow-x-auto` div (plus a `min-w-155` floor on the table
+   itself) so a wide table scrolls instead of overflowing the column. The
+   editor's Table extension isn't configured with `renderWrapper: true`, so
+   there's no extra wrapper element to target here — @tiptap/extension-table
+   renders a bare <table> (see node_modules/@tiptap/extension-table/dist,
+   Table's renderHTML) with an inline min-width style derived from its
+   column count. Making the table itself the scroll container reproduces
+   the same affordance without that wrapper. */
+.wysiwyg .tiptap table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}

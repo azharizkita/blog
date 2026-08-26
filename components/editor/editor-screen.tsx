@@ -16,7 +16,10 @@ import {
   type SaveResult,
 } from "@/app/editor/actions";
 import { Button } from "@/components/ui/button";
-import { WysiwygEditor } from "@/components/editor/wysiwyg";
+import {
+  WysiwygEditor,
+  type WysiwygFlushResult,
+} from "@/components/editor/wysiwyg";
 import composeEntry, { type EntryInput } from "@/lib/compose-entry";
 import getSlug from "@/lib/get-slug";
 import { MarkdownEditor } from "./markdown-editor";
@@ -52,6 +55,7 @@ export function EditorScreen(props: EditorScreenProps) {
   const [mode, setMode] = useState<EditorMode>("write");
   const [roundTripBroken, setRoundTripBroken] = useState(false);
   const forceWriteRef = useRef(false);
+  const wysiwygFlushRef = useRef<(() => WysiwygFlushResult) | null>(null);
 
   // Debounced exact-pipeline preview: the server action renders the real
   // ArticleContent component, so the preview can't drift from production.
@@ -87,12 +91,34 @@ export function EditorScreen(props: EditorScreenProps) {
     }
   };
 
-  const requireContent = (): boolean => {
-    if (!content.trim()) {
+  const requireContent = (value: string): boolean => {
+    if (!value.trim()) {
       setStatus("Content is required.");
       return false;
     }
     return true;
+  };
+
+  // WysiwygEditor debounces onChange by 300ms (it resets on every
+  // keystroke), so `content` can lag behind what's on screen for an
+  // unbounded time while the user is still typing — saving `content`
+  // directly could silently publish a stale document. In Write mode, flush
+  // the editor synchronously first and use its *return value* directly for
+  // this save (not `content`, which wouldn't have updated yet by the time
+  // the save actually runs): null signals the save must be aborted, either
+  // because the document can't currently be serialized safely (the same
+  // lossy-table/hardBreak guard as onChange — see wysiwyg/index.tsx) or
+  // because of some other serialize failure; the error is already reported
+  // via setStatus in that case.
+  const flushWriteModeContent = (): string | null => {
+    if (mode !== "write" || !wysiwygFlushRef.current) return content;
+    const result = wysiwygFlushRef.current();
+    if (!result.ok) {
+      setStatus(result.error);
+      return null;
+    }
+    setContent(result.markdown);
+    return result.markdown;
   };
 
   const reportSave = (result: SaveResult, verb: string) => {
@@ -111,11 +137,13 @@ export function EditorScreen(props: EditorScreenProps) {
   const handleSaveDraft = () => {
     startSaving(async () => {
       setStatus(null);
-      if (!requireContent()) return;
+      const freshContent = flushWriteModeContent();
+      if (freshContent === null) return;
+      if (!requireContent(freshContent)) return;
       const description = composeOrReport();
       if (description === null) return;
       const result = reportSave(
-        await saveDraft({ gistId, description, content }),
+        await saveDraft({ gistId, description, content: freshContent }),
         "Draft saved (secret gist)",
       );
       if (!result) return;
@@ -127,20 +155,26 @@ export function EditorScreen(props: EditorScreenProps) {
   const handlePublish = () => {
     startSaving(async () => {
       setStatus(null);
-      if (!requireContent()) return;
+      const freshContent = flushWriteModeContent();
+      if (freshContent === null) return;
+      if (!requireContent(freshContent)) return;
       const description = composeOrReport();
       if (description === null) return;
 
       if (isPublic && gistId) {
         reportSave(
-          await updatePublished({ gistId, description, content }),
+          await updatePublished({ gistId, description, content: freshContent }),
           "Saved",
         );
         return;
       }
 
       const result = reportSave(
-        await publishGist({ draftGistId: gistId, description, content }),
+        await publishGist({
+          draftGistId: gistId,
+          description,
+          content: freshContent,
+        }),
         "Published",
       );
       if (!result) return;
@@ -170,7 +204,19 @@ export function EditorScreen(props: EditorScreenProps) {
             key={m}
             variant={mode === m ? "secondary" : "ghost"}
             size="sm"
-            onClick={() => setMode(m)}
+            onClick={() => {
+              // A stale banner (and a disarmed guard) must not survive a
+              // mode switch: if the underlying document is still broken,
+              // WysiwygEditor's mount-time round-trip check will simply set
+              // both again as soon as Write is entered. If the user fixed
+              // it in Source first, this is what actually clears the
+              // now-false "would rewrite" message instead of leaving it (and
+              // a permanently-disarmed "Edit visually anyway" landmine)
+              // around forever.
+              setRoundTripBroken(false);
+              forceWriteRef.current = false;
+              setMode(m);
+            }}
           >
             {m === "write" ? "Write" : m === "source" ? "Source" : "Preview"}
           </Button>
@@ -194,6 +240,13 @@ export function EditorScreen(props: EditorScreenProps) {
           >
             Edit visually anyway
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setRoundTripBroken(false)}
+          >
+            Dismiss
+          </Button>
         </div>
       )}
 
@@ -206,6 +259,8 @@ export function EditorScreen(props: EditorScreenProps) {
             setRoundTripBroken(true);
             setMode("source");
           }}
+          onSerializeError={setStatus}
+          flushRef={wysiwygFlushRef}
         />
       )}
       {mode === "source" && (

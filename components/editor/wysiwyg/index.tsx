@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import { EditorContent, Extension, useEditor, type Editor } from "@tiptap/react";
 import type { MarkdownStorage } from "tiptap-markdown";
 import { createExtensions } from "./extensions";
@@ -18,10 +18,73 @@ declare module "@tiptap/core" {
 
 const CHANGE_DEBOUNCE_MS = 300;
 
+export type WysiwygFlushResult =
+  | { ok: true; markdown: string }
+  | { ok: false; error: string };
+
 export interface WysiwygEditorProps {
   value: string;
   onChange: (markdown: string) => void;
   onRoundTripFail: (serialized: string) => void;
+  /**
+   * Called instead of `onChange` whenever a serialize would silently commit
+   * a lossy tiptap-markdown fallback placeholder (see
+   * `detectLossySerialization` below). The caller should surface this as an
+   * error rather than treat it as a normal content update.
+   */
+  onSerializeError?: (message: string) => void;
+  /**
+   * Populated (after mount) with an imperative flush function: clears any
+   * pending debounce and synchronously returns the current document as
+   * markdown, running the same lossy-serialization check as `onChange`.
+   * For callers (Save/Publish) that need guaranteed-fresh, guaranteed-safe
+   * content instead of waiting for the next debounced `onChange`.
+   */
+  flushRef?: RefObject<(() => WysiwygFlushResult) | null>;
+}
+
+/**
+ * tiptap-markdown (configured with `html: false`) falls back to a literal
+ * "[nodeName]" placeholder for any node it can't represent in plain GFM —
+ * see node_modules/tiptap-markdown's built `dist/tiptap-markdown.es.js`,
+ * `HTMLNode`'s `addStorage().markdown.serialize`:
+ * `state.write(\`[${node.type.name}]\`)` (plus `state.closeBlock(node)`
+ * since a fallback node is always block-level in this schema). Tracing the
+ * rest of that file: every node/mark type in this editor's schema is
+ * properly covered *except* two specific shapes that TableEnterGuard (see
+ * extensions.ts) prevents from being created through the UI, but which
+ * could still arrive via paste:
+ *  - `table`: covered by a real GFM serializer (`Table$1`), but only when
+ *    every cell has exactly one child block (`isMarkdownSerializable`) — a
+ *    cell with 2+ paragraphs, or a header/body shape mismatch, makes the
+ *    *whole table* fall back to a standalone `[table]` block/line.
+ *  - `hardBreak`: covered by a real serializer (`HardBreak$1`) that itself
+ *    special-cases `state.inTable` and defers to the same HTMLNode
+ *    fallback — so a hard break inside a table cell renders as a literal
+ *    `[hardBreak]` embedded *inline* within that row's cell text (not a
+ *    standalone line, since the table serializer renders cell content via
+ *    `state.renderInline`, not the top-level block dispatcher).
+ * (A third gap — `underline`, not in tiptap-markdown's covered mark list —
+ * is closed by disabling the mark entirely in extensions.ts instead, since
+ * it isn't part of this editor's supported feature set.)
+ */
+function detectLossySerialization(
+  editor: Editor,
+  serialized: string,
+): string | null {
+  let hasTable = false;
+  let hasHardBreak = false;
+  editor.state.doc.descendants((node) => {
+    if (node.type.name === "table") hasTable = true;
+    if (node.type.name === "hardBreak") hasHardBreak = true;
+  });
+  if (hasTable && /(^|\n)\[table\](\n|$)/.test(serialized)) {
+    return "This table can't be saved as Markdown: a cell has more than one paragraph, or the header/body shape doesn't match. Undo the change, or fix it in Source mode.";
+  }
+  if (hasHardBreak && serialized.includes("[hardBreak]")) {
+    return "A line break inside a table cell can't be saved as Markdown. Remove it, or fix it in Source mode.";
+  }
+  return null;
 }
 
 // StarterKit's bundled Link extension doesn't register a ⌘K shortcut, so a
@@ -42,14 +105,18 @@ export function WysiwygEditor({
   value,
   onChange,
   onRoundTripFail,
+  onSerializeError,
+  flushRef,
 }: WysiwygEditorProps) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Latest-value refs for the unmount-flush effect below, which is declared
-  // with `[]` deps and therefore only ever sees the bindings from the very
-  // first render (before `editor` even exists, since immediatelyRender is
-  // false) unless it reads through refs kept current on every render.
+  // Latest-value refs for the unmount-flush and flushRef-registration
+  // effects below, both declared with `[]` deps and therefore only ever
+  // seeing the bindings from the very first render (before `editor` even
+  // exists, since immediatelyRender is false) unless they read through refs
+  // kept current on every render.
   const editorRef = useRef<Editor | null>(null);
   const onChangeRef = useRef(onChange);
+  const onSerializeErrorRef = useRef(onSerializeError);
 
   const editor = useEditor(
     {
@@ -104,7 +171,13 @@ export function WysiwygEditor({
           // "an edit is pending" and would otherwise re-flush a change
           // that's already been delivered.
           debounceRef.current = null;
-          onChange(editor.storage.markdown.getMarkdown());
+          const serialized = editor.storage.markdown.getMarkdown();
+          const lossyError = detectLossySerialization(editor, serialized);
+          if (lossyError) {
+            onSerializeError?.(lossyError);
+            return;
+          }
+          onChange(serialized);
         }, CHANGE_DEBOUNCE_MS);
       },
     },
@@ -119,10 +192,11 @@ export function WysiwygEditor({
   );
 
   // No deps: runs after every render, purely to keep the refs current for
-  // the mount-only effect below.
+  // the mount-only effects below.
   useEffect(() => {
     editorRef.current = editor;
     onChangeRef.current = onChange;
+    onSerializeErrorRef.current = onSerializeError;
   });
 
   useEffect(() => {
@@ -135,17 +209,63 @@ export function WysiwygEditor({
       // effect-ordering note in the fix report), so `editorRef.current` is
       // still a live, readable editor here — flush the latest markdown to
       // the parent instead of discarding it. An unmount with nothing
-      // pending must not call onChange at all.
+      // pending must not call onChange (or onSerializeError) at all.
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
         debounceRef.current = null;
         const currentEditor = editorRef.current;
         if (currentEditor && !currentEditor.isDestroyed) {
-          onChangeRef.current(currentEditor.storage.markdown.getMarkdown());
+          const serialized = currentEditor.storage.markdown.getMarkdown();
+          const lossyError = detectLossySerialization(
+            currentEditor,
+            serialized,
+          );
+          if (lossyError) {
+            onSerializeErrorRef.current?.(lossyError);
+          } else {
+            onChangeRef.current(serialized);
+          }
         }
       }
     };
   }, []);
+
+  // Populates `flushRef` (if given) with an imperative flush: clears any
+  // pending debounce and synchronously returns the current document as
+  // markdown — or a serialize-error indicator, running the same
+  // lossy-serialization check as onUpdate/unmount above — for callers
+  // (Save/Publish) that need guaranteed-fresh, guaranteed-safe content
+  // instead of waiting for the next debounced onChange.
+  useEffect(() => {
+    if (!flushRef) return;
+    flushRef.current = (): WysiwygFlushResult => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+      const currentEditor = editorRef.current;
+      if (!currentEditor || currentEditor.isDestroyed) {
+        return { ok: false, error: "The editor isn't ready yet." };
+      }
+      try {
+        const serialized = currentEditor.storage.markdown.getMarkdown();
+        const lossyError = detectLossySerialization(currentEditor, serialized);
+        if (lossyError) return { ok: false, error: lossyError };
+        return { ok: true, markdown: serialized };
+      } catch (error) {
+        return {
+          ok: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to serialize the document.",
+        };
+      }
+    };
+    return () => {
+      if (flushRef) flushRef.current = null;
+    };
+  }, [flushRef]);
 
   if (!editor) return null;
 
