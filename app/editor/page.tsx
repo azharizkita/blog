@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import Link from "next/link";
 import { RebuildButton } from "@/components/editor/rebuild-button";
 import { buttonVariants } from "@/components/ui/button";
@@ -19,6 +20,12 @@ export const instant = false;
 
 export default async function EditorPage() {
   assertDevEditorPage();
+
+  // The editor list must always be fresh, so render at request time. This
+  // also stops cacheComponents' prerender validation from walking into the
+  // uncached Octokit call below (its retry jitter uses Math.random(), which
+  // the prerender pass flags as a blocking-route error in the dev overlay).
+  await connection();
 
   const gists = await listAllGists();
   const sorted = [...gists].sort(

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { EditorScreen } from "@/components/editor/editor-screen";
 import type { EntryInput } from "@/lib/compose-entry";
 import parseEntry from "@/lib/parse-entry";
@@ -28,6 +29,11 @@ export default async function EditGistPage({
   params: Promise<{ gistId: string }>;
 }) {
   assertDevEditorPage();
+
+  // Always request-time: the gist must be fresh, and this keeps
+  // cacheComponents' prerender validation out of the uncached Octokit call
+  // (see the same note in app/editor/page.tsx).
+  await connection();
 
   const { gistId } = await params;
   const gist = await getGistById(gistId).catch(() => null);
