@@ -24,6 +24,7 @@ import {
   type WysiwygFlushResult,
 } from "@/components/editor/wysiwyg";
 import composeEntry, { type EntryInput } from "@/lib/compose-entry";
+import extractTitle from "@/lib/extract-title";
 import getSlug from "@/lib/get-slug";
 import { MarkdownEditor } from "./markdown-editor";
 import { MetadataBar } from "./metadata-bar";
@@ -85,9 +86,20 @@ export function EditorScreen(props: EditorScreenProps) {
     return () => clearTimeout(handle);
   }, [content, mode]);
 
-  const composeOrReport = (): string | null => {
+  // The title lives in the document itself: its leading "## " heading (the
+  // site's convention — ArticleContent promotes ## to the page h1). Old
+  // gists whose content doesn't start with a heading fall back to the
+  // metadata title they were loaded with, so they stay saveable unchanged.
+  const deriveTitle = (markdown: string): string =>
+    extractTitle(markdown) || entry.title;
+
+  const composeOrReport = (title: string): string | null => {
+    if (!title) {
+      setStatus("Start the document with a title heading (## Title).");
+      return null;
+    }
     try {
-      return composeEntry(entry);
+      return composeEntry({ ...entry, title });
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
       return null;
@@ -143,7 +155,7 @@ export function EditorScreen(props: EditorScreenProps) {
       const freshContent = flushWriteModeContent();
       if (freshContent === null) return;
       if (!requireContent(freshContent)) return;
-      const description = composeOrReport();
+      const description = composeOrReport(deriveTitle(freshContent));
       if (description === null) return;
       const result = reportSave(
         await saveDraft({ gistId, description, content: freshContent }),
@@ -161,7 +173,7 @@ export function EditorScreen(props: EditorScreenProps) {
       const freshContent = flushWriteModeContent();
       if (freshContent === null) return;
       if (!requireContent(freshContent)) return;
-      const description = composeOrReport();
+      const description = composeOrReport(deriveTitle(freshContent));
       if (description === null) return;
 
       if (isPublic && gistId) {
@@ -188,7 +200,7 @@ export function EditorScreen(props: EditorScreenProps) {
   };
 
   const gistStatus = !gistId ? "New" : isPublic ? "Published" : "Draft";
-  const slug = getSlug(entry.title);
+  const slug = getSlug(deriveTitle(content));
   // Beep pages don't exist (app/[type]/[slug]/page.tsx 404s them) — no path.
   const slugPath =
     entry.type !== "Beep"

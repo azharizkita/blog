@@ -158,6 +158,10 @@ export function WysiwygEditor({
       // SSR safety: render nothing on the server; mount client-side only.
       immediatelyRender: false,
       onCreate({ editor }) {
+        // A new/empty document has nothing to protect — and TitleDocument's
+        // schema seeds it with an empty title heading that serializes as
+        // "##", which would falsely trip the guard against the empty string.
+        if (!value.trim()) return;
         const serialized = editor.storage.markdown.getMarkdown();
         if (!roundTrips(value, serialized)) {
           onRoundTripFail(serialized);

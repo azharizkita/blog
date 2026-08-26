@@ -317,3 +317,13 @@
   overflow-x: auto;
   max-width: 100%;
 }
+
+/* The mandatory title heading (TitleDocument's first node) shows a hint when
+   empty; the Placeholder extension stamps data-placeholder + .is-empty. */
+.wysiwyg .tiptap .is-empty[data-placeholder]::before {
+  content: attr(data-placeholder);
+  color: color-mix(in oklch, var(--muted-foreground) 40%, transparent);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

@@ -9,9 +9,10 @@ interface MetadataBarProps {
 }
 
 /**
- * The gist's metadata, styled as the document's own head rather than a form:
- * the title reads like a title, and type/language/description sit in one
- * quiet row beneath it. Status and slug live in the editor's sticky bar.
+ * The gist's metadata head. The title is NOT here — it's the document's own
+ * leading "## " heading (derived via lib/extract-title.ts); this renders
+ * only the type/language chips and the description. Status and slug live in
+ * the editor's sticky bar.
  */
 export function MetadataBar({ value, onChange }: MetadataBarProps) {
   const set = (patch: Partial<EntryInput>) => onChange({ ...value, ...patch });
@@ -30,16 +31,6 @@ export function MetadataBar({ value, onChange }: MetadataBarProps) {
 
   return (
     <div className="space-y-3">
-      <input
-        id="entry-title"
-        aria-label="Title"
-        placeholder="Title"
-        autoComplete="off"
-        className="w-full bg-transparent text-3xl font-bold tracking-tight outline-none placeholder:text-muted-foreground/40"
-        value={value.title}
-        onChange={(event) => set({ title: event.target.value })}
-      />
-
       <div className="space-y-2 border-b pb-4">
         <div className="flex flex-wrap items-center gap-2">
           <select

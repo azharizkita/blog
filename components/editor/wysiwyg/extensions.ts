@@ -1,10 +1,49 @@
 import StarterKit from "@tiptap/starter-kit";
+import Document from "@tiptap/extension-document";
 import Image from "@tiptap/extension-image";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
+import { Placeholder } from "@tiptap/extensions";
 import { Markdown } from "tiptap-markdown";
 import CodeBlockShiki from "tiptap-extension-code-block-shiki";
 import { Extension, type Extensions } from "@tiptap/react";
+import { Plugin } from "@tiptap/pm/state";
 import { MermaidBlock } from "./mermaid-block";
+
+/**
+ * Ghost-style document shape: the first node is always a heading — the
+ * article's title. The site's convention makes the document's leading "## "
+ * the page h1, and the editor derives the gist's metadata title from it
+ * (lib/extract-title.ts), so the title can't be deleted away or preceded by
+ * other content.
+ */
+const TitleDocument = Document.extend({
+  content: "heading block+",
+});
+
+/**
+ * The title heading must serialize as "## " (level 2): if the first node's
+ * heading level drifts (toolbar H2/H3 applied to the title line, or pasted
+ * content starting with ###), normalize it back to level 2.
+ */
+const EnforceTitleLevel = Extension.create({
+  name: "enforceTitleLevel",
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        appendTransaction(_transactions, _oldState, state) {
+          const first = state.doc.firstChild;
+          if (first?.type.name === "heading" && first.attrs.level !== 2) {
+            return state.tr.setNodeMarkup(0, undefined, {
+              ...first.attrs,
+              level: 2,
+            });
+          }
+          return null;
+        },
+      }),
+    ];
+  },
+});
 
 /**
  * Enter/Shift-Enter inside a table cell can silently corrupt the document.
@@ -65,6 +104,8 @@ const StrikeShortcut = Extension.create({
 export function createExtensions(theme: "light" | "dark"): Extensions {
   return [
     StarterKit.configure({
+      // Replaced by TitleDocument (heading-first document shape).
+      document: false,
       heading: { levels: [2, 3, 4] },
       // The shiki extension replaces the default code block.
       codeBlock: false,
@@ -82,6 +123,14 @@ export function createExtensions(theme: "light" | "dark"): Extensions {
         light: "github-light",
         dark: "github-dark-dimmed",
       },
+    }),
+    TitleDocument,
+    EnforceTitleLevel,
+    Placeholder.configure({
+      // Only the title line (the mandatory first heading) gets a hint; the
+      // matching ::before rule lives in globals.css under .wysiwyg.
+      placeholder: ({ node, pos }) =>
+        pos === 0 && node.type.name === "heading" ? "Title" : "",
     }),
     Image,
     Table,
