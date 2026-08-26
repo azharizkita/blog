@@ -208,7 +208,12 @@ export function EditorScreen(props: EditorScreenProps) {
           <Link
             href="/editor"
             aria-label="Back to editor"
-            className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+            // -ml-1.5 cancels the icon button's internal glyph inset so the
+            // arrow optically aligns with the column edge (title, content).
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "icon-sm" }),
+              "-ml-1.5",
+            )}
           >
             <ArrowLeft />
           </Link>
