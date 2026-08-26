@@ -16,6 +16,7 @@ import {
   type SaveResult,
 } from "@/app/editor/actions";
 import { Button } from "@/components/ui/button";
+import { WysiwygEditor } from "@/components/editor/wysiwyg";
 import composeEntry, { type EntryInput } from "@/lib/compose-entry";
 import getSlug from "@/lib/get-slug";
 import { MarkdownEditor } from "./markdown-editor";
@@ -23,6 +24,8 @@ import { MetadataBar } from "./metadata-bar";
 import { PreviewPane } from "./preview-pane";
 
 const PREVIEW_DEBOUNCE_MS = 600;
+
+type EditorMode = "write" | "source" | "preview";
 
 export interface EditorScreenProps {
   gistId?: string;
@@ -46,10 +49,17 @@ export function EditorScreen(props: EditorScreenProps) {
   const [isPreviewPending, startPreview] = useTransition();
   const [isSaving, startSaving] = useTransition();
   const previewRequestRef = useRef(0);
+  const [mode, setMode] = useState<EditorMode>("write");
+  const [roundTripBroken, setRoundTripBroken] = useState(false);
+  const forceWriteRef = useRef(false);
 
   // Debounced exact-pipeline preview: the server action renders the real
   // ArticleContent component, so the preview can't drift from production.
+  // Only fetch while the preview mode is actually visible; entering preview
+  // re-runs this effect via the `mode` dependency, which is what kicks off
+  // the first render for the current content.
   useEffect(() => {
+    if (mode !== "preview") return;
     const handle = setTimeout(() => {
       const requestId = ++previewRequestRef.current;
       startPreview(async () => {
@@ -66,7 +76,7 @@ export function EditorScreen(props: EditorScreenProps) {
       });
     }, PREVIEW_DEBOUNCE_MS);
     return () => clearTimeout(handle);
-  }, [content]);
+  }, [content, mode]);
 
   const composeOrReport = (): string | null => {
     try {
@@ -154,15 +164,61 @@ export function EditorScreen(props: EditorScreenProps) {
         status={gistStatus}
       />
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="flex items-center gap-1">
+        {(["write", "source", "preview"] as const).map((m) => (
+          <Button
+            key={m}
+            variant={mode === m ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setMode(m)}
+          >
+            {m === "write" ? "Write" : m === "source" ? "Source" : "Preview"}
+          </Button>
+        ))}
+      </div>
+
+      {roundTripBroken && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm">
+          <p className="flex-1">
+            This document contains formatting the visual editor would rewrite.
+            Editing in Source mode to keep it intact.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              forceWriteRef.current = true;
+              setRoundTripBroken(false);
+              setMode("write");
+            }}
+          >
+            Edit visually anyway
+          </Button>
+        </div>
+      )}
+
+      {mode === "write" && (
+        <WysiwygEditor
+          value={content}
+          onChange={setContent}
+          onRoundTripFail={() => {
+            if (forceWriteRef.current) return;
+            setRoundTripBroken(true);
+            setMode("source");
+          }}
+        />
+      )}
+      {mode === "source" && (
         <MarkdownEditor value={content} onChange={setContent} />
+      )}
+      {mode === "preview" && (
         <PreviewPane
           node={preview}
           error={previewError}
           isPending={isPreviewPending}
           version={previewVersion}
         />
-      </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         {!isPublic && (
