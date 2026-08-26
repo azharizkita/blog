@@ -245,3 +245,60 @@
     @apply border px-4 py-2 text-left;
   }
 }
+
+/* --- WYSIWYG editor surface (dev-only /editor Write mode) -------------------
+   Mirrors ArticleContent's element→prose-* mapping so editing looks exactly
+   like the published article. Nothing outside .wysiwyg is affected. */
+.wysiwyg .tiptap {
+  outline: none;
+}
+.wysiwyg .tiptap > * + * {
+  margin-top: calc(var(--spacing) * 8);
+}
+.wysiwyg h2 {
+  @apply prose-h1;
+}
+.wysiwyg h3 {
+  @apply prose-h2;
+}
+.wysiwyg h4 {
+  @apply prose-h3;
+}
+.wysiwyg p {
+  @apply prose-p;
+}
+.wysiwyg ul {
+  @apply prose-list;
+}
+.wysiwyg ol {
+  @apply prose-list list-decimal;
+}
+.wysiwyg blockquote {
+  @apply prose-blockquote;
+}
+.wysiwyg :not(pre) > code {
+  @apply prose-code;
+}
+.wysiwyg table {
+  @apply prose-table;
+}
+.wysiwyg img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+.wysiwyg img.ProseMirror-selectednode,
+.wysiwyg .ProseMirror-selectednode {
+  @apply ring-2 ring-ring;
+}
+
+/* tiptap-extension-code-block-shiki dual-theme support: shiki emits the
+   light-theme colors inline plus --shiki-dark/--shiki-dark-bg custom
+   properties for the dark variant; swap to them under .dark to match the
+   article pipeline's github-light / github-dark-dimmed pairing without
+   re-highlighting or re-mounting the editor on theme change. */
+.dark .wysiwyg .tiptap .shiki,
+.dark .wysiwyg .tiptap .shiki span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
