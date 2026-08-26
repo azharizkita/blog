@@ -5,6 +5,11 @@ import type { EntryInput } from "@/lib/compose-entry";
 import parseEntry from "@/lib/parse-entry";
 import { getGistById } from "@/repositories/gist";
 import { assertDevEditorPage } from "../dev-only";
+// Registers ArticleContent's client components (Mermaid, next/image, …) in
+// this page entry's React Client Manifest so the preview server action can
+// serialize them — see the same import in app/editor/new/page.tsx for the
+// full explanation.
+import "@/components/article-content";
 
 export const metadata: Metadata = {
   title: "Edit article",
