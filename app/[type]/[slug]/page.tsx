@@ -107,7 +107,7 @@ export default async function Article({
   const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
 
   const crumbs = [
-    { name: "Home", href: "/" },
+    { name: config.site.name, href: "/" },
     { name: entryType, href: `/${type}` },
     { name: title, href: `/${type}/${slug}` },
   ];

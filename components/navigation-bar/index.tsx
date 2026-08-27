@@ -19,13 +19,12 @@ export async function NavigationBar() {
     articles.some((gist) => gist.entry.type === type),
   );
 
-  const links = [
-    { label: "Home", href: "/" },
-    ...topicsWithEntries.map((type) => ({
-      label: type,
-      href: `/${type.toLowerCase()}`,
-    })),
-  ];
+  // No Home item: the wordmark on the left already links to "/" (and stays
+  // visible on mobile next to the burger).
+  const links = topicsWithEntries.map((type) => ({
+    label: type,
+    href: `/${type.toLowerCase()}`,
+  }));
 
   const searchItems: SearchItem[] = articles.map((gist) => ({
     title: gist.entry.title,

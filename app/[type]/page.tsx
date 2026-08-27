@@ -83,7 +83,7 @@ export default async function TypeListing({
   );
 
   const crumbs = [
-    { name: "Home", href: "/" },
+    { name: config.site.name, href: "/" },
     { name: topic, href: `/${type}` },
   ];
 
