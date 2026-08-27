@@ -25,8 +25,5 @@ export const config = {
       process.env.AUTHOR_URL ||
       `https://github.com/${process.env.GITHUB_USERNAME || "azharizkita"}`,
   },
-  social: [
-    { label: "GitHub", href: `https://github.com/${process.env.GITHUB_USERNAME || "azharizkita"}` },
-    { label: "RSS", href: "/feed.xml" },
-  ],
+  social: [{ label: "RSS", href: "/feed.xml" }],
 } as const;

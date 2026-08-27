@@ -327,3 +327,28 @@
   height: 0;
   pointer-events: none;
 }
+
+/* --- Article link accent ----------------------------------------------------
+   The palette is otherwise fully neutral; content links get the one chromatic
+   accent so they read as links. Scoped to article bodies only — the site
+   chrome stays neutral — and mirrored in the editor's Write mode (.wysiwyg)
+   so what you edit matches what publishes. Heading anchor links are excluded
+   (they are headings, not prose links). */
+:root {
+  --accent-link: oklch(0.55 0.15 255);
+}
+.dark {
+  --accent-link: oklch(0.72 0.12 255);
+}
+#article a:not(:has(h1, h2, h3, h4)),
+.wysiwyg .tiptap a {
+  color: var(--accent-link);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in oklch, var(--accent-link) 40%, transparent);
+  transition: text-decoration-color 0.15s ease-out;
+}
+#article a:not(:has(h1, h2, h3, h4)):hover,
+.wysiwyg .tiptap a:hover {
+  text-decoration-color: var(--accent-link);
+}
