@@ -7,7 +7,12 @@ export function FeedRow({ gist }: { gist: GistList[number] }) {
   const date = gist.created_at ? new Date(gist.created_at) : null;
   const type = gist.entry.type.toLowerCase();
   return (
-    <article className="group relative flex items-center gap-4 py-5">
+    // overflow-x-clip: the hover chevron parks 24px PAST the row's right edge
+    // (translate-x-6); unclipped, that widens the page's scrollable area and
+    // makes every feed page horizontally scrollable on mobile, where the row
+    // spans the full viewport. clip (not hidden) avoids creating a scroll
+    // container, so the slide-in still animates.
+    <article className="group relative flex items-center gap-4 overflow-x-clip py-5">
       {date && (
         <time
           dateTime={date.toISOString().slice(0, 10)}
