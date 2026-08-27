@@ -115,7 +115,7 @@ export default function RootLayout({
                 {children}
               </main>
 
-              <div className="w-full max-w-3xl mx-auto px-4 pt-4 pb-8">
+              <div className="w-full max-w-3xl mx-auto px-4 pb-8">
                 <Footer />
               </div>
             </div>
