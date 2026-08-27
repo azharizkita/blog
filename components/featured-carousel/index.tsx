@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import placeholder from "@/components/article-content/placeholder.png";
 import type { GistList } from "@/repositories/gist";
 import {
   Carousel,
@@ -15,7 +16,7 @@ export function FeaturedCarousel({ gists }: { gists: GistList }) {
   return (
     <Carousel className="mx-12" opts={{ align: "start" }}>
       <CarouselContent>
-        {gists.map((gist) => {
+        {gists.map((gist, index) => {
           const type = gist.entry.type.toLowerCase();
           // The article's annotated cover image (the editor's "Set as cover"
           // marker) beats the generated OG card; articles without one keep
@@ -35,6 +36,11 @@ export function FeaturedCarousel({ gists }: { gists: GistList }) {
                   width={cover?.width ?? 1200}
                   height={cover?.height ?? 630}
                   sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                  placeholder="blur"
+                  blurDataURL={placeholder.src}
+                  // The first card sits above the fold on every viewport;
+                  // eager-load it so the carousel doesn't pop in blank.
+                  priority={index === 0}
                   className="aspect-[1200/630] w-full rounded-2xl object-cover transition-opacity group-hover:opacity-80"
                 />
                 <p className="prose-muted text-xs uppercase">{gist.entry.type}</p>

@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   allowedDevOrigins: ['lokey-mac.gate-scylla.ts.net'],
   images: {
+    // Cover images live at content-hashed URLs (blog-assets repo) that can
+    // never change content, but raw.githubusercontent sends max-age=300 —
+    // without a floor, the optimizer re-fetches every 5 minutes and
+    // visitors keep paying the cold path. 31 days.
+    minimumCacheTTL: 2678400,
     localPatterns: [
       // The OG endpoint is the featured-carousel card art; it needs its
       // ?title= query. (Next 16 blocks query strings on local images unless
