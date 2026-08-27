@@ -104,7 +104,10 @@ export default function RootLayout({
             {/* App shell owns the flex column so base-ui popups (portaled to
                 <body>) don't become flex items and shift the layout. */}
             <div className="flex min-h-dvh flex-col gap-4">
-              <header className="w-full max-w-3xl mx-auto flex-none pt-4">
+              {/* Same container recipe as <main> and the footer wrapper below
+                  (max-w-3xl mx-auto px-4) so the chrome and content always
+                  share left/right edges. */}
+              <header className="w-full max-w-3xl mx-auto flex-none px-4 pt-4">
                 <NavigationBar />
               </header>
 

@@ -34,7 +34,10 @@ export async function NavigationBar() {
   }));
 
   return (
-    <div className="flex w-full items-center justify-between gap-4 px-1.5">
+    // No horizontal padding of its own: the layout's header wrapper owns the
+    // column inset (px-4), identical to <main>'s, so the wordmark always
+    // lines up with the content's left edge.
+    <div className="flex w-full items-center justify-between gap-4">
       <Link href="/" className="font-extrabold tracking-tight">
         {config.site.name}
       </Link>
@@ -51,7 +54,10 @@ export async function NavigationBar() {
         ))}
       </nav>
 
-      <div className="flex items-center gap-1">
+      {/* -mr-1.5 cancels the trailing icon button's internal glyph inset so
+          the search/burger icon optically aligns with the column's right
+          edge (same trick as the editor's back arrow). */}
+      <div className="-mr-1.5 flex items-center gap-1">
         <SiteSearch items={searchItems} />
         <div className="md:hidden">
           <MobileMenu links={links} />
