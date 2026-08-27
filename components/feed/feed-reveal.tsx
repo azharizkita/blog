@@ -15,22 +15,18 @@ export function FeedReveal({
 }) {
   const [visible, setVisible] = useState(pageSize);
   const rows = Children.toArray(children);
-  // Divider adaptation: all rows stay in the DOM (SEO), so a CSS-only
-  // `last:border-b-0` on the row itself can't tell which row is the last
-  // VISIBLE one — the true last child may be `hidden`. Instead the border
-  // lives on this wrapper div and is computed here, from `visible`/`total`,
-  // so only the last row the visitor can actually see loses its hairline.
-  const lastVisibleIndex = Math.min(visible, total) - 1;
+  // Divider adaptation: all rows stay in the DOM (SEO), so a plain
+  // `border-b last:border-b-0` on the row itself can't tell which row is the
+  // last VISIBLE one — the true last child may be `hidden`. `divide-y`
+  // sidesteps that entirely: it puts a top border on every child but the
+  // first, so the border between the last visible row and the first hidden
+  // one belongs to the (non-rendered, `display:none`) hidden row and never
+  // paints — the last visible row always reads with no trailing hairline,
+  // with no index math needed.
   return (
-    <div>
+    <div className="divide-y">
       {rows.map((row, index) => (
-        <div
-          key={index}
-          className={cn(
-            index >= visible && "hidden",
-            index < lastVisibleIndex && "border-b",
-          )}
-        >
+        <div key={index} className={cn(index >= visible && "hidden")}>
           {row}
         </div>
       ))}

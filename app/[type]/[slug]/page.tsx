@@ -1,8 +1,12 @@
 import ArticleContent from "@/components/article-content";
 import TimeAgo from "@/components/time-ago";
+import { FeedRow } from "@/components/feed";
+import { ShareButton } from "@/components/share-button";
+import { buttonVariants } from "@/components/ui/button";
 import { getGistDetails, getGistList } from "@/repositories/gist";
 import { config } from "@/lib/config";
 import { formatDate } from "@/lib/format-date";
+import readingTime from "@/lib/reading-time";
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import {
@@ -14,6 +18,7 @@ import {
 import { rssAlternate } from "@/lib/metadata";
 import { isContentSegment, type ContentTopic } from "@/lib/content-types";
 import type { Metadata } from "next";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { BlogPosting } from "schema-dts";
@@ -129,19 +134,29 @@ export default async function Article({
     dateModified: repoData.updated_at,
   };
 
-  // Other entries of the same type, for internal linking (no dead-ends).
-  const siblings = (
+  const minutes = readingTime(content);
+
+  // Full same-type chronological list (newest first), self included — used
+  // to locate this entry's position so we can derive its older/newer
+  // neighbors for the prev/next footer links.
+  const sameType = (
     await getGistList("articles", {
       topic: entryType as ContentTopic,
     })
-  )
-    .filter((gist) => gist.slug !== slug)
-    .sort(
-      (a, b) =>
-        new Date(b.created_at ?? 0).getTime() -
-        new Date(a.created_at ?? 0).getTime(),
-    )
-    .slice(0, 4);
+  ).sort(
+    (a, b) =>
+      new Date(b.created_at ?? 0).getTime() -
+      new Date(a.created_at ?? 0).getTime(),
+  );
+
+  const selfIndex = sameType.findIndex((gist) => gist.slug === slug);
+  // Sorted newest-first: the next index down is older, the previous index is newer.
+  const prevPost = selfIndex >= 0 ? sameType[selfIndex + 1] : undefined;
+  const nextPost = selfIndex > 0 ? sameType[selfIndex - 1] : undefined;
+
+  // Other entries of the same type, for internal linking (no dead-ends).
+  const siblingsSorted = sameType.filter((gist) => gist.slug !== slug);
+  const related = siblingsSorted.slice(0, 5);
 
   return (
     <>
@@ -157,31 +172,63 @@ export default async function Article({
         )}
       />
 
+      <header className="mx-auto max-w-2xl space-y-4 pt-8 text-center">
+        <div className="prose-muted flex justify-center gap-3 text-xs tracking-wide uppercase">
+          {repoData.created_at && (
+            <time dateTime={repoData.created_at}>
+              {formatDate(repoData.created_at)}
+            </time>
+          )}
+          <span aria-hidden>&middot;</span>
+          <span>{minutes} min read</span>
+          <span aria-hidden>&middot;</span>
+          <Link href={`/${type}`}>{entryType}</Link>
+        </div>
+        {description ? <p className="prose-lead text-center">{description}</p> : null}
+        <div className="flex justify-center">
+          <ShareButton title={title} url={url} />
+        </div>
+      </header>
+
       <ArticleContent content={content} withBackNavigation />
       {repoData.created_at && (
         <TimeAgo time={repoData.created_at} updatedAt={repoData.updated_at} />
       )}
 
-      {siblings.length > 0 ? (
-        <section className="space-y-4 border-t pt-8">
-          <h2 className="prose-h3">More in {entryType}</h2>
-          <ul className="space-y-4">
-            {siblings.map((sibling) => (
-              <li key={sibling.id}>
-                <Link
-                  href={`/${type}/${sibling.slug}`}
-                  className="group block space-y-1"
-                >
-                  <p className="prose-muted text-xs uppercase tracking-wide">
-                    {formatDate(sibling.created_at)}
-                  </p>
-                  <h3 className="prose-small font-medium transition-colors group-hover:text-muted-foreground">
-                    {sibling.entry.title}
-                  </h3>
-                </Link>
-              </li>
+      <div className="flex items-center justify-between border-t pt-8">
+        {prevPost ? (
+          <Link
+            href={`/${type}/${prevPost.slug}`}
+            aria-label={prevPost.entry.title}
+            className={buttonVariants({ variant: "outline", size: "icon" })}
+          >
+            <ArrowLeft />
+          </Link>
+        ) : (
+          <span />
+        )}
+        <p className="prose-muted text-xs">Published in {entryType}</p>
+        {nextPost ? (
+          <Link
+            href={`/${type}/${nextPost.slug}`}
+            aria-label={nextPost.entry.title}
+            className={buttonVariants({ variant: "outline", size: "icon" })}
+          >
+            <ArrowRight />
+          </Link>
+        ) : (
+          <span />
+        )}
+      </div>
+
+      {related.length > 0 ? (
+        <section className="space-y-4">
+          <h2 className="prose-h3">Related</h2>
+          <div className="divide-y">
+            {related.map((sibling) => (
+              <FeedRow key={sibling.id} gist={sibling} />
             ))}
-          </ul>
+          </div>
         </section>
       ) : null}
 
