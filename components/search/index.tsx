@@ -78,8 +78,8 @@ export function SiteSearch({ items }: SiteSearchProps) {
               <CommandGroup key={type} heading={type}>
                 {entries.map((item) => (
                   <CommandItem
-                    key={item.slug}
-                    value={`${item.type} ${item.title} ${item.description ?? ""}`}
+                    key={`${item.type}-${item.slug}`}
+                    value={`${item.type} ${item.title} ${item.description ?? ""} ${item.type} ${item.slug}`}
                     onSelect={() => handleSelect(item)}
                   >
                     <div className="flex min-w-0 flex-col gap-0.5">

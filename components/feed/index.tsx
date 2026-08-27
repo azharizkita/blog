@@ -14,10 +14,10 @@ export function FeedRow({ gist }: { gist: GistList[number] }) {
           className="w-10 flex-none text-center font-extrabold text-primary"
         >
           <span className="block text-lg leading-none">
-            {String(date.getDate()).padStart(2, "0")}
+            {String(date.getUTCDate()).padStart(2, "0")}
           </span>
           <span className="block text-[10px] tracking-wide uppercase">
-            {date.toLocaleString("en-US", { month: "short" })}
+            {date.toLocaleString("en-US", { month: "short", timeZone: "UTC" })}
           </span>
         </time>
       )}
@@ -26,7 +26,11 @@ export function FeedRow({ gist }: { gist: GistList[number] }) {
       </h2>
       <div className="flex flex-none items-center gap-3 transition-transform group-hover:-translate-x-4">
         {gist.entry.featured && (
-          <Star aria-label="Featured" className="size-3.5 fill-primary text-primary" />
+          <Star
+            role="img"
+            aria-label="Featured"
+            className="size-3.5 fill-primary text-primary"
+          />
         )}
         {gist.readingTimeMinutes != null && (
           <span className="prose-muted text-xs whitespace-nowrap">

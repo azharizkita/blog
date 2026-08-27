@@ -63,6 +63,7 @@ export default async function EditorPage() {
                 </span>
                 {gist.entry.featured && (
                   <Star
+                    role="img"
                     aria-label="Featured"
                     className="inline size-3 fill-primary text-primary"
                   />

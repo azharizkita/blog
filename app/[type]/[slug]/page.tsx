@@ -3,6 +3,7 @@ import TimeAgo from "@/components/time-ago";
 import { FeedRow } from "@/components/feed";
 import { ShareButton } from "@/components/share-button";
 import { buttonVariants } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getGistDetails, getGistList } from "@/repositories/gist";
 import { config } from "@/lib/config";
 import { formatDate } from "@/lib/format-date";
@@ -175,11 +176,13 @@ export default async function Article({
       <header className="mx-auto max-w-2xl space-y-4 pt-8 text-center">
         <div className="prose-muted flex justify-center gap-3 text-xs tracking-wide uppercase">
           {repoData.created_at && (
-            <time dateTime={repoData.created_at}>
-              {formatDate(repoData.created_at)}
-            </time>
+            <>
+              <time dateTime={repoData.created_at}>
+                {formatDate(repoData.created_at)}
+              </time>
+              <span aria-hidden>&middot;</span>
+            </>
           )}
-          <span aria-hidden>&middot;</span>
           <span>{minutes} min read</span>
           <span aria-hidden>&middot;</span>
           <Link href={`/${type}`}>{entryType}</Link>
@@ -197,25 +200,39 @@ export default async function Article({
 
       <div className="flex items-center justify-between border-t pt-8">
         {prevPost ? (
-          <Link
-            href={`/${type}/${prevPost.slug}`}
-            aria-label={prevPost.entry.title}
-            className={buttonVariants({ variant: "outline", size: "icon" })}
-          >
-            <ArrowLeft />
-          </Link>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Link
+                  href={`/${type}/${prevPost.slug}`}
+                  aria-label={prevPost.entry.title}
+                  className={buttonVariants({ variant: "outline", size: "icon" })}
+                >
+                  <ArrowLeft />
+                </Link>
+              }
+            />
+            <TooltipContent>{prevPost.entry.title}</TooltipContent>
+          </Tooltip>
         ) : (
           <span />
         )}
         <p className="prose-muted text-xs">Published in {entryType}</p>
         {nextPost ? (
-          <Link
-            href={`/${type}/${nextPost.slug}`}
-            aria-label={nextPost.entry.title}
-            className={buttonVariants({ variant: "outline", size: "icon" })}
-          >
-            <ArrowRight />
-          </Link>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Link
+                  href={`/${type}/${nextPost.slug}`}
+                  aria-label={nextPost.entry.title}
+                  className={buttonVariants({ variant: "outline", size: "icon" })}
+                >
+                  <ArrowRight />
+                </Link>
+              }
+            />
+            <TooltipContent>{nextPost.entry.title}</TooltipContent>
+          </Tooltip>
         ) : (
           <span />
         )}

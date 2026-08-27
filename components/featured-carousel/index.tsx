@@ -23,7 +23,11 @@ export function FeaturedCarousel({ gists }: { gists: GistList }) {
               <Link href={`/${type}/${gist.slug}`} className="group block space-y-2">
                 <Image
                   src={image}
-                  alt={gist.entry.title}
+                  // Decorative: the visible <h3> beneath already carries the
+                  // title text, so a screen reader announcing the same
+                  // string as the image's alt would speak it twice per card.
+                  // Accepted deviation from the spec's "composed alt" wording.
+                  alt=""
                   width={1200}
                   height={630}
                   sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
