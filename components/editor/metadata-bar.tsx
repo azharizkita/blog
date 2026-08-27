@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ENTRY_TYPES, type EntryInput } from "@/lib/compose-entry";
+import { cn } from "@/lib/utils";
 
 interface MetadataBarProps {
   value: EntryInput;
@@ -48,6 +51,16 @@ export function MetadataBar({ value, onChange }: MetadataBarProps) {
               </option>
             ))}
           </select>
+
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-pressed={Boolean(value.featured)}
+            aria-label={value.featured ? "Unmark as featured" : "Mark as featured"}
+            onClick={() => set({ featured: !value.featured })}
+          >
+            <Star className={cn(value.featured && "fill-primary text-primary")} />
+          </Button>
 
           {value.type === "Sharing" && (
             <input

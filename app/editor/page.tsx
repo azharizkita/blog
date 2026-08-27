@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
+import { Star } from "lucide-react";
 import { RebuildButton } from "@/components/editor/rebuild-button";
 import { buttonVariants } from "@/components/ui/button";
 import { formatDate } from "@/lib/format-date";
@@ -60,6 +61,12 @@ export default async function EditorPage() {
                 <span className="font-medium transition-colors group-hover:text-muted-foreground">
                   {gist.entry.title}
                 </span>
+                {gist.entry.featured && (
+                  <Star
+                    aria-label="Featured"
+                    className="inline size-3 fill-primary text-primary"
+                  />
+                )}
               </span>
               <span className="prose-muted text-xs whitespace-nowrap">
                 {gist.public ? "Published" : "Draft"} ·{" "}

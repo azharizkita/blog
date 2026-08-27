@@ -16,6 +16,8 @@ export interface EntryInput {
   description: string;
   /** Required for Sharing entries, unused otherwise. */
   languageTag?: string;
+  /** Marks the entry as featured; composes to a trailing "!" on the type segment. */
+  featured?: boolean;
 }
 
 export const ENTRY_DELIMITER = " - ";
@@ -25,7 +27,7 @@ export const ENTRY_DELIMITER = " - ";
  * Throws with a user-facing message when the metadata can't round-trip.
  */
 export default function composeEntry(entry: EntryInput): string {
-  const { type, title, description, languageTag } = entry;
+  const { type, title, description, languageTag, featured } = entry;
 
   if (!title.trim()) {
     throw new Error("Title is required.");
@@ -44,7 +46,7 @@ export default function composeEntry(entry: EntryInput): string {
     }
   }
 
-  const parts: string[] = [type];
+  const parts: string[] = [type + (featured ? "!" : "")];
 
   if (type === "Sharing") {
     if (!languageTag?.trim()) {
@@ -74,6 +76,7 @@ export default function composeEntry(entry: EntryInput): string {
     type === "Poem" && !trimmedDescription ? null : trimmedDescription;
   const roundTripFailed =
     roundTripped.type !== type ||
+    roundTripped.featured !== Boolean(featured) ||
     roundTripped.title !== title.trim() ||
     roundTripped.description !== expectedDescription ||
     (type === "Sharing" &&
