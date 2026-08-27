@@ -33,9 +33,14 @@ function toText(node: ReactNode): string {
   return "";
 }
 
-export default async function ArticleContent(props: ArticleContentProps) {
-  "use cache";
-  cacheLife("max"); // article markdown is static; cache the MDX/shiki compile
+/**
+ * The raw, uncached article pipeline. The editor's preview action renders
+ * this directly: a "use cache" function cannot be executed inside a server
+ * action's render (its cache-layer Flight decode fails with
+ * "chunk.reason.enqueueModel is not a function"), and preview content is
+ * ever-changing anyway, so caching it would only grow the dev cache.
+ */
+export async function ArticleContentUncached(props: ArticleContentProps) {
 
   const { content } = props;
 
@@ -180,4 +185,10 @@ export default async function ArticleContent(props: ArticleContentProps) {
       />
     </article>
   );
+}
+
+export default async function ArticleContent(props: ArticleContentProps) {
+  "use cache";
+  cacheLife("max"); // article markdown is static; cache the MDX/shiki compile
+  return ArticleContentUncached(props);
 }
