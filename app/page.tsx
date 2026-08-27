@@ -38,7 +38,10 @@ export default async function Home() {
           className="mx-auto"
           priority
         />
-        <h1 className="prose-h1">{config.site.name}</h1>
+        {/* The nav and icon already carry the identity; keep the h1 for the
+            page's heading structure (exactly one h1) without repeating the
+            name visually. */}
+        <h1 className="sr-only">{config.site.name}</h1>
         <p className="prose-lead">{config.site.description}</p>
       </section>
 
