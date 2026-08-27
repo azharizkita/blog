@@ -1,12 +1,11 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getGistList } from "@/repositories/gist";
 import { config } from "@/lib/config";
-import { formatDate } from "@/lib/format-date";
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { Feed } from "@/components/feed";
 import { breadcrumbNode, collectionPageNode, graph } from "@/lib/structured-data";
 import { rssAlternate } from "@/lib/metadata";
 import {
@@ -84,7 +83,7 @@ export default async function TypeListing({
   );
 
   const crumbs = [
-    { name: "Home", href: "/" },
+    { name: config.site.name, href: "/" },
     { name: topic, href: `/${type}` },
   ];
 
@@ -107,36 +106,17 @@ export default async function TypeListing({
       />
 
       <section className="space-y-2">
-        <h1 className="prose-h1">{topic}</h1>
+        <h1 className="prose-h1">
+          <span className="text-primary">#</span>
+          {topic.toLowerCase()}
+        </h1>
         <p className="prose-lead">{TYPE_LEADS[type]}</p>
+        <p className="prose-muted text-xs">
+          {sorted.length} {sorted.length === 1 ? "entry" : "entries"}
+        </p>
       </section>
       <section className="space-y-6">
-        {sorted.length === 0 ? (
-          <p className="prose-muted">No entries yet.</p>
-        ) : (
-          <ul className="space-y-8">
-            {sorted.map((gist) => (
-              <li key={gist.id}>
-                <Link
-                  href={`/${type}/${gist.slug}`}
-                  className="group block space-y-1"
-                >
-                  <p className="prose-muted text-xs uppercase tracking-wide">
-                    {formatDate(gist.created_at)}
-                  </p>
-                  <h2 className="prose-h3 transition-colors group-hover:text-muted-foreground">
-                    {gist.entry.title}
-                  </h2>
-                  {gist.entry.description ? (
-                    <p className="prose-muted line-clamp-2">
-                      {gist.entry.description}
-                    </p>
-                  ) : null}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+        <Feed gists={sorted} />
       </section>
 
       <Breadcrumbs items={crumbs} />

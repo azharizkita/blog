@@ -4,6 +4,7 @@ import type { ContentTopic } from "@/lib/content-types";
 import getSlug from "@/lib/get-slug";
 import octokit from "@/lib/octokit";
 import parseEntry from "@/lib/parse-entry";
+import readingTime from "@/lib/reading-time";
 
 type GistOptions = {
   topic: ContentTopic;
@@ -38,11 +39,28 @@ export const getGistList = async (
     }
   });
 
+  // Reading time needs the markdown; the list API exposes raw_url but not
+  // content. A failed fetch degrades to null — one bad gist must never take
+  // down the whole list.
+  const enriched = await Promise.all(
+    _data.map(async (gist) => {
+      let readingTimeMinutes: number | null = null;
+      const rawUrl = gist.files?.["index.md"]?.raw_url;
+      if (rawUrl) {
+        try {
+          const response = await fetch(rawUrl);
+          if (response.ok) readingTimeMinutes = readingTime(await response.text());
+        } catch {}
+      }
+      return { ...gist, readingTimeMinutes };
+    }),
+  );
+
   if (type === "beeps") {
-    return _data.filter((gist) => gist.entry.type === "Beep");
+    return enriched.filter((gist) => gist.entry.type === "Beep");
   }
 
-  const articles = _data.filter((gist) => gist.entry.type !== "Beep");
+  const articles = enriched.filter((gist) => gist.entry.type !== "Beep");
 
   if (!!topic) {
     return articles.filter((gist) => gist.entry.type === topic);
