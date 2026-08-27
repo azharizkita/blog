@@ -132,7 +132,11 @@ export function createExtensions(theme: "light" | "dark"): Extensions {
       placeholder: ({ node, pos }) =>
         pos === 0 && node.type.name === "heading" ? "Title" : "",
     }),
-    Image,
+    // Inline, as markdown defines images: tiptap-markdown's image serializer
+    // writes ![alt](src) without closing a block, so a block-level image node
+    // glues the following paragraph onto the image line on serialize — which
+    // silently tripped the round-trip guard on every article with an image.
+    Image.configure({ inline: true }),
     Table,
     TableRow,
     TableHeader,
