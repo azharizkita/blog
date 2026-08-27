@@ -17,19 +17,23 @@ export function FeaturedCarousel({ gists }: { gists: GistList }) {
       <CarouselContent>
         {gists.map((gist) => {
           const type = gist.entry.type.toLowerCase();
-          const image = `/api/og?title=${encodeURIComponent(gist.entry.title)}`;
+          // The article's annotated cover image (the editor's "Set as cover"
+          // marker) beats the generated OG card; articles without one keep
+          // the OG fallback.
+          const cover = gist.coverImage;
+          const image =
+            cover?.src ??
+            `/api/og?title=${encodeURIComponent(gist.entry.title)}`;
           return (
             <CarouselItem key={gist.id} className="basis-full md:basis-1/2 lg:basis-1/3">
               <Link href={`/${type}/${gist.slug}`} className="group block space-y-2">
                 <Image
                   src={image}
-                  // Decorative: the visible <h3> beneath already carries the
-                  // title text, so a screen reader announcing the same
-                  // string as the image's alt would speak it twice per card.
-                  // Accepted deviation from the spec's "composed alt" wording.
-                  alt=""
-                  width={1200}
-                  height={630}
+                  // Decorative when it duplicates the visible <h3>; a real
+                  // cover carries its authored alt text.
+                  alt={cover?.alt ?? ""}
+                  width={cover?.width ?? 1200}
+                  height={cover?.height ?? 630}
                   sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                   className="aspect-[1200/630] w-full rounded-2xl object-cover transition-opacity group-hover:opacity-80"
                 />

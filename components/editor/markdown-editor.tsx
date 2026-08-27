@@ -13,6 +13,7 @@ import {
 import {
   fileToBase64,
   imageFilesFrom,
+  measureImage,
 } from "@/components/editor/wysiwyg/image-upload";
 
 interface MarkdownEditorProps {
@@ -49,13 +50,21 @@ async function uploadIntoView(
   };
 
   try {
+    // Carry the site's alt|WxH convention (lib/get-image-size.ts) like the
+    // Write-mode flow; the author fills the descriptive part in the alt.
+    const objectUrl = URL.createObjectURL(file);
+    const dimensions = await measureImage(objectUrl);
+    URL.revokeObjectURL(objectUrl);
+    const altMeta = dimensions
+      ? `|${dimensions.width}x${dimensions.height}`
+      : "";
     const dataBase64 = await fileToBase64(file);
     const result = await uploadEditorImage({
       dataBase64,
       contentType: file.type,
     });
     if (result.ok) {
-      settle(`![](${result.url})`);
+      settle(`![${altMeta}](${result.url})`);
     } else {
       settle("");
       onError(result.error);

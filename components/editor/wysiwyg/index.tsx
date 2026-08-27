@@ -17,6 +17,19 @@ declare module "@tiptap/core" {
   }
 }
 
+const STALE_EDITOR_MESSAGE =
+  "The editor's dev hot-reload went stale — reload the page to keep editing.";
+
+/**
+ * tiptap-markdown attaches storage.markdown in onBeforeCreate; after long
+ * Turbopack HMR chains the live editor can end up with a stale module graph
+ * where it's missing entirely (dev-only — verified sound in production
+ * builds). Degrade to a reload prompt instead of an uncaught TypeError.
+ */
+function getMarkdownSafe(editor: Editor): string | null {
+  return editor.storage.markdown?.getMarkdown() ?? null;
+}
+
 const CHANGE_DEBOUNCE_MS = 300;
 
 export type WysiwygFlushResult =
@@ -179,7 +192,8 @@ export function WysiwygEditor({
         // schema seeds it with an empty title heading that serializes as
         // "##", which would falsely trip the guard against the empty string.
         if (!value.trim()) return;
-        const serialized = editor.storage.markdown.getMarkdown();
+        const serialized = getMarkdownSafe(editor);
+        if (serialized === null) return;
         if (!roundTrips(value, serialized)) {
           onRoundTripFail(serialized);
         }
@@ -192,7 +206,11 @@ export function WysiwygEditor({
           // "an edit is pending" and would otherwise re-flush a change
           // that's already been delivered.
           debounceRef.current = null;
-          const serialized = editor.storage.markdown.getMarkdown();
+          const serialized = getMarkdownSafe(editor);
+          if (serialized === null) {
+            onSerializeError?.(STALE_EDITOR_MESSAGE);
+            return;
+          }
           const lossyError = detectLossySerialization(editor, serialized);
           if (lossyError) {
             onSerializeError?.(lossyError);
@@ -242,7 +260,8 @@ export function WysiwygEditor({
         debounceRef.current = null;
         const currentEditor = editorRef.current;
         if (currentEditor && !currentEditor.isDestroyed) {
-          const serialized = currentEditor.storage.markdown.getMarkdown();
+          const serialized = getMarkdownSafe(currentEditor);
+          if (serialized === null) return;
           const lossyError = detectLossySerialization(
             currentEditor,
             serialized,
@@ -275,7 +294,10 @@ export function WysiwygEditor({
         return { ok: false, error: "The editor isn't ready yet." };
       }
       try {
-        const serialized = currentEditor.storage.markdown.getMarkdown();
+        const serialized = getMarkdownSafe(currentEditor);
+        if (serialized === null) {
+          return { ok: false, error: STALE_EDITOR_MESSAGE };
+        }
         const lossyError = detectLossySerialization(currentEditor, serialized);
         if (lossyError) return { ok: false, error: lossyError };
         return { ok: true, markdown: serialized };

@@ -4,6 +4,9 @@ import type { ContentTopic } from "@/lib/content-types";
 import getSlug from "@/lib/get-slug";
 import octokit from "@/lib/octokit";
 import parseEntry from "@/lib/parse-entry";
+import extractCoverImage, {
+  type CoverImage,
+} from "@/lib/extract-cover-image";
 import readingTime from "@/lib/reading-time";
 
 type GistOptions = {
@@ -45,14 +48,19 @@ export const getGistList = async (
   const enriched = await Promise.all(
     _data.map(async (gist) => {
       let readingTimeMinutes: number | null = null;
+      let coverImage: CoverImage | null = null;
       const rawUrl = gist.files?.["index.md"]?.raw_url;
       if (rawUrl) {
         try {
           const response = await fetch(rawUrl);
-          if (response.ok) readingTimeMinutes = readingTime(await response.text());
+          if (response.ok) {
+            const markdown = await response.text();
+            readingTimeMinutes = readingTime(markdown);
+            coverImage = extractCoverImage(markdown);
+          }
         } catch {}
       }
-      return { ...gist, readingTimeMinutes };
+      return { ...gist, readingTimeMinutes, coverImage };
     }),
   );
 

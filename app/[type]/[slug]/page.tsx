@@ -4,6 +4,7 @@ import { FeedRow } from "@/components/feed";
 import { ShareButton } from "@/components/share-button";
 import { buttonVariants } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import extractCoverImage from "@/lib/extract-cover-image";
 import { getGistDetails, getGistList } from "@/repositories/gist";
 import { config } from "@/lib/config";
 import { formatDate } from "@/lib/format-date";
@@ -50,7 +51,10 @@ export async function generateMetadata({
   } = repoData;
 
   const url = `/${type}/${slug}`;
-  const image = `/api/og?title=${encodeURIComponent(title)}`;
+  // The article's annotated cover image (editor "Set as cover" marker)
+  // beats the generated OG card for link previews and rich results.
+  const cover = extractCoverImage(repoData.files?.["index.md"]?.content ?? "");
+  const image = cover?.src ?? `/api/og?title=${encodeURIComponent(title)}`;
 
   return {
     title,
@@ -69,7 +73,14 @@ export async function generateMetadata({
       publishedTime: repoData.created_at ?? undefined,
       modifiedTime: repoData.updated_at ?? undefined,
       authors: [config.author.url],
-      images: [{ url: image, width: 1200, height: 630, alt: title }],
+      images: [
+        {
+          url: image,
+          width: cover?.width ?? 1200,
+          height: cover?.height ?? 630,
+          alt: cover?.alt || title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
@@ -116,7 +127,9 @@ export default async function Article({
     "@type": "BlogPosting",
     headline: title,
     url,
-    image: `${config.site.url}/api/og?title=${encodeURIComponent(title)}`,
+    image:
+      extractCoverImage(content)?.src ??
+      `${config.site.url}/api/og?title=${encodeURIComponent(title)}`,
     description: description || "",
     inLanguage: "en",
     articleSection: entryType,

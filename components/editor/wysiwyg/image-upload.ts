@@ -41,6 +41,41 @@ export async function fileToBase64(file: File): Promise<string> {
  * detectLossySerialization (see index.tsx), so a half-finished upload can
  * never reach the gist.
  */
+/**
+ * Reads intrinsic pixel dimensions so pasted images carry the site's
+ * "alt|WxH" convention (lib/get-image-size.ts) like hand-authored ones.
+ */
+export function measureImage(
+  url: string,
+): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const probe = new window.Image();
+    probe.onload = () =>
+      resolve({ width: probe.naturalWidth, height: probe.naturalHeight });
+    probe.onerror = () => resolve(null);
+    probe.src = url;
+  });
+}
+
+/**
+ * Warms the browser cache for the uploaded URL before the editor swaps the
+ * node's src — otherwise the img refetches on swap and visibly blinks.
+ * raw.githubusercontent can 404 for a moment right after the commit, so
+ * retry briefly; resolve either way (the swap happens regardless).
+ */
+async function preloadImage(url: string): Promise<void> {
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const loaded = await new Promise<boolean>((resolve) => {
+      const probe = new window.Image();
+      probe.onload = () => resolve(true);
+      probe.onerror = () => resolve(false);
+      probe.src = url;
+    });
+    if (loaded) return;
+    await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+  }
+}
+
 async function insertAndUpload(
   editor: Editor,
   file: File,
@@ -48,11 +83,18 @@ async function insertAndUpload(
   onError: (message: string) => void,
 ): Promise<void> {
   const objectUrl = URL.createObjectURL(file);
+  const dimensions = await measureImage(objectUrl);
   editor
     .chain()
     .insertContentAt(pos, {
       type: "image",
-      attrs: { src: objectUrl, alt: "" },
+      attrs: {
+        src: objectUrl,
+        // Descriptive part left empty for the author (editable via the
+        // image's alt input in Write mode); dimensions follow the site's
+        // alt|WxH convention.
+        alt: dimensions ? `|${dimensions.width}x${dimensions.height}` : "",
+      },
     })
     .run();
 
@@ -87,6 +129,9 @@ async function insertAndUpload(
       contentType: file.type,
     });
     if (result.ok) {
+      // Cache-warm before the swap so the node re-renders from cache
+      // instead of blinking through a refetch.
+      await preloadImage(result.url);
       finish(result.url);
     } else {
       finish(null);

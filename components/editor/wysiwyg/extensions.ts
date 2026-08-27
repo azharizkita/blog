@@ -1,6 +1,5 @@
 import StarterKit from "@tiptap/starter-kit";
 import Document from "@tiptap/extension-document";
-import Image from "@tiptap/extension-image";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
 import { Placeholder } from "@tiptap/extensions";
 import { Markdown } from "tiptap-markdown";
@@ -8,6 +7,7 @@ import CodeBlockShiki from "tiptap-extension-code-block-shiki";
 import { Extension, type Extensions } from "@tiptap/react";
 import { Plugin } from "@tiptap/pm/state";
 import { ImageUpload } from "./image-upload";
+import { EditorImage } from "./image-view";
 import { MermaidBlock } from "./mermaid-block";
 
 /**
@@ -133,13 +133,13 @@ export function createExtensions(theme: "light" | "dark"): Extensions {
       placeholder: ({ node, pos }) =>
         pos === 0 && node.type.name === "heading" ? "Title" : "",
     }),
-    // Inline, as markdown defines images: tiptap-markdown's image serializer
-    // writes ![alt](src) without closing a block, so a block-level image node
-    // glues the following paragraph onto the image line on serialize — which
-    // silently tripped the round-trip guard on every article with an image.
-    Image.configure({ inline: true }),
-    // Error surface is assigned post-create via editor.storage.imageUpload
-    // (see image-upload.ts / WysiwygEditor's ref-sync effect).
+    // MUST stay inline (as markdown defines images): tiptap-markdown's image
+    // serializer never closes a block, so a block-level image node glues the
+    // following paragraph onto the image line and trips the round-trip
+    // guard. EditorImage = stock Image (inline) + an alt-editing node view.
+    EditorImage,
+    // Paste/drop uploads; errors reach the screen via the upload-error
+    // registry, keyed by editor instance (see WysiwygEditor's sync effect).
     ImageUpload,
     Table,
     TableRow,
