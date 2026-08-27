@@ -49,6 +49,7 @@ export default async function EditGistPage({
 
   const initialEntry: EntryInput = {
     type: parsed.type,
+    featured: parsed.featured,
     title: parsed.title,
     description:
       ("description" in parsed ? parsed.description : "") ?? "",

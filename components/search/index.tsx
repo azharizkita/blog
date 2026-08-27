@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -69,30 +70,32 @@ export function SiteSearch({ items }: SiteSearchProps) {
       </Button>
 
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Search articles…" />
-        <CommandList>
-          <CommandEmpty>No results.</CommandEmpty>
-          {Array.from(groups.entries()).map(([type, entries]) => (
-            <CommandGroup key={type} heading={type}>
-              {entries.map((item) => (
-                <CommandItem
-                  key={item.slug}
-                  value={`${item.type} ${item.title} ${item.description ?? ""}`}
-                  onSelect={() => handleSelect(item)}
-                >
-                  <div className="flex min-w-0 flex-col gap-0.5">
-                    <span className="truncate">{item.title}</span>
-                    {item.description && (
-                      <span className="line-clamp-1 text-xs text-muted-foreground">
-                        {item.description}
-                      </span>
-                    )}
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          ))}
-        </CommandList>
+        <Command>
+          <CommandInput placeholder="Search articles…" />
+          <CommandList>
+            <CommandEmpty>No results.</CommandEmpty>
+            {Array.from(groups.entries()).map(([type, entries]) => (
+              <CommandGroup key={type} heading={type}>
+                {entries.map((item) => (
+                  <CommandItem
+                    key={item.slug}
+                    value={`${item.type} ${item.title} ${item.description ?? ""}`}
+                    onSelect={() => handleSelect(item)}
+                  >
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                      <span className="truncate">{item.title}</span>
+                      {item.description && (
+                        <span className="line-clamp-1 text-xs text-muted-foreground">
+                          {item.description}
+                        </span>
+                      )}
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            ))}
+          </CommandList>
+        </Command>
       </CommandDialog>
     </>
   );
