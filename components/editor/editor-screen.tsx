@@ -53,6 +53,10 @@ export function EditorScreen(props: EditorScreenProps) {
   const [previewVersion, setPreviewVersion] = useState(0);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  // Image-upload failures get their own prominent strip: the muted status
+  // line sits by the save buttons and is easy to miss when a pasted image
+  // silently disappears on a failed upload.
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [isPreviewPending, startPreview] = useTransition();
   const [isSaving, startSaving] = useTransition();
   const previewRequestRef = useRef(0);
@@ -109,6 +113,13 @@ export function EditorScreen(props: EditorScreenProps) {
   const requireContent = (value: string): boolean => {
     if (!value.trim()) {
       setStatus("Content is required.");
+      return false;
+    }
+    // Source-mode image uploads park a placeholder in the text until they
+    // settle (see markdown-editor.tsx); Write mode blocks via the blob-src
+    // guard in the wysiwyg flush instead.
+    if (value.includes("![Uploading image ")) {
+      setStatus("An image is still uploading — wait a moment before saving.");
       return false;
     }
     return true;
@@ -289,6 +300,19 @@ export function EditorScreen(props: EditorScreenProps) {
 
       {status && <p className="prose-muted text-sm">{status}</p>}
 
+      {uploadError && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm">
+          <p className="flex-1">{uploadError}</p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setUploadError(null)}
+          >
+            Dismiss
+          </Button>
+        </div>
+      )}
+
       {roundTripBroken && (
         <div className="flex flex-wrap items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm">
           <p className="flex-1">
@@ -328,11 +352,16 @@ export function EditorScreen(props: EditorScreenProps) {
             setMode("source");
           }}
           onSerializeError={setStatus}
+          onImageError={setUploadError}
           flushRef={wysiwygFlushRef}
         />
       )}
       {mode === "source" && (
-        <MarkdownEditor value={content} onChange={setContent} />
+        <MarkdownEditor
+          value={content}
+          onChange={setContent}
+          onUploadError={setUploadError}
+        />
       )}
       {mode === "preview" && (
         <PreviewPane

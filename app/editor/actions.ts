@@ -1,8 +1,11 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import type { ReactNode } from "react";
 import { updateTag } from "next/cache";
 import { ArticleContentUncached } from "@/components/article-content";
+import { config } from "@/lib/config";
+import octokit from "@/lib/octokit";
 import { createGist, deleteGist, updateGist } from "@/repositories/gist";
 
 export type PreviewResult =
@@ -142,5 +145,77 @@ export async function triggerRebuild(): Promise<RebuildResult> {
       triggered: false,
       message: `Deploy hook request failed: ${errorMessage(error)}`,
     };
+  }
+}
+
+export type UploadImageResult =
+  | { ok: true; url: string }
+  | { ok: false; error: string };
+
+const IMAGE_EXTENSIONS: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/gif": "gif",
+  "image/webp": "webp",
+};
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+/**
+ * Paste/drop image uploads. Gists can't hold binaries, and GitHub's
+ * user-attachments CDN (where gist-web uploads land) has no public API — so
+ * images go into the dedicated assets repo via the Contents API, named by
+ * content hash (re-pasting the same image dedupes to the same URL). The
+ * resulting raw.githubusercontent.com URL is already allowed by
+ * next.config.ts's image remotePatterns.
+ */
+export async function uploadEditorImage(input: {
+  dataBase64: string;
+  contentType: string;
+}): Promise<UploadImageResult> {
+  assertDevAction();
+
+  const extension = IMAGE_EXTENSIONS[input.contentType];
+  if (!extension) {
+    return {
+      ok: false,
+      error: `Unsupported image type "${input.contentType}" — use PNG, JPEG, GIF, or WebP.`,
+    };
+  }
+  // Base64 inflates by 4/3; compare in encoded space to avoid decoding.
+  if (input.dataBase64.length > (MAX_IMAGE_BYTES * 4) / 3) {
+    return { ok: false, error: "Image is larger than 5 MB." };
+  }
+
+  const owner = config.github.username;
+  const repo = config.github.assetsRepo;
+  const hash = createHash("sha256")
+    .update(input.dataBase64)
+    .digest("hex")
+    .slice(0, 16);
+  const path = `images/${hash}.${extension}`;
+  const url = `https://raw.githubusercontent.com/${owner}/${repo}/main/${path}`;
+
+  try {
+    await octokit.rest.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path,
+      message: `assets: ${path}`,
+      content: input.dataBase64,
+    });
+    return { ok: true, url };
+  } catch (error) {
+    const status = (error as { status?: number }).status;
+    // 422 without a sha means the path already exists; names are
+    // content-addressed, so the existing file IS this image.
+    if (status === 422) return { ok: true, url };
+    if (status === 404) {
+      return {
+        ok: false,
+        error: `Upload failed: the "${owner}/${repo}" repo doesn't exist or the PAT lacks Contents write access to it.`,
+      };
+    }
+    return { ok: false, error: `Upload failed: ${errorMessage(error)}` };
   }
 }

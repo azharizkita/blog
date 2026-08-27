@@ -7,6 +7,7 @@ import { Markdown } from "tiptap-markdown";
 import CodeBlockShiki from "tiptap-extension-code-block-shiki";
 import { Extension, type Extensions } from "@tiptap/react";
 import { Plugin } from "@tiptap/pm/state";
+import { ImageUpload } from "./image-upload";
 import { MermaidBlock } from "./mermaid-block";
 
 /**
@@ -137,6 +138,9 @@ export function createExtensions(theme: "light" | "dark"): Extensions {
     // glues the following paragraph onto the image line on serialize — which
     // silently tripped the round-trip guard on every article with an image.
     Image.configure({ inline: true }),
+    // Error surface is assigned post-create via editor.storage.imageUpload
+    // (see image-upload.ts / WysiwygEditor's ref-sync effect).
+    ImageUpload,
     Table,
     TableRow,
     TableHeader,

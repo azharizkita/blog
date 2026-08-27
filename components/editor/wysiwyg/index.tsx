@@ -3,6 +3,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { EditorContent, Extension, useEditor, type Editor } from "@tiptap/react";
 import type { MarkdownStorage } from "tiptap-markdown";
+import { setUploadErrorHandler } from "@/components/editor/upload-error-registry";
 import { createExtensions } from "./extensions";
 import { roundTrips } from "./round-trip";
 import { Toolbar, promptForLink } from "./toolbar";
@@ -41,6 +42,8 @@ export interface WysiwygEditorProps {
    * content instead of waiting for the next debounced `onChange`.
    */
   flushRef?: RefObject<(() => WysiwygFlushResult) | null>;
+  /** Surface for paste/drop image-upload failures (see image-upload.ts). */
+  onImageError?: (message: string) => void;
 }
 
 /**
@@ -74,10 +77,23 @@ function detectLossySerialization(
 ): string | null {
   let hasTable = false;
   let hasHardBreak = false;
+  let hasPendingUpload = false;
   editor.state.doc.descendants((node) => {
     if (node.type.name === "table") hasTable = true;
     if (node.type.name === "hardBreak") hasHardBreak = true;
+    if (
+      node.type.name === "image" &&
+      typeof node.attrs.src === "string" &&
+      node.attrs.src.startsWith("blob:")
+    ) {
+      // A paste/drop upload still in flight (see image-upload.ts) — its
+      // local object URL must never be committed to content or saved.
+      hasPendingUpload = true;
+    }
   });
+  if (hasPendingUpload) {
+    return "An image is still uploading — wait a moment before saving.";
+  }
   if (hasTable && /(^|\n)\[table\](\n|$)/.test(serialized)) {
     return "This table can't be saved as Markdown: a cell has more than one paragraph, or the header/body shape doesn't match. Undo the change, or fix it in Source mode.";
   }
@@ -107,6 +123,7 @@ export function WysiwygEditor({
   onRoundTripFail,
   onSerializeError,
   flushRef,
+  onImageError,
 }: WysiwygEditorProps) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Latest-value refs for the unmount-flush and flushRef-registration
@@ -201,6 +218,12 @@ export function WysiwygEditor({
     editorRef.current = editor;
     onChangeRef.current = onChange;
     onSerializeErrorRef.current = onSerializeError;
+    // The image-upload extension reports errors via the registry keyed by
+    // the editor instance; registering here (every render) keeps it pointed
+    // at the latest prop.
+    if (editor) {
+      setUploadErrorHandler(editor, onImageError);
+    }
   });
 
   useEffect(() => {

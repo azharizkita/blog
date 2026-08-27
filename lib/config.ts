@@ -2,6 +2,9 @@ export const config = {
   github: {
     username: process.env.GITHUB_USERNAME || "azharizkita",
     token: process.env.GITHUB_PAT,
+    // Public repo used as the image bucket for editor paste/drop uploads
+    // (gists can't hold binaries). The PAT needs Contents read/write on it.
+    assetsRepo: process.env.GITHUB_ASSETS_REPO || "blog-assets",
   },
   cache: {
     defaultTime: 3600 * 12, // 12 hours
