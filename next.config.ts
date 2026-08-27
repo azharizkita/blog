@@ -12,6 +12,17 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.githubusercontent.com" },
     ],
   },
+  async headers() {
+    return [
+      {
+        // Defense in depth for the dev-only editor: the pages 404 in
+        // production and carry noindex meta, but the header also covers
+        // any response on these paths (404s included), unlike page meta.
+        source: "/editor/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
