@@ -18,6 +18,8 @@ import {
   Workflow,
   Image as ImageIcon,
   Table as TableIcon,
+  Mail,
+  Music,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -172,6 +174,28 @@ export function Toolbar({ editor }: ToolbarProps) {
         }
       >
         <Workflow />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Envelope note"
+        active={editor.isActive("envelopeBlock")}
+        onClick={() =>
+          chain()
+            .insertContent({ type: "envelopeBlock", attrs: { text: "Hi!" } })
+            .run()
+        }
+      >
+        <Mail />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Apple Music embed"
+        active={editor.isActive("appleMusicBlock")}
+        onClick={() =>
+          chain()
+            .insertContent({ type: "appleMusicBlock", attrs: { url: "" } })
+            .run()
+        }
+      >
+        <Music />
       </ToolbarButton>
       <ToolbarButton label="Image" onClick={insertImage}>
         <ImageIcon />

@@ -8,6 +8,8 @@ import { Extension, type Extensions } from "@tiptap/react";
 import { Plugin } from "@tiptap/pm/state";
 import { ImageUpload } from "./image-upload";
 import { EditorImage } from "./image-view";
+import { AppleMusicBlock } from "./apple-music-block";
+import { EnvelopeBlock } from "./envelope-block";
 import { MermaidBlock } from "./mermaid-block";
 
 /**
@@ -146,6 +148,8 @@ export function createExtensions(theme: "light" | "dark"): Extensions {
     TableHeader,
     TableCell,
     MermaidBlock,
+    EnvelopeBlock,
+    AppleMusicBlock,
     TableEnterGuard,
     StrikeShortcut,
     Markdown.configure({

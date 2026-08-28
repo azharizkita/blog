@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Info, Lightbulb, TriangleAlert } from "lucide-react";
 import Mermaid from "@/components/mermaid";
+import { AppleMusic } from "@/components/apple-music-embed";
+import { Envelope } from "@/components/lottie/envelope";
 import { YouTube } from "@/components/youtube-embed";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +43,8 @@ function Callout({
  * the round-trip guard; the exact Preview renders them).
  */
 export const articleComponents = {
+  AppleMusic,
+  Envelope,
   Mermaid,
   Callout,
   YouTube,
