@@ -19,36 +19,36 @@ export function graph(...nodes: Thing[]) {
   return { "@context": "https://schema.org", "@graph": nodes };
 }
 
-export function personNode(): Person {
+export function personNode(description?: string): Person {
   return {
     "@type": "Person",
     "@id": PERSON_ID,
     name: config.author.name,
     url: config.site.url,
-    description: config.site.description,
+    description: description ?? config.site.description,
     sameAs: [config.author.url],
   };
 }
 
-export function websiteNode(): WebSite {
+export function websiteNode(description?: string): WebSite {
   return {
     "@type": "WebSite",
     "@id": WEBSITE_ID,
     url: config.site.url,
     name: config.site.name,
-    description: config.site.description,
+    description: description ?? config.site.description,
     inLanguage: "en",
     publisher: { "@id": PERSON_ID },
   };
 }
 
-export function blogNode(): Blog {
+export function blogNode(description?: string): Blog {
   return {
     "@type": "Blog",
     "@id": BLOG_ID,
     url: config.site.url,
     name: config.site.name,
-    description: config.site.description,
+    description: description ?? config.site.description,
     inLanguage: "en",
     author: { "@id": PERSON_ID },
     publisher: { "@id": PERSON_ID },

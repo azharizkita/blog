@@ -1,5 +1,6 @@
 import { getGistList } from "@/repositories/gist";
 import { config } from "@/lib/config";
+import { getSiteCopy } from "@/repositories/settings";
 
 // Order the sections the same way the nav does.
 const TYPE_ORDER = ["Blog", "Poem", "Sharing", "Literature"] as const;
@@ -15,10 +16,11 @@ function oneLine(value?: string | null) {
  * catalog in a single cheap fetch instead of parsing each HTML page.
  */
 export async function GET() {
+  const { siteDescription } = await getSiteCopy();
   const lines: string[] = [
     `# ${config.site.name}`,
     "",
-    `> ${oneLine(config.site.description)}`,
+    `> ${oneLine(siteDescription)}`,
     "",
   ];
 

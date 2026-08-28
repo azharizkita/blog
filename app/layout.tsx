@@ -8,6 +8,7 @@ import { NavigationBar } from "@/components/navigation-bar";
 import { Footer } from "@/components/footer";
 import { config } from "@/lib/config";
 import { rssAlternate } from "@/lib/metadata";
+import { getSiteCopy } from "@/repositories/settings";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -27,13 +28,17 @@ const baseClass = cn(
   "font-sans",
 );
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  // Site-wide meta/OG description follows the hero copy edited in
+  // /editor/customize (cached read; revalidated on save).
+  const { siteDescription } = await getSiteCopy();
+  return {
   metadataBase: new URL(config.site.url),
   title: {
     default: config.site.name,
     template: `%s | ${config.site.name}`,
   },
-  description: config.site.description,
+  description: siteDescription,
   applicationName: config.site.name,
   authors: [{ name: config.author.name, url: config.author.url }],
   creator: config.author.name,
@@ -53,7 +58,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: config.site.name,
     title: config.site.name,
-    description: config.site.description,
+    description: siteDescription,
     url: config.site.url,
     locale: "en_US",
     images: [
@@ -68,14 +73,15 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: config.site.name,
-    description: config.site.description,
+    description: siteDescription,
     images: ["/api/og"],
   },
   // Icons come from the app/favicon.ico and app/icon.svg file conventions.
   alternates: {
     types: rssAlternate,
   },
-};
+  };
+}
 
 export const viewport: Viewport = {
   // Matches --background (oklch 1 0 0 / oklch 0.145 0 0) for browser chrome.

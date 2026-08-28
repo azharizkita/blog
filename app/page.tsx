@@ -29,7 +29,13 @@ export default async function Home() {
 
   return (
     <>
-      <JsonLd data={graph(personNode(), websiteNode(), blogNode())} />
+      <JsonLd
+        data={graph(
+          personNode(siteDescription),
+          websiteNode(siteDescription),
+          blogNode(siteDescription),
+        )}
+      />
 
       <section className="mx-auto max-w-[520px] space-y-4 pt-8 text-center">
         <Image

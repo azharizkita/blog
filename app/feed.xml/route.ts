@@ -1,5 +1,6 @@
 import { getGistList } from "@/repositories/gist";
 import { config } from "@/lib/config";
+import { getSiteCopy } from "@/repositories/settings";
 
 function escapeXml(value: string) {
   return value
@@ -12,6 +13,9 @@ function escapeXml(value: string) {
 
 /** /feed.xml — RSS 2.0 feed of every article, newest first. */
 export async function GET() {
+  const { siteDescription } = await getSiteCopy().catch(() => ({
+    siteDescription: config.site.description,
+  }));
   let items = "";
 
   try {
@@ -38,6 +42,10 @@ export async function GET() {
             ? `      <description>${escapeXml(gist.entry.description)}</description>`
             : "",
           pubDate ? `      <pubDate>${pubDate}</pubDate>` : "",
+          // Cover thumbnail for readers that render Media RSS.
+          gist.coverImage
+            ? `      <media:content url="${escapeXml(gist.coverImage.src)}" medium="image"${gist.coverImage.alt ? ` ><media:description>${escapeXml(gist.coverImage.alt)}</media:description></media:content>` : " />"}`
+            : "",
           "    </item>",
         ]
           .filter(Boolean)
@@ -49,11 +57,11 @@ export async function GET() {
   }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
   <channel>
     <title>${escapeXml(config.site.name)}</title>
     <link>${config.site.url}</link>
-    <description>${escapeXml(config.site.description)}</description>
+    <description>${escapeXml(siteDescription)}</description>
     <language>en</language>
     <atom:link href="${config.site.url}/feed.xml" rel="self" type="application/rss+xml" />
 ${items}
