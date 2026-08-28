@@ -1,6 +1,7 @@
 import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { config } from "@/lib/config";
+import { getSiteCopy } from "@/repositories/settings";
 
 // `new Date()` is synchronous IO and cacheComponents' prerender validation
 // rejects it in an uncached scope (every page renders this via the root
@@ -18,15 +19,11 @@ async function copyrightYear(): Promise<number> {
 /** Site-wide footer, rendered at the bottom of every page via the root layout. */
 export async function Footer() {
   const year = await copyrightYear();
+  const { footerNote } = await getSiteCopy();
 
   return (
     <footer className="space-y-6 border-t pt-8">
-      <p className="prose-small prose-muted">
-        This is a curated personal archive of my mind&mdash;from life updates,
-        late-night thoughts, random realizations, or just rants about whatever&apos;s
-        on my plate. It&apos;s not for everyone, but if you&apos;re here, maybe
-        you&apos;ll find something that resonates.
-      </p>
+      <p className="prose-small prose-muted">{footerNote}</p>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="prose-muted text-xs">
           {config.site.name} © {year}

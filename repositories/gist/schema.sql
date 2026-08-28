@@ -99,3 +99,13 @@ create table if not exists post_revisions (
 );
 create index if not exists post_revisions_post_idx
   on post_revisions (post_id, created_at desc);
+
+-- Site-wide editable copy (Ghost-style settings): key/value rows edited
+-- from the editor's Customize page. Known keys: site_description,
+-- footer_note. Per-tag copy lives on tags.description.
+create table if not exists settings (
+  key text primary key,
+  value text,
+  group_name text not null default 'site',
+  updated_at timestamptz not null default now()
+);

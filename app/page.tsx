@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { getGistList } from "@/repositories/gist";
+import { getSiteCopy } from "@/repositories/settings";
 import { config } from "@/lib/config";
 import { JsonLd } from "@/components/json-ld";
 import { blogNode, graph, personNode, websiteNode } from "@/lib/structured-data";
@@ -22,6 +23,7 @@ const byCreatedDesc = (
 
 export default async function Home() {
   const articles = await getGistList("articles");
+  const { siteDescription } = await getSiteCopy();
   const sorted = [...articles].sort(byCreatedDesc);
   const featured = sorted.filter((gist) => gist.entry.featured);
 
@@ -42,7 +44,7 @@ export default async function Home() {
             page's heading structure (exactly one h1) without repeating the
             name visually. */}
         <h1 className="sr-only">{config.site.name}</h1>
-        <p className="prose-lead">{config.site.description}</p>
+        <p className="prose-lead">{siteDescription}</p>
       </section>
 
       {featured.length > 0 && (

@@ -43,6 +43,12 @@ export default async function EditorPage() {
           <span className="text-primary">#</span>editor
         </h1>
         <div className="flex items-center gap-2">
+          <Link
+            href="/editor/customize"
+            className={buttonVariants({ variant: "ghost" })}
+          >
+            Customize
+          </Link>
           <RebuildButton />
           <Link href="/editor/new" className={buttonVariants()}>
             New article

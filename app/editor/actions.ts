@@ -7,6 +7,7 @@ import { ArticleContentUncached } from "@/components/article-content";
 import { config } from "@/lib/config";
 import octokit from "@/lib/octokit";
 import { createGist, deleteGist, updateGist } from "@/repositories/gist";
+import { updateSiteCopy, type SiteCopy } from "@/repositories/settings";
 
 export type PreviewResult =
   | { ok: true; node: ReactNode }
@@ -148,6 +149,8 @@ export async function triggerRebuild(): Promise<RebuildResult> {
   }
 }
 
+export type SaveCopyResult = { ok: true } | { ok: false; error: string };
+
 export type UploadImageResult =
   | { ok: true; url: string }
   | { ok: false; error: string };
@@ -217,5 +220,16 @@ export async function uploadEditorImage(input: {
       };
     }
     return { ok: false, error: `Upload failed: ${errorMessage(error)}` };
+  }
+}
+
+export async function saveSiteCopy(input: SiteCopy): Promise<SaveCopyResult> {
+  assertDevAction();
+  try {
+    await updateSiteCopy(input);
+    updateTag("site-copy");
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: errorMessage(error) };
   }
 }

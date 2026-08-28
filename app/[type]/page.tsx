@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getGistList } from "@/repositories/gist";
+import { getSiteCopy } from "@/repositories/settings";
 import { config } from "@/lib/config";
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs } from "@/components/breadcrumbs";
@@ -15,8 +16,8 @@ import {
   type ContentSegment,
 } from "@/lib/content-types";
 
-// Lead blurb shown under each type heading (and reused as the meta
-// description). Draft copy — tweak the wording to taste.
+// Fallback leads when the tag has no description row yet — the live copy
+// comes from tags.description, edited in /editor/customize.
 const TYPE_LEADS: Record<ContentSegment, string> = {
   blog: "Long-form dumps from my head—work, tech, life, and the odd late-night rant. Read at your own risk.",
   poem: "The things I couldn't say out loud, so I broke them into lines instead.",
@@ -40,7 +41,8 @@ export async function generateMetadata({
 
   const topic = topicFromSegment(type);
   const url = `/${type}`;
-  const description = TYPE_LEADS[type];
+  const { tagDescriptions } = await getSiteCopy();
+  const description = tagDescriptions[type] ?? TYPE_LEADS[type];
   const image = `/api/og?title=${encodeURIComponent(topic)}`;
 
   return {
@@ -75,6 +77,8 @@ export default async function TypeListing({
 
   const topic = topicFromSegment(type);
   const entries = await getGistList("articles", { topic });
+  const { tagDescriptions } = await getSiteCopy();
+  const lead = tagDescriptions[type] ?? TYPE_LEADS[type];
 
   const sorted = [...entries].sort(
     (a, b) =>
@@ -93,7 +97,7 @@ export default async function TypeListing({
         data={graph(
           collectionPageNode({
             name: topic,
-            description: TYPE_LEADS[type],
+            description: lead,
             url: `${config.site.url}/${type}`,
           }),
           breadcrumbNode(
@@ -110,7 +114,7 @@ export default async function TypeListing({
           <span className="text-primary">#</span>
           {topic.toLowerCase()}
         </h1>
-        <p className="prose-lead">{TYPE_LEADS[type]}</p>
+        <p className="prose-lead">{lead}</p>
         <p className="prose-muted text-xs">
           {sorted.length} {sorted.length === 1 ? "entry" : "entries"}
         </p>
