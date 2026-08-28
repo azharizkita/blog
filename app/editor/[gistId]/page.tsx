@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { EditorScreen } from "@/components/editor/editor-screen";
 import type { EntryInput } from "@/lib/compose-entry";
+import { getContentFile } from "@/lib/gist-file";
 import parseEntry from "@/lib/parse-entry";
 import { getGistById } from "@/repositories/gist";
 import { assertDevEditorPage } from "../dev-only";
@@ -60,7 +61,7 @@ export default async function EditGistPage({
     <EditorScreen
       gistId={gistId}
       isPublic={!!gist.public}
-      initialContent={gist.files?.["index.md"]?.content ?? ""}
+      initialContent={getContentFile(gist.files)?.file.content ?? ""}
       initialEntry={initialEntry}
     />
   );

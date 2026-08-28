@@ -5,6 +5,7 @@ import { ShareButton } from "@/components/share-button";
 import { buttonVariants } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import extractCoverImage from "@/lib/extract-cover-image";
+import { getContentFile } from "@/lib/gist-file";
 import { getGistDetails, getGistList } from "@/repositories/gist";
 import { config } from "@/lib/config";
 import { formatDate } from "@/lib/format-date";
@@ -53,7 +54,9 @@ export async function generateMetadata({
   const url = `/${type}/${slug}`;
   // The article's annotated cover image (editor "Set as cover" marker)
   // beats the generated OG card for link previews and rich results.
-  const cover = extractCoverImage(repoData.files?.["index.md"]?.content ?? "");
+  const cover = extractCoverImage(
+    getContentFile(repoData.files)?.file.content ?? "",
+  );
   const image = cover?.src ?? `/api/og?title=${encodeURIComponent(title)}`;
 
   return {
@@ -104,7 +107,7 @@ export default async function Article({
 
   if (!repoData) notFound();
 
-  const content = repoData.files?.["index.md"]?.content;
+  const content = getContentFile(repoData.files)?.file.content;
   const {
     entry: { type: entryType, title, description },
   } = repoData;

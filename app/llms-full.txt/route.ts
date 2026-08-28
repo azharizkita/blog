@@ -1,5 +1,6 @@
 import { getGistDetails, getGistList } from "@/repositories/gist";
 import { config } from "@/lib/config";
+import { getContentFile } from "@/lib/gist-file";
 
 function oneLine(value?: string | null) {
   return (value ?? "").replace(/\s+/g, " ").trim();
@@ -30,7 +31,7 @@ export async function GET() {
       let content: string | undefined;
       try {
         const details = await getGistDetails(gist.slug);
-        content = details?.files?.["index.md"]?.content?.trim();
+        content = getContentFile(details?.files)?.file.content?.trim();
       } catch {
         content = undefined;
       }

@@ -9,7 +9,7 @@ import { LinkIcon } from "lucide-react";
 import Link from "next/link";
 import remarkGfm from "remark-gfm";
 import { remarkMermaid } from "./remark-mermaid";
-import Mermaid from "@/components/mermaid";
+import { articleComponents } from "./mdx-components";
 import getSlug from "@/lib/get-slug";
 import { cn } from "@/lib/utils";
 import { cacheLife } from "next/cache";
@@ -62,7 +62,9 @@ export async function ArticleContentUncached(props: ArticleContentProps) {
     <article id="article" className="isolate space-y-8 px-0 z-0">
       <MDXContent
         components={{
-          Mermaid,
+          // Registered JSX components articles may use (Mermaid, Callout,
+          // YouTube, …) — see ./mdx-components.tsx.
+          ...articleComponents,
           a: ({ href, children, ...rest }) => {
             if (!href) return <span {...rest}>{children}</span>;
 

@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { config } from "@/lib/config";
 import type { ContentTopic } from "@/lib/content-types";
+import { CONTENT_FILENAME, getContentFile } from "@/lib/gist-file";
 import getSlug from "@/lib/get-slug";
 import octokit from "@/lib/octokit";
 import parseEntry from "@/lib/parse-entry";
@@ -49,7 +50,7 @@ export const getGistList = async (
     _data.map(async (gist) => {
       let readingTimeMinutes: number | null = null;
       let coverImage: CoverImage | null = null;
-      const rawUrl = gist.files?.["index.md"]?.raw_url;
+      const rawUrl = getContentFile(gist.files)?.file.raw_url;
       if (rawUrl) {
         try {
           const response = await fetch(rawUrl);
@@ -139,7 +140,7 @@ export const createGist = async (args: {
   const { data } = await octokit.rest.gists.create({
     description: args.description,
     public: args.isPublic,
-    files: { "index.md": { content: args.content } },
+    files: { [CONTENT_FILENAME]: { content: args.content } },
   });
   return data;
 };
@@ -148,10 +149,17 @@ export const updateGist = async (
   gistId: string,
   args: { description: string; content: string },
 ) => {
+  // The gist may still hold its content under the legacy index.md name;
+  // target whatever key exists and rename it to index.mdx in the same
+  // update (migration-on-save). Costs one extra GET per save.
+  const current = await getGistById(gistId);
+  const existing = getContentFile(current.files)?.filename ?? CONTENT_FILENAME;
   const { data } = await octokit.rest.gists.update({
     gist_id: gistId,
     description: args.description,
-    files: { "index.md": { content: args.content } },
+    files: {
+      [existing]: { filename: CONTENT_FILENAME, content: args.content },
+    },
   });
   return data;
 };
