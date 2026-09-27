@@ -3,6 +3,14 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   cacheComponents: true,
   allowedDevOrigins: ['lokey-mac.gate-scylla.ts.net'],
+  experimental: {
+    serverActions: {
+      // Editor image uploads (uploadEditorImage) accept up to 5 MB, sent as
+      // base64 (×4/3 ≈ 6.7 MB) plus action-encoding overhead. The default
+      // 1 MB rejects most real screenshots before the action even runs.
+      bodySizeLimit: "8mb",
+    },
+  },
   images: {
     // Cover images live at content-hashed URLs (blog-assets repo) that can
     // never change content, but raw.githubusercontent sends max-age=300 —
