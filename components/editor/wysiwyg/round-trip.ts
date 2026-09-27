@@ -14,6 +14,9 @@ export function normalizeMarkdown(md: string): string {
       .replace(/\r\n/g, "\n")
       .replace(/[ \t]+$/gm, "")
       .replace(/^([ \t]*)[*+] /gm, "$1- ")
+      // Autolink style: <url> ≡ [url](url). The editor always writes the
+      // bracketed form (MDX can't parse `<url>`; see MdxSafeLink).
+      .replace(/<([a-z][a-z0-9+.-]*:[^\s<>]+)>/gi, "[$1]($1)")
       // Emphasis marker style: _x_ ≡ *x*, __x__ ≡ **x**. Guards against
       // intraword underscores (snake_case), which markdown doesn't treat as
       // emphasis either.

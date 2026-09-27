@@ -1,8 +1,9 @@
 import StarterKit from "@tiptap/starter-kit";
 import Document from "@tiptap/extension-document";
+import Link from "@tiptap/extension-link";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
 import { Placeholder } from "@tiptap/extensions";
-import { Markdown } from "tiptap-markdown";
+import { Markdown, type MarkdownMarkSpec } from "tiptap-markdown";
 import CodeBlockShiki from "tiptap-extension-code-block-shiki";
 import { Extension, type Extensions } from "@tiptap/react";
 import { Plugin } from "@tiptap/pm/state";
@@ -96,6 +97,37 @@ const StrikeShortcut = Extension.create({
 });
 
 /**
+ * Links always serialize as `[text](url)`. prosemirror-markdown's default
+ * link spec (which tiptap-markdown reuses) writes a link whose text equals
+ * its href as a `<url>` autolink — valid Markdown, but articles compile as
+ * MDX, where `<` opens a JSX tag and `<https://…>` is a syntax error that
+ * fails the page's prerender. tiptap-markdown merges an extension's own
+ * `storage.markdown` over its built-in spec, so this replaces it.
+ */
+const MdxSafeLink = Link.extend({
+  addStorage(): { markdown: MarkdownMarkSpec } {
+    return {
+      markdown: {
+        serialize: {
+          open: "[",
+          close(_state, mark) {
+            const href = String(mark.attrs.href).replace(/[()"]/g, "\\$&");
+            const title = mark.attrs.title
+              ? ` "${String(mark.attrs.title).replace(/"/g, '\\"')}"`
+              : "";
+            return `](${href}${title})`;
+          },
+          mixable: true,
+        },
+        parse: {
+          // handled by markdown-it
+        },
+      },
+    };
+  },
+});
+
+/**
  * The full extension set for the WYSIWYG editor. `theme` is used only as the
  * shiki fallback theme (`defaultTheme`) for the brief moment before a
  * language/theme finishes loading — tiptap-extension-code-block-shiki
@@ -112,7 +144,8 @@ export function createExtensions(theme: "light" | "dark"): Extensions {
       heading: { levels: [2, 3, 4] },
       // The shiki extension replaces the default code block.
       codeBlock: false,
-      link: { openOnClick: false },
+      // Replaced by MdxSafeLink (never serializes `<url>` autolinks).
+      link: false,
       // Not offered by the toolbar and — like `table`/`hardBreak` above —
       // not one of the node/mark types tiptap-markdown can serialize under
       // html:false (it shares the same "[underline]" HTMLMark fallback).
@@ -127,6 +160,7 @@ export function createExtensions(theme: "light" | "dark"): Extensions {
         dark: "github-dark-dimmed",
       },
     }),
+    MdxSafeLink.configure({ openOnClick: false }),
     TitleDocument,
     EnforceTitleLevel,
     Placeholder.configure({
