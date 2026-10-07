@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   allowedDevOrigins: ['lokey-mac.gate-scylla.ts.net'],
   experimental: {
+    agentUpgrade: "latest",
     serverActions: {
       // Editor image uploads (uploadEditorImage) accept up to 5 MB, sent as
       // base64 (×4/3 ≈ 6.7 MB) plus action-encoding overhead. The default
