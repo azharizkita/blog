@@ -106,6 +106,42 @@ describe("convertLegacyMarkdown", () => {
   });
 });
 
+describe("fix round 1", () => {
+  it("rewrites simple inline strong/em HTML", () => {
+    const r = convertLegacyMarkdown("a <strong>b</strong> <i>c</i> `<b>x</b>`");
+    expect(r.content).toBe("a **b** *c* `<b>x</b>`");
+    expect(r.unconvertible).toEqual([]);
+  });
+
+  it("reports other inline HTML and unconverted br", () => {
+    for (const line of ["a <span>b</span> c", "a<br />b", "see <Foo /> now"]) {
+      expect(convertLegacyMarkdown(line).unconvertible).toContain(line);
+    }
+    expect(convertLegacyMarkdown("<https://x.y> ok").unconvertible).toEqual([]);
+  });
+
+  it("reports embeds with unknown attributes", () => {
+    const line = '<YouTube id="a" start="3" />';
+    const r = convertLegacyMarkdown(line);
+    expect(r.unconvertible).toEqual([line]);
+    expect(r.content).toBe(line);
+  });
+
+  it("does not turn breaks into backslashes before new blocks", () => {
+    expect(convert("one  \n# H")).toBe("one\n# H");
+    expect(convert("# H  \ntext")).toBe("# H\ntext");
+    expect(convert("one  \n- item")).toBe("one\n- item");
+    expect(convertLegacyMarkdown("one<br />\n# H").unconvertible).toEqual([
+      "one<br />",
+    ]);
+  });
+
+  it("does not prefix new blocks as lazy quote continuation", () => {
+    expect(convert("> a  \n# H")).toBe("> a\n# H");
+    expect(convert("> a  \n> b")).toBe("> a\\\n> b");
+  });
+});
+
 describe("encodeAttribute", () => {
   it("encodes & \" < > and newline", () => {
     expect(encodeAttribute('&"<>\n')).toBe("&amp;&quot;&lt;&gt;&#10;");

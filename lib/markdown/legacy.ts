@@ -49,11 +49,40 @@ function convertEmbed(trimmed: string): string | null {
   for (const a of m[2].matchAll(/([\w-]+)="([^"]*)"/g)) {
     attrs[a[1]] = decodeEntities(a[2]);
   }
+  if (Object.keys(attrs).some((k) => !spec.attrs.includes(k))) return null;
   if (spec.required.some((k) => attrs[k] === undefined)) return null;
   const parts = spec.attrs
     .filter((k) => attrs[k] !== undefined)
     .map((k) => `${k}="${encodeAttribute(attrs[k])}"`);
   return `<!-- ::${spec.name} ${parts.join(" ")} -->`;
+}
+
+const NEW_BLOCK =
+  /^ {0,3}(?:#{1,6}(?:\s|$)|[-*+]\s|\d+[.)]\s|>|`{3,}|~{3,}|(?:[-*_][ \t]*){3,}$)/;
+const QUOTE = /^ {0,3}>/;
+const HEADING = /^ {0,3}#{1,6}(?:\s|$)/;
+
+/** Rewrite simple inline HTML outside code spans; flag whatever remains. */
+function convertInline(text: string): { text: string; flagged: boolean } {
+  let flagged = false;
+  const fix = (seg: string) => {
+    const r = seg
+      .replace(/<(strong|b)>([^<]*)<\/\1>/gi, "**$2**")
+      .replace(/<(em|i)>([^<]*)<\/\1>/gi, "*$2*");
+    const rest = r
+      .replace(/<[a-z][a-z0-9+.-]*:[^\s>]*>/gi, "")
+      .replace(/<[^\s@<>]+@[^\s<>]+>/g, "");
+    if (/<\/?[A-Za-z][^>]*>/.test(rest)) flagged = true;
+    return r;
+  };
+  let res = "";
+  let last = 0;
+  for (const m of text.matchAll(/(`+)[\s\S]*?\1/g)) {
+    res += fix(text.slice(last, m.index)) + m[0];
+    last = m.index + m[0].length;
+  }
+  res += fix(text.slice(last));
+  return { text: res, flagged };
 }
 
 export function convertLegacyMarkdown(source: string): {
@@ -134,12 +163,18 @@ export function convertLegacyMarkdown(source: string): {
 
     // Hard breaks.
     const nextBlank = i + 1 >= lines.length || lines[i + 1].trim() === "";
+    const inQuote = QUOTE.test(line) || quoteHardBreak;
+    const continues =
+      !nextBlank &&
+      !HEADING.test(line) &&
+      (!NEW_BLOCK.test(lines[i + 1]) ||
+        (inQuote && QUOTE.test(lines[i + 1])));
     const masked = maskInlineCode(line);
+    const br = /<br\s*\/?>$/i.exec(masked);
+    const spaces = /\S {2,}$/.exec(masked);
     let text = line;
     let hardBreak = false;
-    if (!nextBlank) {
-      const br = /<br\s*\/?>$/i.exec(masked);
-      const spaces = /\S {2,}$/.exec(masked);
+    if (continues) {
       if (br) {
         text = line.slice(0, br.index) + "\\";
         hardBreak = true;
@@ -149,15 +184,27 @@ export function convertLegacyMarkdown(source: string): {
       } else if (/\\$/.test(masked)) {
         hardBreak = true;
       }
+    } else if (br && nextBlank) {
+      // A break at the end of a paragraph renders nothing.
+      text = line.slice(0, br.index).trimEnd();
+    } else if (spaces && !nextBlank) {
+      text = line.slice(0, spaces.index + 1);
+    }
+    if (text.trim() !== "") {
+      const inline = convertInline(text);
+      text = inline.text;
+      if (inline.flagged) unconvertible.push(line);
     }
 
     if (trimmed === "") {
       quoteHardBreak = false;
     } else if (/^ {0,3}>/.test(line)) {
       quoteHardBreak = hardBreak;
-    } else if (quoteHardBreak) {
+    } else if (quoteHardBreak && !NEW_BLOCK.test(line)) {
       text = `> ${text}`;
       quoteHardBreak = hardBreak;
+    } else {
+      quoteHardBreak = false;
     }
     out.push(text);
   }
