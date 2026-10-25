@@ -1,119 +1,98 @@
 "use client";
 
-import { useEffect, useRef, type RefObject } from "react";
-import { EditorContent, Extension, useEditor, type Editor } from "@tiptap/react";
-import type { MarkdownStorage } from "tiptap-markdown";
+import { useEffect, useRef, useState, type RefObject } from "react";
+import {
+  EditorContent,
+  Extension,
+  useEditor,
+  type Editor,
+  type JSONContent,
+} from "@tiptap/react";
 import { setUploadErrorHandler } from "@/components/editor/upload-error-registry";
+import { markdownToDoc, type MarkdownDoc } from "./bridge/to-doc";
 import { createExtensions } from "./extensions";
-import { roundTrips } from "./round-trip";
+import { checkSave, type SaveCheck } from "./save-guard";
 import { Toolbar, promptForLink } from "./toolbar";
-
-// tiptap-markdown exports the `MarkdownStorage` shape but doesn't itself
-// augment @tiptap/core's (intentionally empty, per-extension-augmented)
-// `Storage` interface, so `editor.storage.markdown` is untyped without this.
-declare module "@tiptap/core" {
-  interface Storage {
-    markdown: MarkdownStorage;
-  }
-}
-
-const STALE_EDITOR_MESSAGE =
-  "The editor's dev hot-reload went stale — reload the page to keep editing.";
-
-/**
- * tiptap-markdown attaches storage.markdown in onBeforeCreate; after long
- * Turbopack HMR chains the live editor can end up with a stale module graph
- * where it's missing entirely (dev-only — verified sound in production
- * builds). Degrade to a reload prompt instead of an uncaught TypeError.
- */
-function getMarkdownSafe(editor: Editor): string | null {
-  return editor.storage.markdown?.getMarkdown() ?? null;
-}
 
 const CHANGE_DEBOUNCE_MS = 300;
 
+const PENDING_UPLOAD = "An image is still uploading — wait a moment before saving.";
+
+export type SaveGuardFailure = Extract<SaveCheck, { ok: false }>;
+
 export type WysiwygFlushResult =
   | { ok: true; markdown: string }
-  | { ok: false; error: string };
+  | { ok: false; error: string; guard?: SaveGuardFailure };
 
 export interface WysiwygEditorProps {
   value: string;
   onChange: (markdown: string) => void;
-  onRoundTripFail: (serialized: string) => void;
   /**
-   * Called instead of `onChange` whenever a serialize would silently commit
-   * a lossy tiptap-markdown fallback placeholder (see
-   * `detectLossySerialization` below). The caller should surface this as an
-   * error rather than treat it as a normal content update.
+   * Called instead of `onChange` whenever the document can't be saved
+   * without losing something (the save guard refused it; see
+   * save-guard.ts). The caller should surface this as an error rather than
+   * treat it as a normal content update.
    */
   onSerializeError?: (message: string) => void;
   /**
    * Populated (after mount) with an imperative flush function: clears any
    * pending debounce and synchronously returns the current document as
-   * markdown, running the same lossy-serialization check as `onChange`.
-   * For callers (Save/Publish) that need guaranteed-fresh, guaranteed-safe
-   * content instead of waiting for the next debounced `onChange`.
+   * Markdown, through the same save guard as `onChange`. For callers
+   * (Save/Publish) that need guaranteed-fresh, guaranteed-safe content
+   * instead of waiting for the next debounced `onChange`.
    */
   flushRef?: RefObject<(() => WysiwygFlushResult) | null>;
   /** Surface for paste/drop image-upload failures (see image-upload.ts). */
   onImageError?: (message: string) => void;
 }
 
-/**
- * tiptap-markdown (configured with `html: false`) falls back to a literal
- * "[nodeName]" placeholder for any node it can't represent in plain GFM —
- * see node_modules/tiptap-markdown's built `dist/tiptap-markdown.es.js`,
- * `HTMLNode`'s `addStorage().markdown.serialize`:
- * `state.write(\`[${node.type.name}]\`)` (plus `state.closeBlock(node)`
- * since a fallback node is always block-level in this schema). Tracing the
- * rest of that file: every node/mark type in this editor's schema is
- * properly covered *except* two specific shapes that TableEnterGuard (see
- * extensions.ts) prevents from being created through the UI, but which
- * could still arrive via paste:
- *  - `table`: covered by a real GFM serializer (`Table$1`), but only when
- *    every cell has exactly one child block (`isMarkdownSerializable`) — a
- *    cell with 2+ paragraphs, or a header/body shape mismatch, makes the
- *    *whole table* fall back to a standalone `[table]` block/line.
- *  - `hardBreak`: covered by a real serializer (`HardBreak$1`) that itself
- *    special-cases `state.inTable` and defers to the same HTMLNode
- *    fallback — so a hard break inside a table cell renders as a literal
- *    `[hardBreak]` embedded *inline* within that row's cell text (not a
- *    standalone line, since the table serializer renders cell content via
- *    `state.renderInline`, not the top-level block dispatcher).
- * (A third gap — `underline`, not in tiptap-markdown's covered mark list —
- * is closed by disabling the mark entirely in extensions.ts instead, since
- * it isn't part of this editor's supported feature set.)
- */
-function detectLossySerialization(
-  editor: Editor,
-  serialized: string,
-): string | null {
-  let hasTable = false;
-  let hasHardBreak = false;
-  let hasPendingUpload = false;
+/** A paste/drop upload still in flight (see image-upload.ts): its local
+ * object URL must never be committed to content or saved. */
+function hasPendingUpload(editor: Editor): boolean {
+  let pending = false;
   editor.state.doc.descendants((node) => {
-    if (node.type.name === "table") hasTable = true;
-    if (node.type.name === "hardBreak") hasHardBreak = true;
     if (
       node.type.name === "image" &&
       typeof node.attrs.src === "string" &&
       node.attrs.src.startsWith("blob:")
     ) {
-      // A paste/drop upload still in flight (see image-upload.ts) — its
-      // local object URL must never be committed to content or saved.
-      hasPendingUpload = true;
+      pending = true;
     }
+    return !pending;
   });
-  if (hasPendingUpload) {
-    return "An image is still uploading — wait a moment before saving.";
-  }
-  if (hasTable && /(^|\n)\[table\](\n|$)/.test(serialized)) {
-    return "This table can't be saved as Markdown: a cell has more than one paragraph, or the header/body shape doesn't match. Undo the change, or fix it in Source mode.";
-  }
-  if (hasHardBreak && serialized.includes("[hardBreak]")) {
-    return "A line break inside a table cell can't be saved as Markdown. Remove it, or fix it in Source mode.";
-  }
-  return null;
+  return pending;
+}
+
+/**
+ * Serializes the editor's document through the save guard. `loadedDoc` is
+ * the editor's top-level JSON as loaded: the bridge's JSON read through the
+ * editor's schema, exactly what the editor was created with (computed from
+ * the schema rather than read from the live editor, so no transaction can
+ * have touched it yet).
+ */
+function createSerializer(loaded: MarkdownDoc) {
+  let loadedDoc: JSONContent[] | null = null;
+  return (editor: Editor): WysiwygFlushResult => {
+    if (hasPendingUpload(editor)) return { ok: false, error: PENDING_UPLOAD };
+    try {
+      loadedDoc ??= editor.schema.nodeFromJSON(loaded.doc).toJSON().content ?? [];
+      const result = checkSave({
+        loaded: loaded.blocks,
+        loadedDoc: loadedDoc!,
+        doc: editor.getJSON(),
+        definitions: loaded.definitions,
+      });
+      return result.ok
+        ? { ok: true, markdown: result.markdown }
+        : { ok: false, error: result.message, guard: result };
+    } catch (error) {
+      return {
+        ok: false,
+        error:
+          error instanceof Error ? error.message : "Failed to serialize the document.",
+      };
+    }
+  };
 }
 
 // StarterKit's bundled Link extension doesn't register a ⌘K shortcut, so a
@@ -130,10 +109,28 @@ const LinkShortcut = Extension.create({
   },
 });
 
+/**
+ * Write mode. The document is loaded through the Markdown bridge
+ * (bridge/to-doc.ts) and saved through the save guard (save-guard.ts):
+ * every post opens here, blocks the editor can't hold exactly stay locked
+ * raw blocks, and nothing is handed to `onChange` or the flush unless it
+ * provably reads back as what is on screen.
+ *
+ * Code blocks are coloured by CodeHighlight (code-highlight.ts), which
+ * never dispatches. It replaced tiptap-extension-code-block-shiki, whose
+ * plugin view dispatched `view.state.tr` after its highlighter loaded
+ * asynchronously: React's dev double-mount and EditorContent's plugin
+ * (un)registration left several plugin views pending on one EditorView,
+ * and once that editor was destroyed (Write→Source on mount, when the old
+ * round-trip check failed) TipTap's dispatch guard read its not-mounted
+ * proxy view (`isDestroyed: false`), applied the first stale dispatch to the
+ * detached editor state (TrailingNode appended a node), and every later
+ * one, built from the destroyed view's older state, threw "Applying a
+ * mismatched transaction".
+ */
 export function WysiwygEditor({
   value,
   onChange,
-  onRoundTripFail,
   onSerializeError,
   flushRef,
   onImageError,
@@ -147,57 +144,17 @@ export function WysiwygEditor({
   const editorRef = useRef<Editor | null>(null);
   const onChangeRef = useRef(onChange);
   const onSerializeErrorRef = useRef(onSerializeError);
+  // Parsed once, at mount (see the contract below); the serializer keeps the
+  // loaded blocks the save guard compares against.
+  const [loaded] = useState(() => markdownToDoc(value));
+  const [serialize] = useState(() => createSerializer(loaded));
 
   const editor = useEditor(
     {
-      // tiptap-extension-code-block-shiki is configured with both light/dark
-      // themes (see extensions.ts) and switches between them purely via the
-      // CSS rule appended to globals.css, keyed off the site's .dark class —
-      // so the editor never needs to be re-created when the site theme
-      // flips (unlike a single-theme setup, which would need to
-      // re-highlight every code block). `theme` here only seeds shiki's
-      // `defaultTheme` fallback for the brief moment before the highlighter
-      // finishes loading; it's read once at mount (see the `[]` deps below).
-      //
-      // This reads the DOM instead of next-themes' `useTheme().resolvedTheme`
-      // (the pattern markdown-editor.tsx uses, gated by a
-      // useSyncExternalStore mounted-check to avoid a hydration mismatch on
-      // its always-visible first paint). Two things make that pattern both
-      // wrong and unnecessary here: `resolvedTheme` is populated by an
-      // ancestor effect that hasn't necessarily run yet when this once-only
-      // editor creation happens, so it's typically still undefined at this
-      // point even in dark mode — silently locking the fallback to "light"
-      // forever; and there's nothing to mismatch anyway, since
-      // `if (!editor) return null` below means both the SSR render and the
-      // first client render are a no-op — the editor is only ever created
-      // inside useEditor's client-side mount effect, after next-themes' own
-      // pre-hydration inline script has already stamped `.dark` onto
-      // `<html>` synchronously. Reading that class directly is therefore
-      // both simpler and correct where `resolvedTheme` would not be. Do not
-      // "fix" this by copying in the mounted-gate pattern.
-      extensions: [
-        ...createExtensions(
-          typeof document !== "undefined" &&
-            document.documentElement.classList.contains("dark")
-            ? "dark"
-            : "light",
-        ),
-        LinkShortcut,
-      ],
-      content: value,
+      extensions: [...createExtensions(), LinkShortcut],
+      content: loaded.doc,
       // SSR safety: render nothing on the server; mount client-side only.
       immediatelyRender: false,
-      onCreate({ editor }) {
-        // A new/empty document has nothing to protect — and TitleDocument's
-        // schema seeds it with an empty title heading that serializes as
-        // "##", which would falsely trip the guard against the empty string.
-        if (!value.trim()) return;
-        const serialized = getMarkdownSafe(editor);
-        if (serialized === null) return;
-        if (!roundTrips(value, serialized)) {
-          onRoundTripFail(serialized);
-        }
-      },
       onUpdate({ editor }) {
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
@@ -206,17 +163,12 @@ export function WysiwygEditor({
           // "an edit is pending" and would otherwise re-flush a change
           // that's already been delivered.
           debounceRef.current = null;
-          const serialized = getMarkdownSafe(editor);
-          if (serialized === null) {
-            onSerializeError?.(STALE_EDITOR_MESSAGE);
-            return;
-          }
-          const lossyError = detectLossySerialization(editor, serialized);
-          if (lossyError) {
-            onSerializeError?.(lossyError);
-            return;
-          }
-          onChange(serialized);
+          // An upload in flight finishes with its own transaction, which
+          // schedules the next update; nothing to report meanwhile.
+          if (hasPendingUpload(editor)) return;
+          const result = serialize(editor);
+          if (result.ok) onChange(result.markdown);
+          else onSerializeError?.(result.error);
         }, CHANGE_DEBOUNCE_MS);
       },
     },
@@ -226,7 +178,6 @@ export function WysiwygEditor({
     // externally (loading different content into an already-mounted
     // instance) must remount this component (e.g. conditional render or a
     // `key`); a mounted editor ignores external `value` changes by design.
-    // Theme is handled by CSS rather than a recreate (see the comment above).
     [],
   );
 
@@ -247,41 +198,33 @@ export function WysiwygEditor({
   useEffect(() => {
     return () => {
       // A pending debounce timer means the last edit hasn't reached the
-      // parent yet. Task 3 fully unmounts this component on every mode
+      // parent yet. The screen fully unmounts this component on every mode
       // switch away from Write (required by the value-is-parsed-once
       // contract above), and useEditor defers the actual editor.destroy()
-      // call by one macrotask past this synchronous cleanup (see the
-      // effect-ordering note in the fix report), so `editorRef.current` is
-      // still a live, readable editor here — flush the latest markdown to
-      // the parent instead of discarding it. An unmount with nothing
-      // pending must not call onChange (or onSerializeError) at all.
+      // call by one macrotask past this synchronous cleanup, so
+      // `editorRef.current` is still a live, readable editor here — flush
+      // the latest Markdown to the parent instead of discarding it. An
+      // unmount with nothing pending must not call onChange (or
+      // onSerializeError) at all.
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
         debounceRef.current = null;
         const currentEditor = editorRef.current;
         if (currentEditor && !currentEditor.isDestroyed) {
-          const serialized = getMarkdownSafe(currentEditor);
-          if (serialized === null) return;
-          const lossyError = detectLossySerialization(
-            currentEditor,
-            serialized,
-          );
-          if (lossyError) {
-            onSerializeErrorRef.current?.(lossyError);
-          } else {
-            onChangeRef.current(serialized);
-          }
+          const result = serialize(currentEditor);
+          if (result.ok) onChangeRef.current(result.markdown);
+          else onSerializeErrorRef.current?.(result.error);
         }
       }
     };
-  }, []);
+  }, [serialize]);
 
   // Populates `flushRef` (if given) with an imperative flush: clears any
   // pending debounce and synchronously returns the current document as
-  // markdown — or a serialize-error indicator, running the same
-  // lossy-serialization check as onUpdate/unmount above — for callers
-  // (Save/Publish) that need guaranteed-fresh, guaranteed-safe content
-  // instead of waiting for the next debounced onChange.
+  // Markdown, or why it can't be saved (a pending upload, or the save
+  // guard's verdict in `guard`), for callers (Save/Publish) that need
+  // guaranteed-fresh, guaranteed-safe content instead of waiting for the
+  // next debounced onChange.
   useEffect(() => {
     if (!flushRef) return;
     flushRef.current = (): WysiwygFlushResult => {
@@ -293,28 +236,12 @@ export function WysiwygEditor({
       if (!currentEditor || currentEditor.isDestroyed) {
         return { ok: false, error: "The editor isn't ready yet." };
       }
-      try {
-        const serialized = getMarkdownSafe(currentEditor);
-        if (serialized === null) {
-          return { ok: false, error: STALE_EDITOR_MESSAGE };
-        }
-        const lossyError = detectLossySerialization(currentEditor, serialized);
-        if (lossyError) return { ok: false, error: lossyError };
-        return { ok: true, markdown: serialized };
-      } catch (error) {
-        return {
-          ok: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "Failed to serialize the document.",
-        };
-      }
+      return serialize(currentEditor);
     };
     return () => {
       if (flushRef) flushRef.current = null;
     };
-  }, [flushRef]);
+  }, [flushRef, serialize]);
 
   if (!editor) return null;
 

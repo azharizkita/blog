@@ -20,9 +20,12 @@ import {
   Table as TableIcon,
   Mail,
   Music,
+  Lightbulb,
+  SquarePlay,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { parseYouTubeId } from "./youtube-block";
 
 interface ToolbarProps {
   editor: Editor;
@@ -103,6 +106,8 @@ export function Toolbar({ editor }: ToolbarProps) {
       codeBlock: editor.isActive("codeBlock"),
       mermaidBlock: editor.isActive("mermaidBlock"),
       table: editor.isActive("table"),
+      calloutBlock: editor.isActive("calloutBlock"),
+      youtubeBlock: editor.isActive("youtubeBlock"),
     }),
   });
 
@@ -111,6 +116,19 @@ export function Toolbar({ editor }: ToolbarProps) {
     if (!src) return;
     const alt = window.prompt("Alt text (site convention allows size metadata)") ?? "";
     chain().setImage({ src, alt }).run();
+  };
+
+  const insertYouTube = () => {
+    const input = window.prompt("YouTube link or video id");
+    if (input === null || !input.trim()) return;
+    const id = parseYouTubeId(input);
+    if (!id) {
+      window.alert("That isn't a YouTube link or video id.");
+      return;
+    }
+    chain()
+      .insertContent({ type: "youtubeBlock", attrs: { id, title: null } })
+      .run();
   };
 
   return (
@@ -191,11 +209,36 @@ export function Toolbar({ editor }: ToolbarProps) {
         active={editor.isActive("appleMusicBlock")}
         onClick={() =>
           chain()
-            .insertContent({ type: "appleMusicBlock", attrs: { url: "" } })
+            .insertContent({
+              type: "appleMusicBlock",
+              attrs: { url: "", title: null },
+            })
             .run()
         }
       >
         <Music />
+      </ToolbarButton>
+      <ToolbarButton
+        label="YouTube video"
+        active={state.youtubeBlock}
+        onClick={insertYouTube}
+      >
+        <SquarePlay />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Callout"
+        active={state.calloutBlock}
+        onClick={() =>
+          chain()
+            .insertContent({
+              type: "calloutBlock",
+              attrs: { kind: "TIP" },
+              content: [{ type: "paragraph" }],
+            })
+            .run()
+        }
+      >
+        <Lightbulb />
       </ToolbarButton>
       <ToolbarButton label="Image" onClick={insertImage}>
         <ImageIcon />

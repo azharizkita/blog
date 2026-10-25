@@ -247,6 +247,7 @@ pre.tm-code {
 .wysiwyg .tiptap > * + * {
   margin-top: calc(var(--spacing) * 8);
 }
+.wysiwyg h1,
 .wysiwyg h2 {
   @apply prose-h1;
 }
@@ -284,15 +285,14 @@ pre.tm-code {
   @apply ring-2 ring-ring;
 }
 
-/* tiptap-extension-code-block-shiki dual-theme support: shiki emits the
-   light-theme colors inline plus --shiki-dark/--shiki-dark-bg custom
-   properties for the dark variant; swap to them under .dark to match the
-   article pipeline's github-light / github-dark-dimmed pairing without
-   re-highlighting or re-mounting the editor on theme change. */
-.dark .wysiwyg .tiptap .shiki,
-.dark .wysiwyg .tiptap .shiki span {
-  color: var(--shiki-dark) !important;
-  background-color: var(--shiki-dark-bg) !important;
+/* Fenced code: the code block renders as pre.tm-code (see extensions.ts),
+   so it takes the article's pre styling and padding (the base `pre` rule
+   and `pre.tm-code` above); token colours come from code-theme.css via the
+   th-* classes CodeHighlight decorates with. */
+
+/* Callouts mirror the article's Callout body (`[&>p]:m-0`). */
+.wysiwyg .callout-body p {
+  margin: 0;
 }
 
 /* Table fidelity with the published article: ArticleContent wraps every

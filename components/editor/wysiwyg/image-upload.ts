@@ -37,9 +37,8 @@ export async function fileToBase64(file: File): Promise<string> {
  * Ghost-style paste/drop image uploads for Write mode: the image appears
  * immediately at the target position with a local object URL, then its src
  * is swapped for the uploaded raw.githubusercontent URL. While any blob:
- * src remains in the doc, serialization is blocked by
- * detectLossySerialization (see index.tsx), so a half-finished upload can
- * never reach the gist.
+ * src remains in the doc, serialization is blocked (hasPendingUpload in
+ * index.tsx), so a half-finished upload can never reach the gist.
  */
 /**
  * Reads intrinsic pixel dimensions so pasted images carry the site's
@@ -99,6 +98,12 @@ async function insertAndUpload(
     .run();
 
   const finish = (uploadedUrl: string | null) => {
+    // The editor may be gone (Write mode left while uploading); dispatching
+    // into a destroyed editor would apply to its detached state.
+    if (editor.isDestroyed) {
+      URL.revokeObjectURL(objectUrl);
+      return;
+    }
     // The node may have moved (or been deleted) since insertion; find it by
     // its unique object URL.
     let found: { pos: number } | null = null;

@@ -8,24 +8,15 @@ import {
   mergeAttributes,
   type NodeViewProps,
 } from "@tiptap/react";
-import type { MarkdownNodeSpec } from "tiptap-markdown";
 import { Envelope } from "@/components/lottie/envelope";
-
-/** `<Envelope text="…" />` lines in the article source. JSX attribute
- * values decode HTML entities, so quotes round-trip as &quot;. */
-const ENVELOPE_LINE = /^<Envelope\s+text="([^"]*)"\s*\/>\s*$/;
-
-const encodeAttr = (value: string) =>
-  value.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
-const decodeAttr = (value: string) =>
-  value.replaceAll("&quot;", '"').replaceAll("&amp;", "&");
+import { dataAttr } from "./data-attr";
 
 /**
- * The Envelope MDX component as an atomic editor node: renders the real
- * animated component in Write mode (like the mermaid block), with the note
- * text editable while selected. Its symmetric markdown parse/serialize is
- * what lets envelope-bearing articles pass the round-trip guard and stay
- * Write-editable — other JSX still falls back to Source mode.
+ * The `<!-- ::envelope text="…" -->` embed as an atomic editor node: renders
+ * the real animated component in Write mode (like the mermaid block), with
+ * the note text editable while selected. `text` holds the note as written
+ * (decoded); the Markdown bridge (bridge/to-doc.ts, bridge/to-markdown.ts)
+ * owns the attribute encoding.
  */
 export const EnvelopeBlock = Node.create({
   name: "envelopeBlock",
@@ -33,66 +24,19 @@ export const EnvelopeBlock = Node.create({
   atom: true,
 
   addAttributes() {
-    return { text: { default: "" } };
+    return { text: dataAttr("text", "") };
   },
 
   parseHTML() {
-    return [
-      {
-        tag: "div[data-envelope-block]",
-        getAttrs: (element) => ({
-          text: element.getAttribute("data-text") ?? "",
-        }),
-      },
-    ];
+    return [{ tag: "div[data-envelope-block]" }];
   },
 
-  renderHTML({ HTMLAttributes, node }) {
-    return [
-      "div",
-      mergeAttributes(HTMLAttributes, {
-        "data-envelope-block": "",
-        "data-text": node.attrs.text,
-      }),
-    ];
+  renderHTML({ HTMLAttributes }) {
+    return ["div", mergeAttributes(HTMLAttributes, { "data-envelope-block": "" })];
   },
 
   addNodeView() {
     return ReactNodeViewRenderer(EnvelopeBlockView);
-  },
-
-  addStorage(): { markdown: MarkdownNodeSpec } {
-    return {
-      markdown: {
-        serialize(state, node) {
-          state.write(`<Envelope text="${encodeAttr(node.attrs.text)}" />`);
-          state.closeBlock(node);
-        },
-        parse: {
-          setup(markdownit) {
-            // A block rule ahead of `paragraph`, so the JSX line becomes
-            // this node instead of escaped text (html:false would other-
-            // wise mangle it and trip the round-trip guard).
-            markdownit.block.ruler.before(
-              "paragraph",
-              "envelope",
-              (state, startLine, _endLine, silent) => {
-                const start = state.bMarks[startLine] + state.tShift[startLine];
-                const line = state.src.slice(start, state.eMarks[startLine]);
-                const match = ENVELOPE_LINE.exec(line);
-                if (!match) return false;
-                if (silent) return true;
-                const token = state.push("html_block", "", 0);
-                token.content = `<div data-envelope-block data-text="${match[1]}"></div>`;
-                token.map = [startLine, startLine + 1];
-                state.line = startLine + 1;
-                return true;
-              },
-            );
-          },
-        },
-      },
-    };
   },
 });
 
@@ -102,14 +46,14 @@ function EnvelopeBlockView({ node, updateAttributes, selected }: NodeViewProps) 
       data-envelope-block
       className={selected ? "rounded-md ring-2 ring-ring" : undefined}
     >
-      <Envelope text={decodeAttr(node.attrs.text)} />
+      <Envelope text={node.attrs.text} />
       {selected && (
         <span className="mx-auto mt-2 flex max-w-md items-baseline gap-1.5 text-sm">
           <span className="flex-none">note:</span>
           <NoteInput
             key={node.attrs.text}
-            initialText={decodeAttr(node.attrs.text)}
-            onCommit={(next) => updateAttributes({ text: encodeAttr(next) })}
+            initialText={node.attrs.text}
+            onCommit={(next) => updateAttributes({ text: next })}
           />
         </span>
       )}

@@ -346,11 +346,6 @@ export function EditorScreen(props: EditorScreenProps) {
         <WysiwygEditor
           value={content}
           onChange={setContent}
-          onRoundTripFail={() => {
-            if (forceWriteRef.current) return;
-            setRoundTripBroken(true);
-            setMode("source");
-          }}
           onSerializeError={setStatus}
           onImageError={setUploadError}
           flushRef={wysiwygFlushRef}

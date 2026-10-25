@@ -3,15 +3,25 @@ import Document from "@tiptap/extension-document";
 import Link from "@tiptap/extension-link";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
 import { Placeholder } from "@tiptap/extensions";
-import { Markdown, type MarkdownMarkSpec } from "tiptap-markdown";
-import CodeBlockShiki from "tiptap-extension-code-block-shiki";
 import { Extension, type Extensions } from "@tiptap/react";
-import { Plugin } from "@tiptap/pm/state";
-import { ImageUpload } from "./image-upload";
+import { Fragment, Slice, type Node as PMNode } from "@tiptap/pm/model";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { HEADING_LEVELS, NODES } from "./bridge/schema-names";
+import { markdownToDoc } from "./bridge/to-doc";
+import { ImageUpload, imageFilesFrom } from "./image-upload";
 import { EditorImage } from "./image-view";
-import { AppleMusicBlock } from "./apple-music-block";
+import { AppleMusicBlock, IFRAME_PASTE, URL_PASTE } from "./apple-music-block";
+import { CalloutBlock } from "./callout-block";
+import { CodeHighlight } from "./code-highlight";
 import { EnvelopeBlock } from "./envelope-block";
 import { MermaidBlock } from "./mermaid-block";
+import { RawBlock } from "./raw-block";
+import { YoutubeBlock } from "./youtube-block";
+
+// The schema registered here must match bridge/schema-names.ts exactly
+// (node/mark names, attrs and their defaults): the bridge reads and writes
+// that contract, and the save guard (save-guard.ts) compares the editor's
+// JSON against it, so any drift reads as a lossy save.
 
 /**
  * Ghost-style document shape: the first node is always a heading — the
@@ -27,7 +37,8 @@ const TitleDocument = Document.extend({
 /**
  * The title heading must serialize as "## " (level 2): if the first node's
  * heading level drifts (toolbar H2/H3 applied to the title line, or pasted
- * content starting with ###), normalize it back to level 2.
+ * content starting with ###), normalize it back to level 2. Only the first
+ * node is governed; other headings keep any level in HEADING_LEVELS.
  */
 const EnforceTitleLevel = Extension.create({
   name: "enforceTitleLevel",
@@ -50,19 +61,13 @@ const EnforceTitleLevel = Extension.create({
 });
 
 /**
- * Enter/Shift-Enter inside a table cell can silently corrupt the document.
- * tiptap-markdown's GFM table serializer (see index.tsx's
- * detectLossySerialization for the full trace through tiptap-markdown's
- * source) only round-trips a cell that holds exactly one paragraph — an
- * Enter that splits a cell's paragraph in two, or a header/body shape
- * mismatch, makes the *entire table* fall back to a literal "[table]"
- * placeholder on the next serialize; a Shift-Enter hard break inside a cell
- * similarly falls back to an inline "[hardBreak]" placeholder. Scoping
- * Enter to table navigation (next cell, or a new row at the table's end)
- * instead of the default paragraph split, and swallowing Shift-Enter
- * entirely, means the corrupting shape can never be created through the
- * editor UI in the first place. (index.tsx's detection is the belt, for
- * content that arrives already in this shape — e.g. via paste.)
+ * Enter/Shift-Enter inside a table cell would create shapes GFM tables
+ * can't hold: an Enter that splits a cell's paragraph in two, or a hard
+ * break inside a cell. The serializer refuses both (bridge/to-markdown.ts
+ * throws UnserializableError, and the save guard stops the save), so the
+ * editor keeps them from being made: Enter moves to the next cell (or adds
+ * a row at the table's end) instead of splitting the paragraph, and the
+ * hard-break keys (Shift-Enter, Mod-Enter) do nothing in a cell.
  */
 const TableEnterGuard = Extension.create({
   name: "tableEnterGuard",
@@ -78,6 +83,22 @@ const TableEnterGuard = Extension.create({
         return this.editor.chain().addRowAfter().goToNextCell().run();
       },
       "Shift-Enter": () => inTableCell(),
+      "Mod-Enter": () => inTableCell(),
+    };
+  },
+});
+
+/**
+ * A hard break inside a heading has no Markdown form (a heading is one
+ * line; the serializer refuses it), so the hard-break keys do nothing there.
+ */
+const HeadingBreakGuard = Extension.create({
+  name: "headingBreakGuard",
+  addKeyboardShortcuts() {
+    const inHeading = () => this.editor.isActive("heading");
+    return {
+      "Shift-Enter": () => inHeading(),
+      "Mod-Enter": () => inHeading(),
     };
   },
 });
@@ -97,70 +118,99 @@ const StrikeShortcut = Extension.create({
 });
 
 /**
- * Links always serialize as `[text](url)`. prosemirror-markdown's default
- * link spec (which tiptap-markdown reuses) writes a link whose text equals
- * its href as a `<url>` autolink — valid Markdown, but articles compile as
- * MDX, where `<` opens a JSX tag and `<https://…>` is a syntax error that
- * fails the page's prerender. tiptap-markdown merges an extension's own
- * `storage.markdown` over its built-in spec, so this replaces it.
+ * Pasted plain text is read as Markdown through the same bridge that loads
+ * posts (markdownToDoc), so pasting a post fragment from Source mode, a
+ * Markdown file or a VS Code Markdown buffer gives the blocks, marks and
+ * embeds it reads as. Left to the defaults: pastes carrying HTML (rich text
+ * from a page, or a copy inside the editor, whose HTML holds the exact
+ * nodes), image files (ImageUpload), pastes into a code block (literal
+ * text), and Apple Music snippets/links (AppleMusicBlock's paste rules).
  */
-const MdxSafeLink = Link.extend({
-  addStorage(): { markdown: MarkdownMarkSpec } {
-    return {
-      markdown: {
-        serialize: {
-          open: "[",
-          close(_state, mark) {
-            const href = String(mark.attrs.href).replace(/[()"]/g, "\\$&");
-            const title = mark.attrs.title
-              ? ` "${String(mark.attrs.title).replace(/"/g, '\\"')}"`
-              : "";
-            return `](${href}${title})`;
+const MarkdownPaste = Extension.create({
+  name: "markdownPaste",
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey("markdownPaste"),
+        props: {
+          handlePaste: (view, event) => {
+            const data = event.clipboardData;
+            if (!data || imageFilesFrom(data).length) return false;
+            const text = data.getData("text/plain");
+            if (!text.trim()) return false;
+            let vscodeMode: string | undefined;
+            try {
+              vscodeMode = JSON.parse(data.getData("vscode-editor-data") || "{}").mode;
+            } catch {
+              vscodeMode = undefined;
+            }
+            if (data.getData("text/html") && vscodeMode !== "markdown") return false;
+            if (view.state.selection.$from.parent.type.spec.code) return false;
+            IFRAME_PASTE.lastIndex = 0;
+            URL_PASTE.lastIndex = 0;
+            if (IFRAME_PASTE.test(text) || URL_PASTE.test(text)) return false;
+
+            let slice: Slice;
+            try {
+              const { doc, blocks } = markdownToDoc(text.replace(/\r\n?/g, "\n"));
+              // The synthetic title markdownToDoc adds isn't part of the paste.
+              const content = (doc.content ?? []).slice(blocks[0]?.synthetic ? 1 : 0);
+              if (!content.length) return false;
+              const fragment = Fragment.fromJSON(view.state.schema, content);
+              // Open ends merge with the text around the cursor, as a paste
+              // of rich text does; but a heading or code block at an end
+              // stays a block of its own (the rest of the paragraph would
+              // otherwise join the code, or a heading turn into its text).
+              const open = Slice.maxOpen(fragment);
+              const closed = (node: PMNode | null) =>
+                !!node?.isTextblock && node.type.name !== NODES.paragraph;
+              slice = new Slice(
+                fragment,
+                closed(fragment.firstChild) ? 0 : open.openStart,
+                closed(fragment.lastChild) ? 0 : open.openEnd,
+              );
+            } catch {
+              return false;
+            }
+            // uiEvent "paste" lets the paste rules run over the result too.
+            view.dispatch(
+              view.state.tr
+                .replaceSelection(slice)
+                .scrollIntoView()
+                .setMeta("paste", true)
+                .setMeta("uiEvent", "paste"),
+            );
+            return true;
           },
-          mixable: true,
         },
-        parse: {
-          // handled by markdown-it
-        },
-      },
-    };
+      }),
+    ];
   },
 });
 
-/**
- * The full extension set for the WYSIWYG editor. `theme` is used only as the
- * shiki fallback theme (`defaultTheme`) for the brief moment before a
- * language/theme finishes loading — tiptap-extension-code-block-shiki
- * natively supports dual light/dark themes via its `themes` option, toggled
- * purely by CSS (see the `.dark .wysiwyg .tiptap .shiki` rule appended to
- * globals.css), so code blocks never need re-highlighting or the editor
- * re-mounting when the site theme flips.
- */
-export function createExtensions(theme: "light" | "dark"): Extensions {
+/** The full extension set for the WYSIWYG editor. */
+export function createExtensions(): Extensions {
   return [
     StarterKit.configure({
       // Replaced by TitleDocument (heading-first document shape).
       document: false,
-      heading: { levels: [2, 3, 4] },
-      // The shiki extension replaces the default code block.
-      codeBlock: false,
-      // Replaced by MdxSafeLink (never serializes `<url>` autolinks).
+      heading: { levels: [...HEADING_LEVELS] },
+      // Fenced code: the article's pre styling (pre.tm-code), coloured by
+      // CodeHighlight below.
+      codeBlock: { HTMLAttributes: { class: "tm-code" } },
+      // Registered separately below (openOnClick off), after StarterKit so
+      // the schema's mark order stays as schema-names.ts MARK_ORDER expects.
       link: false,
-      // Not offered by the toolbar and — like `table`/`hardBreak` above —
-      // not one of the node/mark types tiptap-markdown can serialize under
-      // html:false (it shares the same "[underline]" HTMLMark fallback).
-      // Disabling it removes that lossy path from the schema entirely,
-      // rather than trying to detect it after the fact.
+      // Not offered by the toolbar and not part of the Markdown contract.
       underline: false,
+      // TrailingNode defaults to the doc's first allowed child — under
+      // TitleDocument that's a heading, so every transaction on a post not
+      // ending in one appended an empty level-1 heading (saved as "#").
+      // An empty trailing paragraph writes nothing.
+      trailingNode: { node: NODES.paragraph },
     }),
-    CodeBlockShiki.configure({
-      defaultTheme: theme === "dark" ? "github-dark-dimmed" : "github-light",
-      themes: {
-        light: "github-light",
-        dark: "github-dark-dimmed",
-      },
-    }),
-    MdxSafeLink.configure({ openOnClick: false }),
+    CodeHighlight,
+    Link.configure({ openOnClick: false }),
     TitleDocument,
     EnforceTitleLevel,
     Placeholder.configure({
@@ -169,10 +219,8 @@ export function createExtensions(theme: "light" | "dark"): Extensions {
       placeholder: ({ node, pos }) =>
         pos === 0 && node.type.name === "heading" ? "Title" : "",
     }),
-    // MUST stay inline (as markdown defines images): tiptap-markdown's image
-    // serializer never closes a block, so a block-level image node glues the
-    // following paragraph onto the image line and trips the round-trip
-    // guard. EditorImage = stock Image (inline) + an alt-editing node view.
+    // Inline, as Markdown defines images. EditorImage = stock Image (inline)
+    // + an alt-editing node view.
     EditorImage,
     // Paste/drop uploads; errors reach the screen via the upload-error
     // registry, keyed by editor instance (see WysiwygEditor's sync effect).
@@ -184,14 +232,12 @@ export function createExtensions(theme: "light" | "dark"): Extensions {
     MermaidBlock,
     EnvelopeBlock,
     AppleMusicBlock,
+    YoutubeBlock,
+    CalloutBlock,
+    RawBlock,
     TableEnterGuard,
+    HeadingBreakGuard,
     StrikeShortcut,
-    Markdown.configure({
-      html: false,
-      bulletListMarker: "-",
-      linkify: false,
-      breaks: false,
-      transformPastedText: true,
-    }),
+    MarkdownPaste,
   ];
 }

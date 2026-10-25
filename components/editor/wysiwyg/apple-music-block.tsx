@@ -10,33 +10,29 @@ import {
   type NodeViewProps,
 } from "@tiptap/react";
 import { Music } from "lucide-react";
-import type { MarkdownNodeSpec } from "tiptap-markdown";
 import { AppleMusic, toAppleMusicEmbedUrl } from "@/components/apple-music-embed";
+import { dataAttr } from "./data-attr";
 
-/** `<AppleMusic url="…" />` lines in the article source. JSX attribute
- * values decode HTML entities, so quotes/ampersands round-trip encoded. */
-const APPLE_MUSIC_LINE = /^<AppleMusic\s+url="([^"]*)"\s*\/>\s*$/;
-
-/** Pasted Apple embed snippets arrive as escaped text (html:false), so the
- * iframe tag is matched in the text itself and reduced to its src. */
-const IFRAME_PASTE =
+/** Pasted Apple embed snippets arrive as text, so the iframe tag is matched
+ * in the text itself and reduced to its src. */
+export const IFRAME_PASTE =
   /<iframe[^>]*\ssrc="(https:\/\/embed\.music\.apple\.com\/[^"]+)"[^>]*>(?:<\/iframe>)?/g;
 
 /** A bare Apple Music share link also converts. The lookbehind keeps this
  * rule off the URL inside an iframe's src="…" (the rule above owns that). */
-const URL_PASTE = /(?<!")https:\/\/(?:embed\.)?music\.apple\.com\/\S+/g;
+export const URL_PASTE = /(?<!")https:\/\/(?:embed\.)?music\.apple\.com\/\S+/g;
 
-const encodeAttr = (value: string) =>
-  value.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
-const decodeAttr = (value: string) =>
+/** The iframe snippet is HTML, so its src carries `&amp;`/`&quot;`. */
+const decodeHtmlAttr = (value: string) =>
   value.replaceAll("&quot;", '"').replaceAll("&amp;", "&");
 
 /**
- * The AppleMusic MDX component as an atomic editor node — same shape as the
- * envelope block: symmetric markdown parse/serialize keeps articles with
- * embeds Write-editable past the round-trip guard, the node view renders
- * the real player, and paste rules convert Apple's iframe snippet or a
- * plain music.apple.com link straight into the block.
+ * The `<!-- ::apple-music url="…" -->` embed as an atomic editor node — same
+ * shape as the envelope block: the node view renders the real player, and
+ * paste rules convert Apple's iframe snippet or a plain music.apple.com link
+ * straight into the block. `url` and `title` hold the values as written
+ * (decoded); the Markdown bridge owns the attribute encoding. `title` has no
+ * editor UI and is kept as loaded.
  */
 export const AppleMusicBlock = Node.create({
   name: "appleMusicBlock",
@@ -44,37 +40,27 @@ export const AppleMusicBlock = Node.create({
   atom: true,
 
   addAttributes() {
-    return { url: { default: "" } };
+    return { url: dataAttr("url", ""), title: dataAttr("title", null) };
   },
 
   parseHTML() {
-    return [
-      {
-        tag: "div[data-apple-music-block]",
-        getAttrs: (element) => ({
-          url: element.getAttribute("data-url") ?? "",
-        }),
-      },
-    ];
+    return [{ tag: "div[data-apple-music-block]" }];
   },
 
-  renderHTML({ HTMLAttributes, node }) {
+  renderHTML({ HTMLAttributes }) {
     return [
       "div",
-      mergeAttributes(HTMLAttributes, {
-        "data-apple-music-block": "",
-        "data-url": node.attrs.url,
-      }),
+      mergeAttributes(HTMLAttributes, { "data-apple-music-block": "" }),
     ];
   },
 
   addPasteRules() {
-    const toNode = (url: string) => ({ url: decodeAttr(url.trim()) });
+    const toNode = (url: string) => ({ url: url.trim(), title: null });
     return [
       nodePasteRule({
         find: IFRAME_PASTE,
         type: this.type,
-        getAttributes: (match) => toNode(match[1]),
+        getAttributes: (match) => toNode(decodeHtmlAttr(match[1])),
       }),
       nodePasteRule({
         find: URL_PASTE,
@@ -88,38 +74,6 @@ export const AppleMusicBlock = Node.create({
     return ReactNodeViewRenderer(AppleMusicBlockView);
   },
 
-  addStorage(): { markdown: MarkdownNodeSpec } {
-    return {
-      markdown: {
-        serialize(state, node) {
-          state.write(`<AppleMusic url="${encodeAttr(node.attrs.url)}" />`);
-          state.closeBlock(node);
-        },
-        parse: {
-          setup(markdownit) {
-            // A block rule ahead of `paragraph`, so the JSX line becomes
-            // this node instead of escaped text (see envelope-block).
-            markdownit.block.ruler.before(
-              "paragraph",
-              "appleMusic",
-              (state, startLine, _endLine, silent) => {
-                const start = state.bMarks[startLine] + state.tShift[startLine];
-                const line = state.src.slice(start, state.eMarks[startLine]);
-                const match = APPLE_MUSIC_LINE.exec(line);
-                if (!match) return false;
-                if (silent) return true;
-                const token = state.push("html_block", "", 0);
-                token.content = `<div data-apple-music-block data-url="${match[1]}"></div>`;
-                token.map = [startLine, startLine + 1];
-                state.line = startLine + 1;
-                return true;
-              },
-            );
-          },
-        },
-      },
-    };
-  },
 });
 
 function AppleMusicBlockView({
@@ -127,7 +81,7 @@ function AppleMusicBlockView({
   updateAttributes,
   selected,
 }: NodeViewProps) {
-  const url = decodeAttr(node.attrs.url);
+  const url: string = node.attrs.url;
   const valid = toAppleMusicEmbedUrl(url) !== null;
   return (
     <NodeViewWrapper
@@ -135,7 +89,7 @@ function AppleMusicBlockView({
       className={selected ? "rounded-md ring-2 ring-ring" : undefined}
     >
       {valid ? (
-        <AppleMusic url={url} />
+        <AppleMusic url={url} title={node.attrs.title ?? undefined} />
       ) : (
         <span className="prose-muted flex h-24 items-center justify-center gap-2 rounded-lg border border-dashed text-sm">
           <Music aria-hidden className="size-4" />
@@ -148,7 +102,7 @@ function AppleMusicBlockView({
           <UrlInput
             key={node.attrs.url}
             initialUrl={url}
-            onCommit={(next) => updateAttributes({ url: encodeAttr(next) })}
+            onCommit={(next) => updateAttributes({ url: next })}
           />
         </span>
       )}
