@@ -7,6 +7,7 @@ import extractCoverImage, {
   type CoverImage,
 } from "@/lib/extract-cover-image";
 import { CONTENT_FILENAME } from "@/lib/gist-file";
+import { convertLegacyMarkdown } from "@/lib/markdown/legacy";
 import getSlug from "@/lib/get-slug";
 import parseEntry from "@/lib/parse-entry";
 import readingTime from "@/lib/reading-time";
@@ -17,7 +18,7 @@ import readingTime from "@/lib/reading-time";
  * contract is the historical gist-shaped one — every consumer outside this
  * folder still sees octokit-ish rows with a composed `Type! - Title - …`
  * description, an `entry` parsed from it, and content under
- * files["index.mdx"] — so swapping the storage never touched them.
+ * files["index.md"] — so swapping the storage never touched them.
  *
  * Connections follow Neon practice: the app uses the pooled DATABASE_URL
  * via the HTTP driver (one-shot queries, ideal inside "use cache" scopes);
@@ -100,7 +101,10 @@ function toGistShape(row: PostRow) {
   return {
     ...toListItem(row),
     files: {
-      [CONTENT_FILENAME]: { filename: CONTENT_FILENAME, content: row.content },
+      [CONTENT_FILENAME]: {
+        filename: CONTENT_FILENAME,
+        content: convertLegacyMarkdown(row.content).content, // LEGACY SHIM — remove after production migration (spec §6)
+      },
     } as Record<string, { filename: string; content: string } | undefined>,
   };
 }

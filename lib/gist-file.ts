@@ -1,18 +1,17 @@
 /**
- * Article content lives in one file per gist. New saves write `index.mdx`
- * (articles are compiled as MDX and may contain registered JSX components —
- * see components/article-content/mdx-components.tsx); `index.md` remains a
- * read fallback for anything not yet migrated.
+ * Article content lives in one file per gist. New saves write `index.md`
+ * (articles are rendered with TanStack Markdown); `index.mdx` remains a read
+ * fallback for anything not yet migrated.
  */
-export const CONTENT_FILENAME = "index.mdx";
-export const LEGACY_CONTENT_FILENAME = "index.md";
+export const CONTENT_FILENAME = "index.md";
+export const LEGACY_CONTENT_FILENAME = "index.mdx";
 
 interface GistFileLike {
   content?: string;
   raw_url?: string;
 }
 
-/** Picks the gist's content file, preferring `.mdx` over the `.md` fallback. */
+/** Picks the gist's content file, preferring `.md` over the `.mdx` fallback. */
 export function getContentFile<File extends GistFileLike>(
   files: Record<string, File | null | undefined> | undefined | null,
 ): { filename: string; file: File } | null {
