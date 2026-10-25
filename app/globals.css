@@ -135,23 +135,6 @@
     @apply flex flex-1;
   }
 
-  span[data-line] {
-    @apply px-2;
-  }
-
-  /* safer attribute selector - match known values if possible */
-  code[data-theme],
-  code[data-theme] span {
-    color: var(--shiki-light);
-    background-color: transparent !important;
-  }
-
-  /* dark mode overrides — class-based to match next-themes */
-  .dark code[data-theme],
-  .dark code[data-theme] span {
-    color: var(--shiki-dark);
-    background-color: var(--card) !important;
-  }
   html {
     @apply font-sans;
     /* Reserve the scrollbar track so page length changes don't shift layout,
@@ -169,6 +152,14 @@
       scroll-behavior: auto !important;
     }
   }
+}
+
+/* Fenced code (TanStack Markdown). Unlayered so it overrides code-theme.css's
+   `padding: 1rem`: keep the base `pre` rule's py-2 and the old per-line px-2.
+   Token colours come from code-theme.css. */
+pre.tm-code {
+  padding-block: 0.5rem;
+  padding-inline: 0.5rem;
 }
 
 @utility no-scrollbar {

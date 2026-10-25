@@ -37,15 +37,15 @@ function Callout({
 }
 
 /**
- * The JSX components articles may use — MDX only sees what's listed here,
- * which keeps content code on a whitelist. Registered names are usable in
- * any article (Write mode falls back to Source for JSX-containing docs via
- * the round-trip guard; the exact Preview renders them).
+ * Emitted component tags -> React components. Only tags produced by
+ * lib/markdown/extensions.ts reach here, which keeps article content on a
+ * whitelist; unknown comment components (`md-unknown`) render nothing.
  */
 export const articleComponents = {
-  AppleMusic,
-  Envelope,
-  Mermaid,
-  Callout,
-  YouTube,
+  "md-apple-music": AppleMusic,
+  "md-envelope": Envelope,
+  "md-mermaid": Mermaid,
+  "md-callout": Callout,
+  "md-youtube": YouTube,
+  "md-unknown": () => null,
 };

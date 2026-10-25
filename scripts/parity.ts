@@ -42,7 +42,15 @@ export function normalize(html: string): string {
     return `<pre${stripAttrs(attrs)}>${esc}</pre>`;
   });
   out = out.replace(/<code\b([^>]*)>/g, (_m, attrs: string) => `<code${stripAttrs(attrs)}>`);
-  return out.replace(/>\s+</g, "><").trim();
+  out = out.replace(
+    /<figure\b([^>]*)>/g,
+    (_m, attrs: string) => `<figure${attrs.replace(/\s+data-[\w-]+(?:="[^"]*")?/g, "")}>`,
+  );
+  // React text separators and whitespace right after a <br> are reader-invisible.
+  out = out.replace(/(<br\s*\/?>)\s*(?:<!-- -->)?/g, "$1");
+  out = out.replace(/>\s+</g, "><").trim();
+  // A <br> closing a block is reader-invisible (the legacy converter drops it).
+  return out.replace(/<br\s*\/?>(?=<\/(?:p|li|blockquote|td|th)>)/g, "");
 }
 
 function stripAttrs(attrs: string): string {
@@ -72,7 +80,7 @@ for (const { slug, url } of posts) {
       console.log(`captured ${slug}`);
       continue;
     }
-    const expected = readFileSync(file, "utf8");
+    const expected = normalize(readFileSync(file, "utf8"));
     if (actual === expected) continue;
     let i = 0;
     while (i < expected.length && expected[i] === actual[i]) i++;
