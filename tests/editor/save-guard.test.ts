@@ -178,7 +178,7 @@ describe("checkSave", () => {
     doc.content!.splice(1, 0, raw("1. x\n\n2. y"));
     doc.content!.splice(3, 0, raw("1) x\n\n2) y"));
     const result = checkSave({ ...args, doc });
-    expect(result).toMatchObject({ ok: false, reason: "unserializable", blockIndex: 2 });
+    expect(result).toMatchObject({ ok: false, reason: "unserializable", check: "serialize", blockIndex: 2 });
     if (!result.ok) expect(result.message).toContain("lists next to it");
   });
 
@@ -259,6 +259,7 @@ describe("checkSave", () => {
     expect(result).toMatchObject({
       ok: false,
       reason: "lossy",
+      check: "B",
       blockIndex: 4,
       loadedSource: "##### Deep heading",
       savingSource: "##### Deep heading",
@@ -318,7 +319,7 @@ describe("checkSave loadedIndex / skipCheckB", () => {
   it("skipCheckB still refuses a Check A failure", () => {
     const { doc, args } = load(SOURCE);
     const result = checkSave({ ...args, doc, serialize: dropEmbed, skipCheckB: true });
-    expect(result).toMatchObject({ ok: false, reason: "lossy" });
+    expect(result).toMatchObject({ ok: false, reason: "lossy", check: "A" });
   });
 
   it("skipCheckB passes an unedited doc", () => {

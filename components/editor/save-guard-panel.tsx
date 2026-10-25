@@ -59,9 +59,12 @@ export function SaveGuardPanel({
         <Button variant="outline" size="sm" onClick={onKeepEditing} disabled={disabled}>
           Keep editing
         </Button>
-        <Button variant="outline" size="sm" onClick={onForceSave} disabled={disabled}>
-          I deleted it on purpose — save
-        </Button>
+        {/* Force-save only skips Check B; any other refusal would just repeat. */}
+        {guard.check === "B" && (
+          <Button variant="outline" size="sm" onClick={onForceSave} disabled={disabled}>
+            I deleted it on purpose — save
+          </Button>
+        )}
       </div>
     </div>
   );

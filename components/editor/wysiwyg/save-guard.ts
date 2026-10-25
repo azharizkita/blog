@@ -18,6 +18,8 @@ export type SaveCheck =
   | {
       ok: false;
       reason: "lossy" | "unserializable";
+      /** Which check refused: the serializer, Check A, or Check B (the only one a force-save skips). */
+      check: "serialize" | "A" | "B";
       /** Index into `doc.content` of the first top-level block that differs. */
       blockIndex: number;
       /** That block's Markdown as loaded, or null (a new or synthetic block, or none). */
@@ -348,12 +350,14 @@ export function checkSave({
     j === undefined || loaded[j]?.synthetic ? null : (loaded[j]?.source ?? null);
   const fail = (
     reason: "lossy" | "unserializable",
+    check: "serialize" | "A" | "B",
     blockIndex: number,
     savingSource: string | null,
     message: string,
   ): SaveCheck => ({
     ok: false,
     reason,
+    check,
     blockIndex,
     loadedIndex:
       near[blockIndex] === undefined || loaded[near[blockIndex]!]?.synthetic
@@ -374,7 +378,7 @@ export function checkSave({
       index = content.findIndex((n) => safeBlockToMarkdown(n) === null);
       if (index === -1) index = Math.max(0, exact.findIndex((j) => j === undefined));
     }
-    return fail("unserializable", index, null, error.message);
+    return fail("unserializable", "serialize", index, null, error.message);
   }
 
   // The blocks the saved text should hold, with their doc index.
@@ -404,6 +408,7 @@ export function checkSave({
       (got.length < expected.length && !!expected[k + 1] && same(expected[k + 1].node, have.node));
     return fail(
       "lossy",
+      "A",
       want?.index ?? content.length,
       dropped ? null : have.block.source,
       LOSSY,
@@ -416,7 +421,7 @@ export function checkSave({
     const j = exact[index];
     if (j === undefined || loaded[j]?.synthetic) continue;
     if (!deepEqual(got[k].block.node, loaded[j].node))
-      return fail("lossy", index, got[k].block.source, LOSSY_UNCHANGED);
+      return fail("lossy", "B", index, got[k].block.source, LOSSY_UNCHANGED);
   }
 
   return { ok: true, markdown };

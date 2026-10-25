@@ -603,3 +603,14 @@ describe("docToMarkdown", () => {
     expect(unserializable).toBeLessThan(10);
   });
 });
+
+describe("empty callout round trip", () => {
+  it("saves as `> [!TIP]` and reloads as an editable calloutBlock", () => {
+    const empty: JSONContent = { type: "calloutBlock", attrs: { kind: "TIP" }, content: [para()] };
+    const md = docToMarkdown(doc(TITLE, empty));
+    expect(md).toContain("> [!TIP]");
+    const reloaded = markdownToDoc(md).doc.content!;
+    expect(reloaded[1]).toEqual(empty);
+    expect(docToMarkdown({ type: "doc", content: reloaded })).toBe(md);
+  });
+});

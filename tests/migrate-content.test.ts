@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import { appliedExactlyOnce, assertChangedSet, EXPECTED_CHANGED, lineDiff, readingTime } from "../scripts/migrate-content-lib";
 
 describe("assertChangedSet", () => {
-  it("accepts exactly the expected four, or none", () => {
+  it("accepts the expected four, any subset, or none", () => {
     expect(assertChangedSet([...EXPECTED_CHANGED].reverse())).toBeNull();
+    expect(assertChangedSet(["21-guns"])).toBeNull();
     expect(assertChangedSet([])).toBeNull();
   });
-  it("rejects missing, extra and duplicate slugs", () => {
-    expect(assertChangedSet(["21-guns"])).toMatch(/missing/);
+  it("rejects slugs outside the set and duplicates", () => {
     expect(assertChangedSet([...EXPECTED_CHANGED, "other"])).toMatch(/unexpected: \[other\]/);
-    expect(assertChangedSet([...EXPECTED_CHANGED, "21-guns"])).not.toBeNull();
+    expect(assertChangedSet(["21-guns", "21-guns"])).toMatch(/duplicates: \[21-guns\]/);
   });
 });
 

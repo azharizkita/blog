@@ -15,7 +15,7 @@ import { dataAttr } from "./data-attr";
  * it raw: a footnote, an aligned table, a loose list, unknown HTML, …),
  * kept as its exact Markdown `source` and written back byte for byte. It is
  * locked: the source is shown, not editable here (Source mode edits it);
- * the block can still be selected, moved or deleted as a whole.
+ * the block can still be selected or deleted as a whole.
  */
 export const RawBlock = Node.create({
   name: "rawBlock",

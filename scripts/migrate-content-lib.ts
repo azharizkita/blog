@@ -1,11 +1,9 @@
 // Pure helpers for scripts/migrate-content.ts (kept separate so tests can import them).
 
-export const EXPECTED_CHANGED = [
-  "21-guns",
-  "hiduplah-dengan-tenang",
-  "the-astral-omen",
-  "the-weight-of-silence",
-] as const;
+import { LEGACY_POST_SLUGS } from "../lib/markdown/legacy-shim.ts";
+
+/** The only slugs that may still hold MDX-era syntax (shared with the read shim). */
+export const EXPECTED_CHANGED: readonly string[] = LEGACY_POST_SLUGS;
 
 const WORDS_PER_MINUTE = 275; // mirrors lib/reading-time.ts (Ghost's convention)
 
@@ -15,15 +13,16 @@ export function readingTime(markdown: string): number {
   return Math.max(1, Math.ceil(words / WORDS_PER_MINUTE));
 }
 
-/** Returns an error message if the changed slugs are not exactly the expected set, else null. */
+/**
+ * Returns an error message if a changed slug is outside the expected set or
+ * repeated, else null. Any subset is fine: a legacy post saved from the new
+ * editor is already converted.
+ */
 export function assertChangedSet(changed: string[]): string | null {
-  if (changed.length === 0) return null;
-  const got = [...new Set(changed)].sort();
-  const want: string[] = [...EXPECTED_CHANGED].sort();
-  const missing = want.filter((s) => !got.includes(s));
-  const extra = got.filter((s) => !want.includes(s));
-  if (!missing.length && !extra.length && got.length === changed.length) return null;
-  return `changed set mismatch; missing: [${missing.join(", ")}], unexpected: [${extra.join(", ")}]`;
+  const unexpected = [...new Set(changed.filter((s) => !EXPECTED_CHANGED.includes(s)))];
+  const duplicates = changed.filter((s, i) => changed.indexOf(s) !== i);
+  if (!unexpected.length && !duplicates.length) return null;
+  return `changed set mismatch; unexpected: [${unexpected.join(", ")}], duplicates: [${[...new Set(duplicates)].join(", ")}]`;
 }
 
 /** Unified-style line diff (LCS) with `context` lines around each change. */

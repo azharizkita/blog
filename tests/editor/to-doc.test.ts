@@ -426,3 +426,13 @@ describe("markdownToDoc", () => {
     }
   });
 });
+
+describe("empty callout", () => {
+  it("`> [!TIP]` alone maps to an editable calloutBlock with one empty paragraph", () => {
+    expect(body("> [!TIP]")).toEqual({
+      type: "calloutBlock",
+      attrs: { kind: "TIP" },
+      content: [{ type: "paragraph" }],
+    });
+  });
+});

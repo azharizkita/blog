@@ -245,7 +245,8 @@ function mapComponent(node: ComponentNode): JSONContent {
     return {
       type: NODES.calloutBlock,
       attrs: { kind },
-      content: nonEmpty(node.children, "callout"),
+      // `> [!TIP]` alone (a callout saved empty) stays editable.
+      content: node.children.length ? mapBlocks(node.children) : [{ type: NODES.paragraph }],
     };
   }
   const embed = node.tagName ? EMBEDS[node.tagName] : undefined;
