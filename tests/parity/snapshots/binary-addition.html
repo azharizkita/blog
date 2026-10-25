@@ -1,0 +1,70 @@
+<article id="article" class="isolate space-y-8 px-0 z-0"><h1 class="prose-h1 mt-8 first:mt-0">Binary Addition</h1><div class="w-full"><a class="group inline-block w-full" href="#case-study"><h2 id="case-study" class="prose-h2 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link inline mr-2 mb-1" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>Case Study</h2></a></div><blockquote class="prose-blockquote"><p class="prose-p"><em>&quot;Make me a JS function to add two binary numbers without using built-in functions or libraries.&quot;</em></p></blockquote><p class="prose-p">Before we jump into the code, let’s make sure we understand how binary addition works. Here’s the basic rule:</p><blockquote class="prose-blockquote"><p class="prose-p"><strong><em>Binary consists only of 0s and 1s</em></strong></p></blockquote><p class="prose-p">You’ll notice that while adding binary numbers, the sum at any step can go up to &quot;3&quot;. Let’s take an example:</p><blockquote class="prose-blockquote"><p class="prose-p"><strong>11 + 11</strong></p></blockquote><div class="w-full"><a class="group inline-block w-full" href="#how-to-do-it"><h2 id="how-to-do-it" class="prose-h2 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link inline mr-2 mb-1" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>How to Do It</h2></a></div><blockquote class="prose-blockquote"><p class="prose-p">Start with the last index of both binary numbers.</p></blockquote><p class="prose-p">In this case, the first binary digit is <strong>1</strong>, and the second binary digit is also <strong>1</strong>. Add them up: <strong>1 + 1 = 2</strong>.</p><p class="prose-p">Since <strong>binary numbers</strong> only consist of <strong>0s and 1s</strong>, <strong>2</strong> is not a valid digit. So, we need a system to manage this.</p><p class="prose-p">Here’s the trick: we’ll use a <strong>carry</strong> to handle the overflow. If the sum is greater than 1, the carry will be <strong>1</strong>. Otherwise, it’ll be <strong>0</strong>.</p><figure data-rehype-pretty-code-figure=""><pre tabindex="0">carry = 1;
+currentResult = 0;
+
+// So after this iteration, the result is: 0</pre></figure><div class="w-full"><a class="group inline-block w-full" href="#moving-to-the-next-step"><h2 id="moving-to-the-next-step" class="prose-h2 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link inline mr-2 mb-1" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>Moving to the Next Step</h2></a></div><blockquote class="prose-blockquote"><p class="prose-p">Add the next digits, including the carry.</p></blockquote><p class="prose-p">Again, we’re adding <strong>1 + 1</strong>. But this time, we also add the carry from the previous step, making it <strong>1 + 1 + 1 = 3</strong>.</p><p class="prose-p">The maximum value here can only be <strong>3</strong>, so we’ll apply the same logic:</p><ul class="prose-list"><li>Set the carry with <code>carry = sum &gt; 1 ? 1 : 0</code>.</li><li>Use the mod operator to get the correct result: <code>sum % 2</code>.</li></ul><figure data-rehype-pretty-code-figure=""><pre tabindex="0">carry = 1;
+currentResult = 1;</pre></figure><p class="prose-p">Now, append the current result to the final output:</p><figure data-rehype-pretty-code-figure=""><pre tabindex="0">carry = 1;
+currentResult = 1;
+
+// The result so far will be: 10</pre></figure><div class="w-full"><a class="group inline-block w-full" href="#checking-for-remaining-carry"><h2 id="checking-for-remaining-carry" class="prose-h2 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link inline mr-2 mb-1" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>Checking for Remaining Carry</h2></a></div><blockquote class="prose-blockquote"><p class="prose-p">If there’s still a carry left after finishing the iteration, append it to the result.</p></blockquote><p class="prose-p">Since our last step gave us a carry of <strong>1</strong>, we add that to the result:</p><figure data-rehype-pretty-code-figure=""><pre tabindex="0">// The result after appending the carry will be: 110</pre></figure><div class="w-full"><a class="group inline-block w-full" href="#final-result"><h2 id="final-result" class="prose-h2 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link inline mr-2 mb-1" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>Final Result</h2></a></div><p class="prose-p">So, the binary addition of <strong>11 + 11</strong> gives us <code>110</code>.</p><div class="w-full"><a class="group inline-block w-full" href="#the-complete-code"><h2 id="the-complete-code" class="prose-h2 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link inline mr-2 mb-1" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>The Complete Code</h2></a></div><p class="prose-p">Here’s the working JavaScript function for adding binary numbers without using built-in functions:</p><figure data-rehype-pretty-code-figure=""><pre tabindex="0">const withExplanation = false;
+
+function addBinary(bin1, bin2) {
+  let result = "";
+  let carry = 0;
+  let i = bin1.length - 1;
+  let j = bin2.length - 1;
+
+  if (withExplanation) console.log({ bin1, bin2 }, "\n");
+
+  let step = 1;
+
+  while (i &gt;= 0 || j &gt;= 0 || carry) {
+    let sum = carry;
+
+    if (withExplanation) {
+      console.log("Step:\t\t", step);
+      console.log("Carryover:\t", sum);
+    }
+
+    if (i &gt;= 0) {
+      if (withExplanation) {
+        console.log(`Add index ${i} of ${bin1} (which is ${bin1[i]})`);
+      }
+      sum += Number(bin1[i]);
+    }
+
+    if (j &gt;= 0) {
+      if (withExplanation) {
+        console.log(`Add index ${j} of ${bin2} (which is ${bin2[j]})`);
+      }
+      sum += Number(bin2[j]);
+    }
+
+    if (withExplanation) console.log("Sum result:\t", sum);
+
+    carry = sum &gt; 1 ? 1 : 0;
+
+    if (carry &amp;&amp; withExplanation) {
+      console.log(`Carryover needed, new carry: ${carry}`);
+    }
+
+    result = String(sum % 2) + result;
+
+    if (withExplanation) console.log("Result so far:\t", result, "\n");
+
+    step++;
+    i--;
+    j--;
+  }
+
+  console.log(
+    `The result of ${bin1} (${parseInt(bin1, 2)} in decimal) + ${bin2} (${parseInt(bin2, 2)} in decimal) is ${result} (${parseInt(result, 2)} in decimal)`
+  );
+
+  // Return result if needed
+  // return result;
+}
+
+// Example inputs
+const input1 = "101011";
+const input2 = "11111";
+addBinary(input1, input2);</pre></figure><div class="w-full"><a class="group inline-block w-full" href="#conclusion"><h2 id="conclusion" class="prose-h2 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link inline mr-2 mb-1" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>Conclusion</h2></a></div><p class="prose-p">In this blog, we’ve broken down how to add binary numbers manually by handling carryovers and restricting the result to binary digits. With this approach, you can add binary numbers without relying on built-in functions. Just remember the key rules:</p><ul class="prose-list"><li><strong>Carry over if the sum exceeds 1.</strong></li><li><strong>Use mod to keep the result within 0 or 1.</strong></li></ul><p class="prose-p">That’s it! You now have a basic understanding of how to perform binary addition.</p></article>

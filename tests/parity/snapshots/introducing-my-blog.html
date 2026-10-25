@@ -1,0 +1,42 @@
+<article id="article" class="isolate space-y-8 px-0 z-0"><h1 class="prose-h1 mt-8 first:mt-0">Introducing my Blog</h1><p class="prose-p">First of all, I want to thank you for visiting my very first blog!</p><div class="w-full"><a class="group inline-block w-full" href="#how-do-i-host-this"><h2 id="how-do-i-host-this" class="prose-h2 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link inline mr-2 mb-1" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>How do I host this?</h2></a></div><p class="prose-p">Some people may confused about my statement of &quot;database-less blog&quot;. I mean, how can you do it without any DBs?</p><p class="prose-p">Well, actually, there are some tricky tricks to done this and <em>uhm</em> it is not literally a database-less blog.</p><p class="prose-p">At this point, I will not just <code>giving away the code</code> to you guys because I just don&#x27;t want people to just copy it without any comperhension. I guess, we&#x27;ll step into the <code>Main Idea</code> right now!</p><div class="w-full"><a class="group inline-block w-full" href="#main-idea"><h2 id="main-idea" class="prose-h2 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link inline mr-2 mb-1" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>Main idea!</h2></a></div><p class="prose-p">Before we go any further, I recommend you to have a basic knowledge about the <a target="_blank" title="GitHub Docs" href="https://docs.github.com/en">GitHub API</a> because I actually use that a lot on this web.</p><p class="prose-p">If you really pay attention, my <a target="_blank" title="Azhari Rizkita - Personal SIte" href="https://azharizkita.lcsindonesia.com/">main page</a> fetches my personal GitHub data, yes, using the GitHub API. It is as simple as</p><figure data-rehype-pretty-code-figure=""><pre tabindex="0">const octo = new Octokit({ auth: 'my_very_secreat_personal_auth_key' })
+const { data } = await octo.request('GET /users/azharizkita/gists')</pre></figure><p class="prose-p">The code simply gives you an array of my public gists. Then you can parse the data and make your own UI out of that (which will be better than mine, probably).</p><div class="w-full"><a class="group inline-block w-full" href="#so-does-the-blog-part"><h2 id="so-does-the-blog-part" class="prose-h2 mt-8 first:mt-0 cursor-pointer hover:text-muted-foreground transition-colors w-full wrap-break-word"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link inline mr-2 mb-1" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>So does the Blog part!</h2></a></div><p class="prose-p">I store my blogs on my github <a target="_blank" title="My personal gist" href="https://gist.github.com/azharizkita">gist</a>. You may wonder &quot;how do I show the content into my HTML?&quot;. Don&#x27;t wory, I did wonder the same thought too.</p><p class="prose-p">Which I found surprisingly easy (thanks to this <a target="_blank" href="https://preview.npmjs.com/package/markdown-it">markdown-it</a> package). It is as simple as the code below.</p><figure data-rehype-pretty-code-figure=""><pre tabindex="0">const md = new Markdown();
+const content = md.render(data.files['index.md'].content);</pre></figure><p class="prose-p">This line of code parses the raw <code>.md</code> file into a rendered HTML code.</p><p class="prose-p">Unfortunately, it comes without any styling so you need to do it manually. What? You don&#x27;t want to style it? Fine. Here is mine.</p><figure data-rehype-pretty-code-figure=""><pre tabindex="0">.blog {
+    @apply text-gray-900;
+    @apply space-y-6;
+    @apply text-justify;
+	@apply pb-6;
+}
+
+.blog h2 {
+    @apply font-black;
+    @apply text-2xl
+}
+
+.blog h3 {
+    @apply font-black;
+    @apply text-xl
+}
+
+.blog h4 {
+    @apply font-black;
+    @apply text-lg
+}
+
+.blog a {
+    @apply underline;
+	@apply text-red-600;
+	@apply font-semibold
+}
+
+.blog code {
+	@apply px-2;
+	@apply bg-gray-200;
+	@apply rounded-md;
+}
+.blog pre {
+	@apply p-4;
+	@apply overflow-auto;
+	@apply whitespace-pre;
+	@apply bg-gray-200;
+	@apply rounded-md;
+}</pre></figure><p class="prose-p">Since I am sooooo lazy to style things, take a note that this is only for some important tags. Be creative (don&#x27;t be like me).</p><p class="prose-p">And there it is the whole idea about the concept of my &quot;database-less blog&quot;. I hope this blog able to open up people&#x27;s mind about that concept. Have a nice day!</p></article>
