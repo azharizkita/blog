@@ -49,7 +49,8 @@ export type Fidelity = (block: TopLevelBlock, json: JSONContent) => boolean;
 /**
  * The load-time check: the block's JSON, written back to Markdown and parsed
  * on its own (with the document's definitions, so references resolve as in
- * the full parse), must give the node the full parse gave it.
+ * the full parse), must give exactly one block: the node the full parse
+ * gave it.
  */
 export function serializesBack(definitions: string): Fidelity {
   return (block, json) => {
@@ -60,10 +61,16 @@ export function serializesBack(definitions: string): Fidelity {
       if (error instanceof UnserializableError) return false;
       throw error;
     }
-    const parsed = parseArticle(
+    const children = parseArticle(
       markdown + (definitions ? "\n\n" + definitions : ""),
-    ).children[0];
-    return deepEqual(parsed, block.node);
+    ).children;
+    // Exactly one block must come back (a trailing generated footnotes
+    // block, from the definitions, is not part of it).
+    const own =
+      children.length > 1 && children[children.length - 1].type === "footnotes"
+        ? children.slice(0, -1)
+        : children;
+    return own.length === 1 && deepEqual(own[0], block.node);
   };
 }
 

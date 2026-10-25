@@ -1,7 +1,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { markdownToDoc } from "@/components/editor/wysiwyg/bridge/to-doc";
+import { markdownToDoc, serializesBack } from "@/components/editor/wysiwyg/bridge/to-doc";
+import { parseArticle } from "@/lib/markdown/config";
 import { encodeAttribute } from "@/lib/markdown/attributes";
 import { convertLegacyMarkdown } from "@/lib/markdown/legacy";
 
@@ -354,6 +355,13 @@ describe("markdownToDoc", () => {
       );
       expect(body("*__x__*")).toEqual(raw("*__x__*"));
       expect(body("~~*[a](/p)*~~")).toEqual(raw("~~*[a](/p)*~~"));
+    });
+
+    it("the default fidelity check needs exactly one block back", () => {
+      const check = serializesBack("");
+      const block = { source: "a", node: parseArticle("a").children[0] };
+      expect(check(block, { type: "paragraph", content: [{ type: "text", text: "a" }] })).toBe(true);
+      expect(check(block, raw("a\n\nb"))).toBe(false);
     });
 
     it("a failing fidelity check makes the block raw", () => {

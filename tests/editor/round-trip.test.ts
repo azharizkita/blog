@@ -42,8 +42,8 @@ describe("docToMarkdown", () => {
   it("every fixture round-trips at AST level", () => {
     expect(fixtures.length).toBeGreaterThan(0);
     for (const { file, source } of fixtures) {
-      const { doc: json, definitions } = markdownToDoc(source);
-      const out = docToMarkdown(json, definitions);
+      const { doc: json, definitions, blocks } = markdownToDoc(source);
+      const out = docToMarkdown(json, definitions, { syntheticTitle: blocks[0]?.synthetic });
       expect(parseArticle(out), file).toEqual(parseArticle(source));
     }
   });
@@ -61,10 +61,16 @@ describe("docToMarkdown", () => {
   it("re-serializing a reloaded fixture is stable", () => {
     for (const { file, source } of fixtures) {
       const first = markdownToDoc(source);
-      const out = docToMarkdown(first.doc, first.definitions);
+      const options = { syntheticTitle: first.blocks[0]?.synthetic };
+      const out = docToMarkdown(first.doc, first.definitions, options);
       const second = markdownToDoc(out);
       expect(second.doc, file).toEqual(first.doc);
-      expect(docToMarkdown(second.doc, second.definitions), file).toBe(out);
+      expect(
+        docToMarkdown(second.doc, second.definitions, {
+          syntheticTitle: second.blocks[0]?.synthetic,
+        }),
+        file,
+      ).toBe(out);
     }
   });
 
@@ -241,17 +247,111 @@ describe("docToMarkdown", () => {
 
   it("an empty synthetic title writes nothing; a filled one writes ## text", () => {
     const empty = { type: "heading", attrs: { level: 2 } };
-    expect(docToMarkdown(doc(empty, para(text("body"))))).toBe("body");
-    expect(docToMarkdown(doc(empty))).toBe("");
-    expect(docToMarkdown(doc({ ...empty, content: [text("New")] }, para(text("b"))))).toBe(
-      "## New\n\nb",
+    const synthetic = { syntheticTitle: true };
+    expect(docToMarkdown(doc(empty, para(text("body"))), "", synthetic)).toBe("body");
+    expect(docToMarkdown(doc(empty), "", synthetic)).toBe("");
+    expect(
+      docToMarkdown(doc({ ...empty, content: [text("New")] }, para(text("b"))), "", synthetic),
+    ).toBe("## New\n\nb");
+  });
+
+  it("a genuine empty ## at the top survives (R15)", () => {
+    const empty = { type: "heading", attrs: { level: 2 } };
+    expect(docToMarkdown(doc(empty, para(text("body"))))).toBe("##\n\nbody");
+    const source = "##\n\nbody";
+    const loaded = markdownToDoc(source);
+    expect(loaded.blocks[0].synthetic).toBeUndefined();
+    expect(
+      docToMarkdown(loaded.doc, loaded.definitions, {
+        syntheticTitle: loaded.blocks[0]?.synthetic,
+      }),
+    ).toBe(source);
+    // An NBSP-only title is not empty: it is not dropped as synthetic.
+    const nbsp = { ...empty, content: [text("\u00a0")] };
+    expect(docToMarkdown(doc(nbsp, para(text("b"))), "", { syntheticTitle: true })).toMatch(
+      /^##/,
     );
   });
 
   it("posts without a ## title round-trip byte-for-byte", () => {
     const source = "# Big\n\ntext";
-    const { doc: json, definitions } = markdownToDoc(source);
-    expect(docToMarkdown(json, definitions)).toBe(source);
+    const { doc: json, definitions, blocks } = markdownToDoc(source);
+    expect(blocks[0].synthetic).toBe(true);
+    expect(docToMarkdown(json, definitions, { syntheticTitle: true })).toBe(source);
+  });
+
+  describe("block boundaries (open, save, no edits)", () => {
+    const resave = (source: string) => {
+      const loaded = markdownToDoc(source);
+      return docToMarkdown(loaded.doc, loaded.definitions, {
+        syntheticTitle: loaded.blocks[0]?.synthetic,
+      });
+    };
+
+    it("a raw loose list keeps the next list separate", () => {
+      for (const source of [
+        "## T\n\n- a\n\n  x\n\n* c",
+        "## T\n\n1. a\n\n   x\n\n1) c",
+        "## T\n\n* a\n\n  x\n\n- c",
+      ]) {
+        const loaded = markdownToDoc(source);
+        expect(loaded.blocks.map((b) => b.raw), source).toEqual([false, true, false]);
+        const out = resave(source);
+        expect(parseArticle(out), source).toEqual(parseArticle(source));
+      }
+    });
+
+    it("an editor list above a raw list of the same kind stays separate", () => {
+      const item = (t: string) => ({ type: "listItem", content: [para(text(t))] });
+      const json = doc(
+        TITLE,
+        { type: "bulletList", content: [item("b")] },
+        { type: "rawBlock", attrs: { source: "- a\n\n  x" } },
+      );
+      const out = docToMarkdown(json);
+      expect(out).toBe("## T\n\n* b\n\n- a\n\n  x");
+      expect(markdownToDoc(out).doc).toEqual(json);
+      const ordered = doc(
+        TITLE,
+        { type: "orderedList", attrs: { start: 1 }, content: [item("b")] },
+        { type: "rawBlock", attrs: { source: "1. a\n\n   x" } },
+      );
+      expect(markdownToDoc(docToMarkdown(ordered)).doc).toEqual(ordered);
+    });
+
+    it("an ordered list squeezed between raw lists of both delimiters throws", () => {
+      const json = doc(
+        TITLE,
+        { type: "rawBlock", attrs: { source: "1. a\n\n   x" } },
+        {
+          type: "orderedList",
+          attrs: { start: 1 },
+          content: [{ type: "listItem", content: [para(text("b"))] }],
+        },
+        { type: "rawBlock", attrs: { source: "1) c\n\n   y" } },
+      );
+      expect(() => docToMarkdown(json)).toThrow(UnserializableError);
+    });
+
+    it("an unclosed raw fence before an added paragraph throws, naming the block", () => {
+      const json = doc(
+        TITLE,
+        { type: "rawBlock", attrs: { source: "```js {1}\nx" } },
+        para(text("added")),
+      );
+      expect(() => docToMarkdown(json)).toThrow(UnserializableError);
+      expect(() => docToMarkdown(json)).toThrow(/block 2\b/);
+    });
+  });
+
+  it("ordered list numbers past 9 digits throw", () => {
+    const items = [1, 2].map((n) => ({ type: "listItem", content: [para(text(`i${n}`))] }));
+    expect(() =>
+      blockToMarkdown({ type: "orderedList", attrs: { start: 999999999 }, content: items }),
+    ).toThrow(UnserializableError);
+    expect(
+      blockToMarkdown({ type: "orderedList", attrs: { start: 999999998 }, content: items }),
+    ).toBe("999999998. i1\n999999999. i2");
   });
 
   it("definitions are appended verbatim after the blocks", () => {

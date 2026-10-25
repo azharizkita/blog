@@ -1,6 +1,12 @@
 import { parseInline } from "@tanstack/markdown";
 import type { JSONContent } from "@tiptap/react";
 import { encodeAttribute } from "@/lib/markdown/attributes";
+import {
+  DESTINATION,
+  FOOTNOTE,
+  REFERENCE,
+  splitTopLevelBlocks,
+} from "@/lib/markdown/blocks";
 import { parseOptions } from "@/lib/markdown/config";
 import { deepEqual } from "./deep-equal";
 import { CALLOUT_KINDS, MARK_ORDER, MARKS, NODES } from "./schema-names";
@@ -89,6 +95,8 @@ function codeSpan(value: string, context: InlineContext): string {
  * bare form can't hold `<` or `>`, so those are percent-encoded (the same
  * URL); `\`, `(` and `)` are backslash-escaped (the parser unescapes them).
  */
+// Ruling R14: percent-encoding whitespace (and `<`/`>`) in link and image
+// URLs is accepted normalization; it is the same URL.
 const encodeUrl = (href: string) =>
   href.replace(/[\s<>]/g, (c) => encodeURIComponent(c));
 
@@ -245,7 +253,8 @@ function renderInline(
         content = `![${escapeInline(alt)}](${destination(src, attrs.title)})`;
         ast = {
           type: "image",
-          src: encodeUrl(src),
+          src: encodeUrl(src), // R14: accepted URL normalization
+
           alt,
           ...(attrs.title ? { title: attrs.title } : {}),
         };
@@ -296,7 +305,7 @@ function renderInline(
       out += delimiter;
       const astNode: Open["node"] = { type: AST_TYPE[mark.type], children: [] };
       if (mark.type === MARKS.link) {
-        astNode.href = encodeUrl(String(mark.attrs?.href ?? ""));
+        astNode.href = encodeUrl(String(mark.attrs?.href ?? "")); // R14
         if (mark.attrs?.title) astNode.title = mark.attrs.title;
       }
       append(astNode);
@@ -313,17 +322,10 @@ function renderInline(
 const FENCE_START = /^[ \t]*(?:`{3,}|~{3,})/;
 // The parser lifts these lines out of the document before parsing blocks
 // (extractDefinitions, dist/parser.js), ignoring backslash escapes.
-// Same patterns as lib/markdown/blocks.ts (which mirrors the parser).
-const FOOTNOTE_DEFINITION = /^ {0,3}\[\^[^\]\n]+\]:/;
-const REFERENCE_DEFINITION = /^ {0,3}\[[^\]\n]+\]:[ \t]*(\S.*)$/;
-const DESTINATION =
-  /^(?:<([^<>\n]*)>|([^<>\s]*?))(?:\s+(?:"([^"]*)"|'([^']*)'|\(([^)]*)\)))?$/;
+// The patterns come from lib/markdown/blocks.ts, which mirrors the parser.
 const isDefinition = (line: string) => {
-  const reference = REFERENCE_DEFINITION.exec(line);
-  return (
-    FOOTNOTE_DEFINITION.test(line) ||
-    (!!reference && DESTINATION.test(reference[1].trimEnd()))
-  );
+  const reference = REFERENCE.exec(line);
+  return FOOTNOTE.test(line) || (!!reference && DESTINATION.test(reference[2].trimEnd()));
 };
 
 /**
@@ -527,46 +529,105 @@ const SELF_CLOSING: readonly string[] = [
 ];
 
 type Markers = { bullet: string; ordered: string };
+type ListKind = "bullet" | "ordered";
+
+const BULLETS = ["-", "*", "+"] as const;
+const DELIMITERS = [".", ")"] as const;
+// The parser's listMarker (dist/parser.js), at the start of a block.
+const LIST_START = /^\s{0,8}([-+*]|\d{1,9}([.)]))(?:[ \t]|$)/;
 
 /**
- * Sibling blocks. Two lists of the same kind in a row would be read as one
- * (loose) list, so adjacent lists alternate markers (`-`/`*`, `.`/`)`).
- * `tight` joins blocks with a single newline where the parser allows it
- * (list items), otherwise blocks are separated by a blank line. Empty
- * paragraphs write nothing.
+ * A block's list kind, and for a rawBlock that is a list, the marker it
+ * uses (fixed: its source is written verbatim). Two neighbouring lists of
+ * one kind and marker would be read as one list.
  */
-function blocksToMarkdown(nodes: JSONContent[] = [], tight = false): string {
-  const parts: string[] = [];
-  let prev: JSONContent | undefined;
-  let markers: Markers = { bullet: "-", ordered: "." };
-  for (const node of nodes) {
-    if (prev?.type === node.type && (node.type === NODES.bulletList || node.type === NODES.orderedList)) {
-      markers =
-        node.type === NODES.bulletList
-          ? { ...markers, bullet: markers.bullet === "-" ? "*" : "-" }
-          : { ...markers, ordered: markers.ordered === "." ? ")" : "." };
-    } else {
-      markers = { bullet: "-", ordered: "." };
+function listBoundary(node: JSONContent): { kind: ListKind; marker?: string } | undefined {
+  if (node.type === NODES.bulletList) return { kind: "bullet" };
+  if (node.type === NODES.orderedList) return { kind: "ordered" };
+  if (node.type !== NODES.rawBlock) return undefined;
+  const match = LIST_START.exec(String(node.attrs?.source ?? ""));
+  if (!match) return undefined;
+  return match[2]
+    ? { kind: "ordered", marker: match[2] }
+    : { kind: "bullet", marker: match[1] };
+}
+
+type Laid = { node: JSONContent; index: number; text: string };
+
+/**
+ * Sibling blocks, each with its Markdown. Adjacent lists of one kind get
+ * different markers (`-`/`*`/`+`, `.`/`)`), also against a raw list next to
+ * them, so they stay separate lists. Empty paragraphs write nothing.
+ */
+function layoutBlocks(nodes: JSONContent[], offset = 0): Laid[] {
+  const entries = nodes
+    .map((node, i) => ({
+      node,
+      index: i + offset,
+      boundary: listBoundary(node),
+      text:
+        node.type === NODES.bulletList || node.type === NODES.orderedList
+          ? undefined
+          : serializeBlock(node),
+    }))
+    .filter((e) => e.text !== "");
+  const chosen: (string | undefined)[] = entries.map((e) => e.boundary?.marker);
+  entries.forEach((entry, i) => {
+    if (entry.text !== undefined || !entry.boundary) return;
+    const kind = entry.boundary.kind;
+    const avoid = [i - 1, i + 1]
+      .filter((j) => entries[j]?.boundary?.kind === kind)
+      .map((j) => chosen[j]);
+    const options = kind === "bullet" ? BULLETS : DELIMITERS;
+    const marker = options.find((m) => !avoid.includes(m));
+    if (!marker) {
+      throw new UnserializableError(
+        `The list at block ${entry.index + 1} can't be saved as Markdown: it would merge with the lists next to it. Add a paragraph between them, or fix it in Source mode.`,
+      );
     }
-    const text = serializeBlock(node, markers);
-    if (text === "") continue;
-    if (parts.length) {
+    chosen[i] = marker;
+    const markers: Markers = { bullet: "-", ordered: "." };
+    if (kind === "bullet") markers.bullet = marker;
+    else markers.ordered = marker;
+    entry.text = listToMarkdown(entry.node, markers);
+  });
+  return entries
+    .filter((e) => e.text !== "")
+    .map((e) => ({ node: e.node, index: e.index, text: e.text! }));
+}
+
+/**
+ * Joins laid-out blocks. `tight` joins with a single newline where the
+ * parser allows it (list items), otherwise blocks are separated by a blank
+ * line.
+ */
+function joinBlocks(laid: Laid[], tight = false): string {
+  return laid
+    .map(({ node, text }, i) => {
+      if (i === 0) return text;
+      const prev = laid[i - 1].node;
       const single =
         tight &&
-        prev !== undefined &&
         (interruptsParagraph(node) ||
           (node.type === NODES.paragraph && SELF_CLOSING.includes(prev.type ?? "")));
-      parts.push(single ? "\n" : "\n\n");
-    }
-    parts.push(text);
-    prev = node;
-  }
-  return parts.join("");
+      return (single ? "\n" : "\n\n") + text;
+    })
+    .join("");
 }
+
+const blocksToMarkdown = (nodes: JSONContent[] = [], tight = false) =>
+  joinBlocks(layoutBlocks(nodes), tight);
 
 function listToMarkdown(node: JSONContent, markers: Markers): string {
   const ordered = node.type === NODES.orderedList;
   const start = Number(node.attrs?.start ?? 1);
+  const count = (node.content ?? []).length;
+  // The parser reads at most 9 digits as a list number.
+  if (ordered && (!Number.isInteger(start) || start < 0 || start + count - 1 > 999_999_999)) {
+    throw new UnserializableError(
+      `A numbered list from ${start} can't be saved as Markdown: list numbers have at most 9 digits.`,
+    );
+  }
   return (node.content ?? [])
     .map((item, i) => {
       const marker = ordered ? `${start + i}${markers.ordered}` : markers.bullet;
@@ -654,28 +715,53 @@ export function blockToMarkdown(node: JSONContent): string {
   return serializeBlock(node);
 }
 
-/** The synthetic title (`LoadedBlock.synthetic`): an empty first `##` heading. */
+/** An empty `##` heading (no content at all; NBSP or spaces count as content). */
 const isEmptyTitle = (node: JSONContent | undefined) =>
   node?.type === NODES.heading &&
   node.attrs?.level === 2 &&
   !(node.content ?? []).length;
+
+export type DocToMarkdownOptions = {
+  /**
+   * The document's first node is the synthetic title markdownToDoc added
+   * (`LoadedBlock.synthetic`): while it is empty it writes nothing, so posts
+   * without a title save unchanged. Without this flag an empty first `##`
+   * is a real heading and is written.
+   */
+  syntheticTitle?: boolean;
+};
 
 /**
  * Converts TipTap JSON back into the post's Markdown: top-level blocks
  * separated by a blank line, `rawBlock`s verbatim, then `definitions` (link
  * references / footnotes, from markdownToDoc) verbatim after a blank line.
  *
- * An empty level-2 heading as the first node writes nothing: it is the
- * synthetic title markdownToDoc adds to posts that have none, and writing it
- * would change those posts. Once it has text it is written as `## text`.
- *
  * Throws UnserializableError for shapes Markdown can't hold (a table cell
  * with more than one paragraph, a mismatched table, a line break in a table
- * cell or heading, unknown nodes or marks) rather than dropping them.
+ * cell or heading, unknown nodes or marks) rather than dropping them, and
+ * when the whole document wouldn't read back as one block per written block
+ * (a block merging with or swallowing its neighbour, e.g. after an unclosed
+ * raw fence).
  */
-export function docToMarkdown(doc: JSONContent, definitions?: string): string {
+export function docToMarkdown(
+  doc: JSONContent,
+  definitions?: string,
+  options: DocToMarkdownOptions = {},
+): string {
   const content = doc.content ?? [];
-  const body = blocksToMarkdown(isEmptyTitle(content[0]) ? content.slice(1) : content);
-  if (!definitions) return body;
-  return body ? `${body}\n\n${definitions}` : definitions;
+  const skip = options.syntheticTitle && isEmptyTitle(content[0]) ? 1 : 0;
+  const laid = layoutBlocks(content.slice(skip), skip);
+  const body = joinBlocks(laid);
+  const markdown = !definitions ? body : body ? `${body}\n\n${definitions}` : definitions;
+
+  // Safety net: the saved text must split back into exactly these blocks.
+  const read = splitTopLevelBlocks(markdown).blocks.map((b) => b.source);
+  const bad = laid.findIndex((entry, i) => read[i] !== entry.text);
+  if (bad !== -1 || read.length !== laid.length) {
+    const entry = laid[bad === -1 ? laid.length - 1 : bad];
+    throw new UnserializableError(
+      `Saving would change the document at block ${entry.index + 1} (${entry.node.type}): it would merge with or swallow the block next to it. Undo the last change, or fix it in Source mode.`,
+    );
+  }
+  return markdown;
 }

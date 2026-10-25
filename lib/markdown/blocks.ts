@@ -9,10 +9,11 @@ export type TopLevelBlock = { source: string; node: BlockNode };
 export type SplitResult = { blocks: TopLevelBlock[]; definitions: string };
 
 const FENCE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
-const FOOTNOTE = /^ {0,3}\[\^([^\]\n]+)\]:[ \t]*(.*)$/;
-const REFERENCE = /^ {0,3}\[([^\]\n]+)\]:[ \t]*(\S.*)$/;
+// Exported for the editor serializer, which must not write lines these match.
+export const FOOTNOTE = /^ {0,3}\[\^([^\]\n]+)\]:[ \t]*(.*)$/;
+export const REFERENCE = /^ {0,3}\[([^\]\n]+)\]:[ \t]*(\S.*)$/;
 // Same pattern as parseDestination (dist/utils.js:66-73); not exported.
-const DESTINATION =
+export const DESTINATION =
   /^(?:<([^<>\n]*)>|([^<>\s]*?))(?:\s+(?:"([^"]*)"|'([^']*)'|\(([^)]*)\)))?$/;
 const CONTINUATION = /^(?: {4,}|\t)/;
 
