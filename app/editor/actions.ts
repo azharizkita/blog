@@ -34,7 +34,7 @@ export async function renderPreview(content: string): Promise<PreviewResult> {
   try {
     // The uncached pipeline keeps the preview byte-identical to the published
     // article while staying callable from an action ("use cache" functions
-    // can't execute during a server-action render). MDX compile errors throw
+    // can't execute during a server-action render). Markdown render errors throw
     // here and are surfaced as a structured error.
     const node = await ArticleContentUncached({ content });
     return { ok: true, node };

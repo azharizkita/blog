@@ -21,7 +21,7 @@ create table if not exists posts (
   id text primary key,
   title text not null,
   slug text not null,
-  -- MDX source (Ghost stores lexical; this blog's format is MDX).
+  -- MDX source (Ghost stores lexical; this blog's format is TanStack Markdown).
   content text not null default '',
   custom_excerpt text,
   status text not null default 'draft'

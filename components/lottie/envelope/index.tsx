@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 /**
  * A clickable envelope for articles, animated by the author-supplied Lottie
  * (paper recolored to papyrus in the JSON; otherwise the original asset).
- * Registered as an MDX component — `<Envelope text="Hi!" />` — and editable
+ * Rendered from the `::envelope` directive in TanStack Markdown, and editable
  * in the editor's Write mode via its TipTap node
  * (components/editor/wysiwyg/envelope-block).
  *

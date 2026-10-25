@@ -11,9 +11,9 @@ interface PreviewPaneProps {
   version: number;
 }
 
-// evaluate() catches compile errors server-side, but a runtime error inside
-// the rendered MDX (e.g. {someUndefinedVar}) only throws while React renders
-// the returned tree here on the client — hence the boundary.
+// Render errors are caught server-side, but a runtime error inside the
+// rendered article tree only throws while React renders the returned tree
+// here on the client — hence the boundary.
 class PreviewErrorBoundary extends Component<
   { children: ReactNode },
   { message: string | null }
