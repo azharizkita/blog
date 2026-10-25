@@ -448,6 +448,8 @@ describe("docToMarkdown", () => {
       blockToMarkdown({ type: "heading", attrs: { level: 2 }, content: [text(" a "), text(" ")] }),
     ).toBe("## a");
     expect(blockToMarkdown(para(text("a "), { type: "hardBreak" }, text(" b")))).toBe("a \\\nb");
+    // Trimming the blank-only last run exposes a trailing break, which goes too.
+    expect(blockToMarkdown(para(text("a"), { type: "hardBreak" }, text("  ")))).toBe("a");
   });
 
   it("unknown nodes and marks throw instead of being dropped", () => {

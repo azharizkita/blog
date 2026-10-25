@@ -19,9 +19,13 @@ import { CALLOUT_KINDS, MARK_ORDER, MARKS, NODES } from "./schema-names";
 
 /** A document shape that has no Markdown form; saving must stop, not drop it. */
 export class UnserializableError extends Error {
-  constructor(message: string) {
+  /** The top-level block (index into `doc.content`) it comes from, when known. */
+  blockIndex?: number;
+
+  constructor(message: string, blockIndex?: number) {
     super(message);
     this.name = "UnserializableError";
+    this.blockIndex = blockIndex;
   }
 }
 
@@ -404,7 +408,11 @@ function inlineToMarkdown(nodes: JSONContent[] = [], context: InlineContext): st
     else items.splice(index, 1);
     return !text;
   };
-  while (items.length && trimEdge(items.length - 1, (t) => t.replace(/\s+$/, "")));
+  // Trimming a blank-only run can expose a trailing hard break; drop it too.
+  for (;;) {
+    if (items[items.length - 1]?.type === NODES.hardBreak) items.pop();
+    else if (!items.length || !trimEdge(items.length - 1, (t) => t.replace(/\s+$/, ""))) break;
+  }
   while (items.length && trimEdge(0, (t) => t.replace(/^\s+/, "")));
   const marksOf = items.map(delimitedMarks);
   const italics = marksOf.some((m) => m.some((x) => x.type === MARKS.italic))
@@ -559,7 +567,17 @@ type Laid = { node: JSONContent; index: number; text: string };
  * different markers (`-`/`*`/`+`, `.`/`)`), also against a raw list next to
  * them, so they stay separate lists. Empty paragraphs write nothing.
  */
-function layoutBlocks(nodes: JSONContent[], offset = 0): Laid[] {
+function layoutBlocks(nodes: JSONContent[], offset = 0, top = false): Laid[] {
+  // At the top level, errors carry the index of the block they come from.
+  const tagged = <T>(index: number, run: () => T): T => {
+    try {
+      return run();
+    } catch (error) {
+      if (top && error instanceof UnserializableError && error.blockIndex === undefined)
+        error.blockIndex = index;
+      throw error;
+    }
+  };
   const entries = nodes
     .map((node, i) => ({
       node,
@@ -568,7 +586,7 @@ function layoutBlocks(nodes: JSONContent[], offset = 0): Laid[] {
       text:
         node.type === NODES.bulletList || node.type === NODES.orderedList
           ? undefined
-          : serializeBlock(node),
+          : tagged(i + offset, () => serializeBlock(node)),
     }))
     .filter((e) => e.text !== "");
   const chosen: (string | undefined)[] = entries.map((e) => e.boundary?.marker);
@@ -583,13 +601,14 @@ function layoutBlocks(nodes: JSONContent[], offset = 0): Laid[] {
     if (!marker) {
       throw new UnserializableError(
         `The list at block ${entry.index + 1} can't be saved as Markdown: it would merge with the lists next to it. Add a paragraph between them, or fix it in Source mode.`,
+        top ? entry.index : undefined,
       );
     }
     chosen[i] = marker;
     const markers: Markers = { bullet: "-", ordered: "." };
     if (kind === "bullet") markers.bullet = marker;
     else markers.ordered = marker;
-    entry.text = listToMarkdown(entry.node, markers);
+    entry.text = tagged(entry.index, () => listToMarkdown(entry.node, markers));
   });
   return entries
     .filter((e) => e.text !== "")
@@ -750,7 +769,7 @@ export function docToMarkdown(
 ): string {
   const content = doc.content ?? [];
   const skip = options.syntheticTitle && isEmptyTitle(content[0]) ? 1 : 0;
-  const laid = layoutBlocks(content.slice(skip), skip);
+  const laid = layoutBlocks(content.slice(skip), skip, true);
   const body = joinBlocks(laid);
   const markdown = !definitions ? body : body ? `${body}\n\n${definitions}` : definitions;
 
@@ -761,6 +780,7 @@ export function docToMarkdown(
     const entry = laid[bad === -1 ? laid.length - 1 : bad];
     throw new UnserializableError(
       `Saving would change the document at block ${entry.index + 1} (${entry.node.type}): it would merge with or swallow the block next to it. Undo the last change, or fix it in Source mode.`,
+      entry.index,
     );
   }
   return markdown;
