@@ -11,7 +11,6 @@ import {
 import { setUploadErrorHandler } from "@/components/editor/upload-error-registry";
 import { markdownToDoc, type MarkdownDoc } from "./bridge/to-doc";
 import { createExtensions } from "./extensions";
-import { docToMarkdown } from "./bridge/to-markdown";
 import { checkSave, type SaveCheck } from "./save-guard";
 import { Toolbar, promptForLink } from "./toolbar";
 
@@ -30,17 +29,16 @@ export interface WysiwygHandle {
   /** Clears any pending debounce and serializes through the save guard. */
   flush(): WysiwygFlushResult;
   /**
-   * Replaces the top-level node at `index` with the one loaded there.
-   * Returns false when nothing was loaded at that index.
+   * Replaces the current top-level node at `blockIndex` with the loaded
+   * node `loadedIndex` (the guard's `blockIndex` / `loadedIndex` pair).
+   * Returns false when either is out of range.
    */
-  restoreBlock(index: number): boolean;
+  restoreBlock(blockIndex: number, loadedIndex: number): boolean;
   /**
-   * Serializes without the lossy check (Check B): for "I deleted it on
-   * purpose". Still refuses a document Markdown can't hold.
+   * Serializes skipping Check B only (for "I deleted it on purpose"):
+   * Check A failures and unserializable content are still refused.
    */
   forceSerialize(): WysiwygFlushResult;
-  /** Whether a block was loaded at `index` (so Restore can be offered). */
-  canRestore(index: number): boolean;
 }
 
 export interface WysiwygEditorProps {
@@ -63,9 +61,10 @@ export interface WysiwygEditorProps {
   flushRef?: RefObject<WysiwygHandle | null>;
   /**
    * Reports the outcome of every debounced save check (true = the document
-   * would save exactly as shown).
+   * would save exactly as shown); null as soon as the document changes
+   * again (the verdict is stale) or while an upload is pending.
    */
-  onCheck?: (ok: boolean) => void;
+  onCheck?: (ok: boolean | null) => void;
   /** Surface for paste/drop image-upload failures (see image-upload.ts). */
   onImageError?: (message: string) => void;
 }
@@ -103,37 +102,31 @@ function createSerializer(loaded: MarkdownDoc) {
     error:
       error instanceof Error ? error.message : "Failed to serialize the document.",
   });
+  const run = (editor: Editor, skipCheckB: boolean): WysiwygFlushResult => {
+    if (hasPendingUpload(editor)) return { ok: false, error: PENDING_UPLOAD };
+    try {
+      const result = checkSave({
+        loaded: loaded.blocks,
+        loadedDoc: loadedNodes(editor),
+        doc: editor.getJSON(),
+        definitions: loaded.definitions,
+        skipCheckB,
+      });
+      return result.ok
+        ? { ok: true, markdown: result.markdown }
+        : { ok: false, error: result.message, guard: result };
+    } catch (error) {
+      return failure(error);
+    }
+  };
   return {
     loadedNodes,
     serialize(editor: Editor): WysiwygFlushResult {
-      if (hasPendingUpload(editor)) return { ok: false, error: PENDING_UPLOAD };
-      try {
-        const result = checkSave({
-          loaded: loaded.blocks,
-          loadedDoc: loadedNodes(editor),
-          doc: editor.getJSON(),
-          definitions: loaded.definitions,
-        });
-        return result.ok
-          ? { ok: true, markdown: result.markdown }
-          : { ok: false, error: result.message, guard: result };
-      } catch (error) {
-        return failure(error);
-      }
+      return run(editor, false);
     },
-    /** Like `serialize`, minus the lossy check; an UnserializableError still fails. */
+    /** Like `serialize`, minus Check B; Check A and unserializable content still fail. */
     forceSerialize(editor: Editor): WysiwygFlushResult {
-      if (hasPendingUpload(editor)) return { ok: false, error: PENDING_UPLOAD };
-      try {
-        return {
-          ok: true,
-          markdown: docToMarkdown(editor.getJSON(), loaded.definitions, {
-            syntheticTitle: loaded.blocks[0]?.synthetic === true,
-          }),
-        };
-      } catch (error) {
-        return failure(error);
-      }
+      return run(editor, true);
     },
   };
 }
@@ -201,6 +194,7 @@ export function WysiwygEditor({
       // SSR safety: render nothing on the server; mount client-side only.
       immediatelyRender: false,
       onUpdate({ editor }) {
+        onCheckRef.current?.(null);
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
           // Reset to null once the timer actually fires, not just when it's
@@ -299,26 +293,23 @@ export function WysiwygEditor({
         const e = live();
         return e ? serializer.forceSerialize(e) : notReady;
       },
-      canRestore(index) {
-        const e = live();
-        return !!e && index >= 0 && index < serializer.loadedNodes(e).length;
-      },
-      restoreBlock(index) {
+      restoreBlock(blockIndex, loadedIndex) {
         const e = live();
         if (!e) return false;
-        const original = serializer.loadedNodes(e)[index];
-        const current = e.state.doc.maybeChild(index);
-        if (!original) return false;
+        const original = serializer.loadedNodes(e)[loadedIndex];
         const { state, view } = e;
-        let from = 0;
-        for (let i = 0; i < Math.min(index, state.doc.childCount); i++) {
-          from += state.doc.child(i).nodeSize;
+        if (!original || blockIndex < 0 || blockIndex > state.doc.childCount) {
+          return false;
         }
+        let from = 0;
+        for (let i = 0; i < blockIndex; i++) from += state.doc.child(i).nodeSize;
         const node = e.schema.nodeFromJSON(original);
-        const tr = current
-          ? state.tr.replaceWith(from, from + current.nodeSize, node)
-          : state.tr.insert(state.doc.content.size, node);
-        view.dispatch(tr);
+        const current = state.doc.maybeChild(blockIndex);
+        view.dispatch(
+          current
+            ? state.tr.replaceWith(from, from + current.nodeSize, node)
+            : state.tr.insert(from, node),
+        );
         return true;
       },
     };

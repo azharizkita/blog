@@ -22,6 +22,8 @@ export type SaveCheck =
       blockIndex: number;
       /** That block's Markdown as loaded, or null (a new or synthetic block, or none). */
       loadedSource: string | null;
+      /** Index into `loadedDoc` of the loaded block paired with `blockIndex` (undefined: none, e.g. a new block). */
+      loadedIndex?: number;
       /** That block's Markdown in the text being saved, or null (dropped, or never written). */
       savingSource: string | null;
       message: string;
@@ -44,6 +46,8 @@ export type CheckSaveArgs = {
   definitions: string;
   /** Injected for fault-injection tests; defaults to docToMarkdown. */
   serialize?: Serialize;
+  /** Skip Check B (unedited blocks must read back as loaded); Check A still runs. */
+  skipCheckB?: boolean;
 };
 
 const LOSSY =
@@ -334,6 +338,7 @@ export function checkSave({
   doc,
   definitions,
   serialize = docToMarkdown,
+  skipCheckB = false,
 }: CheckSaveArgs): SaveCheck {
   const content = doc.content ?? [];
   const syntheticTitle = loaded[0]?.synthetic === true;
@@ -350,6 +355,10 @@ export function checkSave({
     ok: false,
     reason,
     blockIndex,
+    loadedIndex:
+      near[blockIndex] === undefined || loaded[near[blockIndex]!]?.synthetic
+        ? undefined
+        : near[blockIndex],
     loadedSource: sourceOf(near[blockIndex]),
     savingSource,
     message,
@@ -402,7 +411,7 @@ export function checkSave({
   }
 
   // Check B.
-  for (let k = 0; k < expected.length; k++) {
+  if (!skipCheckB) for (let k = 0; k < expected.length; k++) {
     const { index } = expected[k];
     const j = exact[index];
     if (j === undefined || loaded[j]?.synthetic) continue;

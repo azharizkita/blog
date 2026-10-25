@@ -7,6 +7,8 @@ export interface SaveGuardPanelProps {
   onRestore?: () => void;
   onKeepEditing: () => void;
   onForceSave: () => void;
+  /** Disables the actions while a save is in progress. */
+  disabled?: boolean;
 }
 
 function Source({ label, source }: { label: string; source: string | null }) {
@@ -29,6 +31,7 @@ export function SaveGuardPanel({
   onRestore,
   onKeepEditing,
   onForceSave,
+  disabled,
 }: SaveGuardPanelProps) {
   const n = guard.blockIndex + 1;
   return (
@@ -52,11 +55,11 @@ export function SaveGuardPanel({
         />
       </div>
       <div className="flex flex-wrap gap-2">
-        {onRestore && <Button size="sm" onClick={onRestore}>Restore block &amp; save</Button>}
-        <Button variant="outline" size="sm" onClick={onKeepEditing}>
+        {onRestore && <Button size="sm" onClick={onRestore} disabled={disabled}>Restore block &amp; save</Button>}
+        <Button variant="outline" size="sm" onClick={onKeepEditing} disabled={disabled}>
           Keep editing
         </Button>
-        <Button variant="outline" size="sm" onClick={onForceSave}>
+        <Button variant="outline" size="sm" onClick={onForceSave} disabled={disabled}>
           I deleted it on purpose — save
         </Button>
       </div>

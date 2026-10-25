@@ -275,3 +275,54 @@ describe("checkSave", () => {
     }
   });
 });
+
+describe("checkSave loadedIndex / skipCheckB", () => {
+  const dropEmbed = (d: JSONContent, definitions?: string, options?: Parameters<typeof docToMarkdown>[2]) =>
+    docToMarkdown(
+      { ...d, content: d.content!.filter((n) => n.type !== "appleMusicBlock") },
+      definitions,
+      options,
+    );
+
+  it("pairs with the loaded block after an earlier delete", () => {
+    const { doc, args } = load(SOURCE);
+    doc.content!.splice(1, 1); // delete the first paragraph; embed now at 1
+    const result = checkSave({ ...args, doc, serialize: dropEmbed });
+    expect(result).toMatchObject({ ok: false, blockIndex: 1, loadedIndex: 2 });
+  });
+
+  it("pairs with the loaded block after an earlier insert", () => {
+    const { doc, args } = load(SOURCE);
+    doc.content!.splice(1, 0, para(text("Inserted.")));
+    const result = checkSave({ ...args, doc, serialize: dropEmbed });
+    expect(result).toMatchObject({ ok: false, blockIndex: 3, loadedIndex: 2 });
+  });
+
+  it("has no loadedIndex for a new lossy block", () => {
+    const { doc, args } = load(SOURCE);
+    doc.content!.push({ type: "appleMusicBlock", attrs: { url: "https://m.dev/2", title: "New" } });
+    const result = checkSave({
+      ...args,
+      doc,
+      serialize: (d, definitions, options) =>
+        docToMarkdown(
+          { ...d, content: d.content!.filter((n) => n.attrs?.title !== "New") },
+          definitions,
+          options,
+        ),
+    });
+    expect(result).toMatchObject({ ok: false, blockIndex: 6, loadedSource: null });
+    if (!result.ok) expect(result.loadedIndex).toBeUndefined();
+  });
+
+  it("skipCheckB still refuses a Check A failure", () => {
+    const { doc, args } = load(SOURCE);
+    const result = checkSave({ ...args, doc, serialize: dropEmbed, skipCheckB: true });
+    expect(result).toMatchObject({ ok: false, reason: "lossy" });
+  });
+
+  it("skipCheckB passes an unedited doc", () => {
+    const { doc, args } = load(SOURCE);
+    expect(checkSave({ ...args, doc, skipCheckB: true })).toEqual({ ok: true, markdown: SOURCE });
+  });
+});

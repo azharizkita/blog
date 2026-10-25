@@ -71,7 +71,6 @@ export function EditorScreen(props: EditorScreenProps) {
   const [guardStop, setGuardStop] = useState<{
     guard: SaveGuardFailure;
     kind: SaveKind;
-    canRestore: boolean;
   } | null>(null);
   const wysiwygFlushRef = useRef<WysiwygHandle | null>(null);
 
@@ -148,18 +147,17 @@ export function EditorScreen(props: EditorScreenProps) {
   // via setStatus in that case.
   const flushWriteModeContent = (
     kind: SaveKind,
-    via: (handle: WysiwygHandle) => WysiwygFlushResult = (h) => h.flush(),
+    via?: (handle: WysiwygHandle) => WysiwygFlushResult,
   ): string | null => {
     const handle = wysiwygFlushRef.current;
     if (mode !== "write" || !handle) return content;
-    const result = via(handle);
+    const result = via ? via(handle) : handle.flush();
     if (!result.ok) {
       setRoundTripSafe(false);
       if (result.guard) {
         setGuardStop({
           guard: result.guard,
           kind,
-          canRestore: handle.canRestore(result.guard.blockIndex),
         });
         setStatus(null);
       } else {
@@ -167,7 +165,8 @@ export function EditorScreen(props: EditorScreenProps) {
       }
       return null;
     }
-    setRoundTripSafe(true);
+    // Only a normal, fully checked flush earns the green dot.
+    setRoundTripSafe(via ? null : true);
     setGuardStop(null);
     setContent(result.markdown);
     return result.markdown;
@@ -247,9 +246,10 @@ export function EditorScreen(props: EditorScreenProps) {
 
   const restoreAndSave = () => {
     if (!guardStop) return;
-    const index = guardStop.guard.blockIndex;
+    const { blockIndex, loadedIndex } = guardStop.guard;
+    if (loadedIndex === undefined) return;
     retryGuarded((handle) => {
-      handle.restoreBlock(index);
+      handle.restoreBlock(blockIndex, loadedIndex);
       return handle.flush();
     });
   };
@@ -363,7 +363,10 @@ export function EditorScreen(props: EditorScreenProps) {
       {guardStop && mode === "write" && (
         <SaveGuardPanel
           guard={guardStop.guard}
-          onRestore={guardStop.canRestore ? restoreAndSave : undefined}
+          onRestore={
+            guardStop.guard.loadedIndex !== undefined ? restoreAndSave : undefined
+          }
+          disabled={isSaving}
           onKeepEditing={() => setGuardStop(null)}
           onForceSave={() => retryGuarded((h) => h.forceSerialize())}
         />
