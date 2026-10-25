@@ -33,6 +33,37 @@ describe("article markdown config", () => {
     }
   });
 
+  it("callouts keep the original kind and only a custom title", () => {
+    for (const k of ["NOTE", "TIP", "IMPORTANT", "WARNING", "CAUTION", "FOO"]) {
+      expect(blocks(`> [!${k}]\n> x`)[0].properties).toEqual({
+        kind: k,
+        type: k === "TIP" ? "tip" : k === "WARNING" || k === "CAUTION" ? "warn" : "note",
+      });
+    }
+    expect(blocks("> [!tip]\n> x")[0].properties?.kind).toBe("TIP");
+    expect(blocks("> [!TIP] Custom title\n> x")[0].properties).toEqual({
+      kind: "TIP",
+      type: "tip",
+      title: "Custom title",
+    });
+  });
+
+  it("mermaid keeps meta other than height", () => {
+    expect(blocks('```mermaid height=300 title="Flow"\ngraph TD\n```')[0].properties).toEqual({
+      chart: "graph TD",
+      height: "300",
+      meta: 'title="Flow"',
+    });
+    expect(blocks("```mermaid {1}\ngraph TD\n```")[0].properties).toEqual({
+      chart: "graph TD",
+      meta: "{1}",
+    });
+    expect(blocks("```mermaid height=520\ngraph TD\n```")[0].properties).toEqual({
+      chart: "graph TD",
+      height: "520",
+    });
+  });
+
   it("comment components map to tags with decoded props", () => {
     expect(blocks('<!-- ::apple-music url="u" -->')[0]).toMatchObject({
       type: "component",

@@ -80,10 +80,18 @@ export function mermaidExtension(): MarkdownExtension {
     transformDocument: (document) =>
       transformBlocks(document, (node) => {
         if (node.type !== "code" || node.lang !== "mermaid") return node;
-        const height = /(?:^|\s)height=(\d+)(?:\s|$)/.exec(node.meta ?? "")?.[1];
+        const meta = node.meta ?? "";
+        const match = /(?:^|\s)height=(\d+)(?=\s|$)/.exec(meta);
+        const height = match?.[1];
+        // Any other fence info is kept so nothing downstream (the editor
+        // bridge) can drop it silently; the article renderer ignores it.
+        const rest = match
+          ? (meta.slice(0, match.index) + " " + meta.slice(match.index + match[0].length)).trim()
+          : meta.trim();
         const properties: Record<string, string> = {
           chart: node.value,
           ...(height ? { height } : {}),
+          ...(rest ? { meta: rest } : {}),
         };
         return {
           type: "component",
@@ -125,20 +133,33 @@ const CALLOUT_TYPES: Record<string, "note" | "tip" | "warn"> = {
   CAUTION: "warn",
 };
 
-/** `callout` nodes -> md-callout component nodes. */
+/**
+ * `callout` nodes -> md-callout component nodes. Properties: `type` (the
+ * visual variant the article renderer uses), `kind` (the kind as written,
+ * upper-cased) and `title` only when the author wrote a custom title (the
+ * parser otherwise fills in the title-cased kind).
+ */
 export function calloutComponentExtension(): MarkdownExtension {
   return {
     name: "callout-component",
     transformDocument: (document) =>
       transformBlocks(document, (node) => {
         if (node.type !== "callout") return node;
-        const type = CALLOUT_TYPES[node.kind.toUpperCase()] ?? "note";
+        const kind = node.kind.toUpperCase();
+        const type = CALLOUT_TYPES[kind] ?? "note";
+        const defaultTitle =
+          node.kind.slice(0, 1).toUpperCase() + node.kind.slice(1).toLowerCase();
+        const properties: Record<string, string> = {
+          kind,
+          type,
+          ...(node.title && node.title !== defaultTitle ? { title: node.title } : {}),
+        };
         return {
           type: "component",
           name: "callout",
           tagName: "md-callout",
-          attributes: { type },
-          properties: { type },
+          attributes: properties,
+          properties,
           children: node.children,
         } satisfies ComponentNode;
       }),

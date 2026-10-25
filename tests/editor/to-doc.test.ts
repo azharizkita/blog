@@ -57,13 +57,23 @@ describe("markdownToDoc", () => {
       );
     });
 
-    it("nested marks accumulate", () => {
-      // Outermost mark first; adjacent runs with equal marks merge.
-      expect(body("**a _b_**")).toEqual(
+    it("nested marks use one canonical order", () => {
+      // Schema rank order (link, bold, code, italic, strike), whatever the
+      // nesting; adjacent runs with equal marks merge.
+      const both = [{ type: "bold" }, { type: "italic" }];
+      expect(body("*__x__*")).toEqual(para(text("x", both)));
+      expect(body("__*x*__")).toEqual(para(text("x", both)));
+      expect(body("~~*[a](/p)*~~")).toEqual(
         para(
-          text("a ", [{ type: "bold" }]),
-          text("b", [{ type: "bold" }, { type: "italic" }]),
+          text("a", [
+            { type: "link", attrs: { href: "/p", title: null } },
+            { type: "italic" },
+            { type: "strike" },
+          ]),
         ),
+      );
+      expect(body("*a **b***")).toEqual(
+        para(text("a ", [{ type: "italic" }]), text("b", both)),
       );
     });
 
@@ -228,9 +238,36 @@ describe("markdownToDoc", () => {
     it("TIP callout with a nested paragraph", () => {
       expect(body("> [!TIP]\n> Use **this**.")).toEqual({
         type: "calloutBlock",
-        attrs: { kind: "tip" },
+        attrs: { kind: "TIP" },
         content: [para(text("Use "), text("this", [{ type: "bold" }]), text("."))],
       });
+    });
+  });
+
+  it("callouts keep their original kind", () => {
+    for (const kind of ["NOTE", "IMPORTANT", "WARNING", "CAUTION"]) {
+      expect(body(`> [!${kind}]\n> x`)).toEqual({
+        type: "calloutBlock",
+        attrs: { kind },
+        content: [para(text("x"))],
+      });
+    }
+  });
+
+  it("callouts with a custom title or an unknown kind are raw", () => {
+    const titled = "> [!TIP] Custom title\n> x";
+    expect(body(titled)).toEqual(raw(titled));
+    expect(body("> [!FOO]\n> x")).toEqual(raw("> [!FOO]\n> x"));
+  });
+
+  it("mermaid with meta other than height is raw", () => {
+    const titled = '```mermaid height=300 title="Flow"\ngraph TD\n```';
+    expect(body(titled)).toEqual(raw(titled));
+    const lines = "```mermaid {1}\ngraph TD\n```";
+    expect(body(lines)).toEqual(raw(lines));
+    expect(body("```mermaid height=520\ngraph TD\n```")).toEqual({
+      type: "mermaidBlock",
+      attrs: { code: "graph TD", height: "520" },
     });
   });
 
@@ -245,9 +282,29 @@ describe("markdownToDoc", () => {
     expect(blocks[0].raw).toBe(false);
   });
 
-  it("level-1 heading becomes rawBlock", () => {
-    expect(body("# Big")).toEqual(raw("# Big"));
+  it("level-1 heading maps to heading level 1", () => {
+    expect(body("# Big")).toEqual({
+      type: "heading",
+      attrs: { level: 1 },
+      content: [text("Big")],
+    });
+    // Shapes the fixtures use: an empty `# ` and an image inside an h1.
+    expect(body("# ")).toEqual({ type: "heading", attrs: { level: 1 } });
+    expect(body("# ![cover](https://x.dev/a.jpg)")).toEqual({
+      type: "heading",
+      attrs: { level: 1 },
+      content: [
+        {
+          type: "image",
+          attrs: { src: "https://x.dev/a.jpg", alt: "cover", title: null },
+        },
+      ],
+    });
+  });
+
+  it("level-5 and level-6 headings become rawBlock", () => {
     expect(body("##### Small")).toEqual(raw("##### Small"));
+    expect(body("###### Tiny")).toEqual(raw("###### Tiny"));
   });
 
   describe("raw fallbacks", () => {
@@ -303,21 +360,22 @@ describe("markdownToDoc", () => {
       const { doc, blocks } = markdownToDoc("# Big\n\ntext");
       expect(doc.content).toEqual([
         { type: "heading", attrs: { level: 2 } },
-        raw("# Big"),
+        { type: "heading", attrs: { level: 1 }, content: [text("Big")] },
         para(text("text")),
       ]);
       expect(blocks.map((b) => b.source)).toEqual(["", "# Big", "text"]);
+      expect(blocks.map((b) => b.raw)).toEqual([false, false, false]);
       expect(blocks[0].synthetic).toBe(true);
     });
 
     it("doc.content[i] corresponds to blocks[i]", () => {
-      const { doc, blocks } = markdownToDoc("## A\n\npara\n\n- x\n\n# H1");
+      const { doc, blocks } = markdownToDoc("## A\n\npara\n\n- x\n\n##### H5");
       expect(doc.content).toHaveLength(blocks.length);
       expect(blocks.map((b) => [b.source, b.raw])).toEqual([
         ["## A", false],
         ["para", false],
         ["- x", false],
-        ["# H1", true],
+        ["##### H5", true],
       ]);
     });
   });
@@ -334,6 +392,7 @@ describe("markdownToDoc", () => {
         attrs: { level: 2 },
       });
       expect(doc.content, file).toHaveLength(blocks.length);
+      expect(blocks.filter((b) => b.raw).map((b) => b.source), file).toEqual([]);
     }
   });
 });

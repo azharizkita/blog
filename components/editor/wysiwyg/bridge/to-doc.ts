@@ -10,6 +10,7 @@ import { splitTopLevelBlocks, type TopLevelBlock } from "@/lib/markdown/blocks";
 import {
   CALLOUT_KINDS,
   HEADING_LEVELS,
+  MARK_ORDER,
   MARKS,
   NODES,
   type CalloutKind,
@@ -53,8 +54,15 @@ function sameMarks(a: Mark[] | undefined, b: Mark[] | undefined): boolean {
   return JSON.stringify(a ?? []) === JSON.stringify(b ?? []);
 }
 
+const rank = (mark: Mark) => MARK_ORDER.indexOf(mark.type as never);
+
+/** Attaches marks in canonical (schema rank) order, one per type. */
 function withMarks(node: JSONContent, marks: Mark[]): JSONContent {
-  return marks.length ? { ...node, marks } : node;
+  if (!marks.length) return node;
+  const unique = marks.filter(
+    (m, i) => marks.findIndex((n) => n.type === m.type) === i,
+  );
+  return { ...node, marks: unique.sort((a, b) => rank(a) - rank(b)) };
 }
 
 /** Appends inline content, merging adjacent text with equal marks (as ProseMirror does). */
@@ -194,8 +202,15 @@ const EMBEDS: Record<
 function mapComponent(node: ComponentNode): JSONContent {
   const props = node.properties ?? {};
   if (node.tagName === "md-callout") {
-    const kind = props.type as CalloutKind;
-    if (!CALLOUT_KINDS.includes(kind)) throw new Unmappable("callout kind");
+    // `type` is derived from `kind`; any other property (a custom `title`)
+    // has no place in the editor.
+    const kind = props.kind as CalloutKind;
+    if (
+      !CALLOUT_KINDS.includes(kind) ||
+      Object.keys(props).some((k) => k !== "kind" && k !== "type")
+    ) {
+      throw new Unmappable("callout kind or title");
+    }
     return {
       type: NODES.calloutBlock,
       attrs: { kind },
