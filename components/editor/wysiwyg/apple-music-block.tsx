@@ -129,7 +129,9 @@ function UrlInput({
       onChange={(event) => setDraft(event.target.value.replace(/[\r\n]/g, ""))}
       onMouseDown={(event) => event.stopPropagation()}
       onFocus={() => window.getSelection()?.removeAllRanges()}
-      onBlur={() => onCommit(draft.trim())}
+      onBlur={() => {
+        if (draft.trim() !== initialUrl) onCommit(draft.trim());
+      }}
       onKeyDown={(event) => {
         if (event.key === "Enter") {
           event.preventDefault();

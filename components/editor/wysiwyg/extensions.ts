@@ -4,10 +4,10 @@ import Link from "@tiptap/extension-link";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
 import { Placeholder } from "@tiptap/extensions";
 import { Extension, type Extensions } from "@tiptap/react";
-import { Fragment, Slice, type Node as PMNode } from "@tiptap/pm/model";
+import { Fragment, Slice, type Node as PMNode, type ResolvedPos } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
+import type { EditorView } from "@tiptap/pm/view";
 import { HEADING_LEVELS, NODES } from "./bridge/schema-names";
-import { markdownToDoc } from "./bridge/to-doc";
 import { ImageUpload, imageFilesFrom } from "./image-upload";
 import { EditorImage } from "./image-view";
 import { AppleMusicBlock, IFRAME_PASTE, URL_PASTE } from "./apple-music-block";
@@ -15,6 +15,7 @@ import { CalloutBlock } from "./callout-block";
 import { CodeHighlight } from "./code-highlight";
 import { EnvelopeBlock } from "./envelope-block";
 import { MermaidBlock } from "./mermaid-block";
+import { planPaste, type PasteTarget } from "./paste";
 import { RawBlock } from "./raw-block";
 import { YoutubeBlock } from "./youtube-block";
 
@@ -119,12 +120,16 @@ const StrikeShortcut = Extension.create({
 
 /**
  * Pasted plain text is read as Markdown through the same bridge that loads
- * posts (markdownToDoc), so pasting a post fragment from Source mode, a
- * Markdown file or a VS Code Markdown buffer gives the blocks, marks and
- * embeds it reads as. Left to the defaults: pastes carrying HTML (rich text
- * from a page, or a copy inside the editor, whose HTML holds the exact
- * nodes), image files (ImageUpload), pastes into a code block (literal
- * text), and Apple Music snippets/links (AppleMusicBlock's paste rules).
+ * posts (planPaste in paste.ts, via markdownToDoc), so pasting a post
+ * fragment from Source mode, a Markdown file or a VS Code Markdown buffer
+ * gives the blocks, marks and embeds it reads as. In a heading or table
+ * cell the paste is flattened to one line (neither can hold a line break
+ * or a second paragraph). Shift held while pasting (⌘⇧V) pastes the text
+ * without reading it as Markdown. Left to the defaults: pastes carrying
+ * HTML (rich text from a page, or a copy inside the editor, whose HTML
+ * holds the exact nodes), image files (ImageUpload), pastes into a code
+ * block (literal text), and Apple Music snippets/links (AppleMusicBlock's
+ * paste rules).
  */
 const MarkdownPaste = Extension.create({
   name: "markdownPaste",
@@ -138,48 +143,70 @@ const MarkdownPaste = Extension.create({
             if (!data || imageFilesFrom(data).length) return false;
             const text = data.getData("text/plain");
             if (!text.trim()) return false;
+            const { $from } = view.state.selection;
+            if ($from.parent.type.spec.code) return false;
             let vscodeMode: string | undefined;
             try {
               vscodeMode = JSON.parse(data.getData("vscode-editor-data") || "{}").mode;
             } catch {
               vscodeMode = undefined;
             }
-            if (data.getData("text/html") && vscodeMode !== "markdown") return false;
-            if (view.state.selection.$from.parent.type.spec.code) return false;
+            const target: PasteTarget = isInlineTarget($from) ? "inline" : "block";
+            const plain = shiftHeld(view);
+            // Rich pastes keep their HTML, except into a heading or cell,
+            // where only one line of text can land safely, or as plain text.
+            if (
+              data.getData("text/html") &&
+              vscodeMode !== "markdown" &&
+              target === "block" &&
+              !plain
+            ) {
+              return false;
+            }
             IFRAME_PASTE.lastIndex = 0;
             URL_PASTE.lastIndex = 0;
-            if (IFRAME_PASTE.test(text) || URL_PASTE.test(text)) return false;
+            if (target === "block" && (IFRAME_PASTE.test(text) || URL_PASTE.test(text))) {
+              return false;
+            }
 
-            let slice: Slice;
+            let plan;
             try {
-              const { doc, blocks } = markdownToDoc(text.replace(/\r\n?/g, "\n"));
-              // The synthetic title markdownToDoc adds isn't part of the paste.
-              const content = (doc.content ?? []).slice(blocks[0]?.synthetic ? 1 : 0);
-              if (!content.length) return false;
-              const fragment = Fragment.fromJSON(view.state.schema, content);
-              // Open ends merge with the text around the cursor, as a paste
-              // of rich text does; but a heading or code block at an end
-              // stays a block of its own (the rest of the paragraph would
-              // otherwise join the code, or a heading turn into its text).
-              const open = Slice.maxOpen(fragment);
-              const closed = (node: PMNode | null) =>
-                !!node?.isTextblock && node.type.name !== NODES.paragraph;
-              slice = new Slice(
-                fragment,
-                closed(fragment.firstChild) ? 0 : open.openStart,
-                closed(fragment.lastChild) ? 0 : open.openEnd,
-              );
+              plan = planPaste(text, target, plain);
             } catch {
               return false;
             }
-            // uiEvent "paste" lets the paste rules run over the result too.
-            view.dispatch(
-              view.state.tr
-                .replaceSelection(slice)
-                .scrollIntoView()
-                .setMeta("paste", true)
-                .setMeta("uiEvent", "paste"),
-            );
+            let tr = view.state.tr;
+            if (plan.kind === "default") return false;
+            if (plan.kind === "text") {
+              if (!plan.text) return false;
+              tr = tr.insertText(plan.text);
+            } else {
+              try {
+                const fragment = Fragment.fromJSON(view.state.schema, plan.content);
+                // Open ends merge with the text around the cursor, as a
+                // paste of rich text does; but a heading or code block at an
+                // end stays a block of its own (the rest of the paragraph
+                // would otherwise join the code, or a heading turn into its
+                // text).
+                const open = Slice.maxOpen(fragment);
+                const closed = (node: PMNode | null) =>
+                  !!node?.isTextblock && node.type.name !== NODES.paragraph;
+                tr = tr.replaceSelection(
+                  new Slice(
+                    fragment,
+                    closed(fragment.firstChild) ? 0 : open.openStart,
+                    closed(fragment.lastChild) ? 0 : open.openEnd,
+                  ),
+                );
+              } catch {
+                return false;
+              }
+            }
+            tr.scrollIntoView().setMeta("paste", true);
+            // uiEvent "paste" lets the paste rules run over the result too
+            // (not for a plain paste, which inserts the text as it is).
+            if (!plain) tr.setMeta("uiEvent", "paste");
+            view.dispatch(tr);
             return true;
           },
         },
@@ -187,6 +214,27 @@ const MarkdownPaste = Extension.create({
     ];
   },
 });
+
+/**
+ * Whether Shift was down for this paste (⌘⇧V, "paste as plain text"). The
+ * paste event doesn't say; ProseMirror tracks it from key events for its own
+ * plain-text paste (`view.input.shiftKey`, internal but long-standing), and
+ * a plugin's own keydown handler isn't reliably reached (an earlier plugin
+ * that handles the key stops the chain).
+ */
+function shiftHeld(view: EditorView): boolean {
+  return (view as unknown as { input?: { shiftKey?: boolean } }).input?.shiftKey === true;
+}
+
+/** A heading, or anywhere inside a table cell. */
+function isInlineTarget($pos: ResolvedPos): boolean {
+  if ($pos.parent.type.name === NODES.heading) return true;
+  for (let depth = $pos.depth; depth > 0; depth--) {
+    const name = $pos.node(depth).type.name;
+    if (name === NODES.tableCell || name === NODES.tableHeader) return true;
+  }
+  return false;
+}
 
 /** The full extension set for the WYSIWYG editor. */
 export function createExtensions(): Extensions {
