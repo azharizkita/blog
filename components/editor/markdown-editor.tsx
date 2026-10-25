@@ -15,6 +15,7 @@ import {
   imageFilesFrom,
   measureImage,
 } from "@/components/editor/wysiwyg/image-upload";
+import { sourceLinter } from "./source-lint";
 
 interface MarkdownEditorProps {
   value: string;
@@ -95,6 +96,7 @@ export function MarkdownEditor({
   const extensions = useMemo(
     () => [
       markdown(),
+      sourceLinter,
       EditorView.domEventHandlers({
         paste: (event, view) => {
           const files = imageFilesFrom(event.clipboardData);

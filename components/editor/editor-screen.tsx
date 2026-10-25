@@ -21,7 +21,9 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   WysiwygEditor,
+  type SaveGuardFailure,
   type WysiwygFlushResult,
+  type WysiwygHandle,
 } from "@/components/editor/wysiwyg";
 import composeEntry, { type EntryInput } from "@/lib/compose-entry";
 import extractTitle from "@/lib/extract-title";
@@ -29,10 +31,12 @@ import getSlug from "@/lib/get-slug";
 import { MarkdownEditor } from "./markdown-editor";
 import { MetadataBar } from "./metadata-bar";
 import { PreviewPane } from "./preview-pane";
+import { SaveGuardPanel } from "./save-guard-panel";
 
 const PREVIEW_DEBOUNCE_MS = 600;
 
 type EditorMode = "write" | "source" | "preview";
+type SaveKind = "draft" | "publish";
 
 export interface EditorScreenProps {
   gistId?: string;
@@ -61,9 +65,15 @@ export function EditorScreen(props: EditorScreenProps) {
   const [isSaving, startSaving] = useTransition();
   const previewRequestRef = useRef(0);
   const [mode, setMode] = useState<EditorMode>("write");
-  const [roundTripBroken, setRoundTripBroken] = useState(false);
-  const forceWriteRef = useRef(false);
-  const wysiwygFlushRef = useRef<(() => WysiwygFlushResult) | null>(null);
+  // Outcome of the last Write-mode save check (null = none yet).
+  const [roundTripSafe, setRoundTripSafe] = useState<boolean | null>(null);
+  // A refused save, with the action that was refused so the panel can retry it.
+  const [guardStop, setGuardStop] = useState<{
+    guard: SaveGuardFailure;
+    kind: SaveKind;
+    canRestore: boolean;
+  } | null>(null);
+  const wysiwygFlushRef = useRef<WysiwygHandle | null>(null);
 
   // Debounced exact-pipeline preview: the server action renders the real
   // ArticleContent component, so the preview can't drift from production.
@@ -136,13 +146,29 @@ export function EditorScreen(props: EditorScreenProps) {
   // lossy-table/hardBreak guard as onChange — see wysiwyg/index.tsx) or
   // because of some other serialize failure; the error is already reported
   // via setStatus in that case.
-  const flushWriteModeContent = (): string | null => {
-    if (mode !== "write" || !wysiwygFlushRef.current) return content;
-    const result = wysiwygFlushRef.current();
+  const flushWriteModeContent = (
+    kind: SaveKind,
+    via: (handle: WysiwygHandle) => WysiwygFlushResult = (h) => h.flush(),
+  ): string | null => {
+    const handle = wysiwygFlushRef.current;
+    if (mode !== "write" || !handle) return content;
+    const result = via(handle);
     if (!result.ok) {
-      setStatus(result.error);
+      setRoundTripSafe(false);
+      if (result.guard) {
+        setGuardStop({
+          guard: result.guard,
+          kind,
+          canRestore: handle.canRestore(result.guard.blockIndex),
+        });
+        setStatus(null);
+      } else {
+        setStatus(result.error);
+      }
       return null;
     }
+    setRoundTripSafe(true);
+    setGuardStop(null);
     setContent(result.markdown);
     return result.markdown;
   };
@@ -160,10 +186,10 @@ export function EditorScreen(props: EditorScreenProps) {
     return result;
   };
 
-  const handleSaveDraft = () => {
+  const saveDraftNow = (via?: (handle: WysiwygHandle) => WysiwygFlushResult) => {
     startSaving(async () => {
       setStatus(null);
-      const freshContent = flushWriteModeContent();
+      const freshContent = flushWriteModeContent("draft", via);
       if (freshContent === null) return;
       if (!requireContent(freshContent)) return;
       const description = composeOrReport(deriveTitle(freshContent));
@@ -178,10 +204,10 @@ export function EditorScreen(props: EditorScreenProps) {
     });
   };
 
-  const handlePublish = () => {
+  const publishNow = (via?: (handle: WysiwygHandle) => WysiwygFlushResult) => {
     startSaving(async () => {
       setStatus(null);
-      const freshContent = flushWriteModeContent();
+      const freshContent = flushWriteModeContent("publish", via);
       if (freshContent === null) return;
       if (!requireContent(freshContent)) return;
       const description = composeOrReport(deriveTitle(freshContent));
@@ -207,6 +233,24 @@ export function EditorScreen(props: EditorScreenProps) {
       setGistId(result.gistId);
       setIsPublic(true);
       router.replace(`/editor/${result.gistId}`);
+    });
+  };
+
+  const handleSaveDraft = () => saveDraftNow();
+  const handlePublish = () => publishNow();
+
+  const retryGuarded = (via: (handle: WysiwygHandle) => WysiwygFlushResult) => {
+    if (!guardStop) return;
+    if (guardStop.kind === "draft") saveDraftNow(via);
+    else publishNow(via);
+  };
+
+  const restoreAndSave = () => {
+    if (!guardStop) return;
+    const index = guardStop.guard.blockIndex;
+    retryGuarded((handle) => {
+      handle.restoreBlock(index);
+      return handle.flush();
     });
   };
 
@@ -247,6 +291,15 @@ export function EditorScreen(props: EditorScreenProps) {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          {mode === "write" && roundTripSafe === true && (
+            <span className="prose-muted flex items-center gap-1.5 text-xs">
+              <span
+                aria-hidden
+                className="size-1.5 rounded-full bg-green-500"
+              />
+              Round-trip safe
+            </span>
+          )}
           <div
             role="group"
             aria-label="Editor mode"
@@ -264,16 +317,10 @@ export function EditorScreen(props: EditorScreenProps) {
                     : "text-muted-foreground hover:text-foreground",
                 )}
                 onClick={() => {
-                  // A stale banner (and a disarmed guard) must not survive a
-                  // mode switch: if the underlying document is still broken,
-                  // WysiwygEditor's mount-time round-trip check will simply
-                  // set both again as soon as Write is entered. If the user
-                  // fixed it in Source first, this is what actually clears
-                  // the now-false "would rewrite" message instead of leaving
-                  // it (and a permanently-disarmed "Edit visually anyway"
-                  // landmine) around forever.
-                  setRoundTripBroken(false);
-                  forceWriteRef.current = false;
+                  // A stale verdict must not survive a mode switch: Write
+                  // re-checks on its next edit or save.
+                  setGuardStop(null);
+                  setRoundTripSafe(null);
                   setMode(m);
                 }}
               >
@@ -313,31 +360,13 @@ export function EditorScreen(props: EditorScreenProps) {
         </div>
       )}
 
-      {roundTripBroken && (
-        <div className="flex flex-wrap items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm">
-          <p className="flex-1">
-            This document contains formatting the visual editor would rewrite.
-            Editing in Source mode to keep it intact.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              forceWriteRef.current = true;
-              setRoundTripBroken(false);
-              setMode("write");
-            }}
-          >
-            Edit visually anyway
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setRoundTripBroken(false)}
-          >
-            Dismiss
-          </Button>
-        </div>
+      {guardStop && mode === "write" && (
+        <SaveGuardPanel
+          guard={guardStop.guard}
+          onRestore={guardStop.canRestore ? restoreAndSave : undefined}
+          onKeepEditing={() => setGuardStop(null)}
+          onForceSave={() => retryGuarded((h) => h.forceSerialize())}
+        />
       )}
 
       <MetadataBar value={entry} onChange={setEntry} />
@@ -349,6 +378,7 @@ export function EditorScreen(props: EditorScreenProps) {
           onSerializeError={setStatus}
           onImageError={setUploadError}
           flushRef={wysiwygFlushRef}
+          onCheck={setRoundTripSafe}
         />
       )}
       {mode === "source" && (
