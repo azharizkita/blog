@@ -3,7 +3,7 @@
 //        node --env-file=<env> scripts/migrate-content.ts --apply --confirm-host=<host>
 import { neon } from "@neondatabase/serverless";
 import { convertLegacyMarkdown } from "../lib/markdown/legacy.ts";
-import { assertChangedSet, lineDiff, readingTime } from "./migrate-content-lib.ts";
+import { appliedExactlyOnce, assertChangedSet, lineDiff, readingTime } from "./migrate-content-lib.ts";
 
 const args = process.argv.slice(2);
 const apply = args.includes("--apply");
@@ -58,15 +58,27 @@ if (!apply) {
   process.exit(0);
 }
 
+const skipped: string[] = [];
 for (const { row, content } of changes) {
   const minutes = readingTime(content);
-  const queries = [
-    sql`insert into post_revisions (post_id, title, content) values (${row.id}, ${row.title}, ${row.content})`,
-    sql`update posts set content = ${content} where id = ${row.id}`,
-  ];
-  if (minutes !== row.reading_time_minutes)
-    queries.push(sql`update posts set reading_time_minutes = ${minutes} where id = ${row.id}`);
-  await sql.transaction(queries);
-  console.log(`applied ${row.slug}`);
+  // Both statements are guarded on the content still being what we read, so a
+  // concurrent edit makes them no-ops instead of being overwritten.
+  const results = await sql.transaction([
+    sql`insert into post_revisions (post_id, title, content)
+        select id, title, content from posts where id = ${row.id} and content = ${row.content}
+        returning id`,
+    sql`update posts set content = ${content}, reading_time_minutes = ${minutes}
+        where id = ${row.id} and content = ${row.content}
+        returning id`,
+  ]);
+  if (appliedExactlyOnce(results)) console.log(`applied ${row.slug}`);
+  else {
+    console.error(`${row.slug}: changed since read - skipped`);
+    skipped.push(row.slug);
+  }
+}
+if (skipped.length) {
+  console.error(`Skipped (changed since read): ${skipped.join(", ")}`);
+  process.exit(1);
 }
 console.log("Done.");

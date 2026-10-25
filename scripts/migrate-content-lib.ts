@@ -66,3 +66,8 @@ export function lineDiff(before: string, after: string, context = 2): string {
   });
   return out.join("\n");
 }
+
+/** True only if both transaction statements (revision insert, update) each returned exactly one row. */
+export function appliedExactlyOnce(results: unknown[]): boolean {
+  return results.length === 2 && results.every((r) => Array.isArray(r) && r.length === 1);
+}

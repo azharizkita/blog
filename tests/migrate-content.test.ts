@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assertChangedSet, EXPECTED_CHANGED, lineDiff, readingTime } from "../scripts/migrate-content-lib";
+import { appliedExactlyOnce, assertChangedSet, EXPECTED_CHANGED, lineDiff, readingTime } from "../scripts/migrate-content-lib";
 
 describe("assertChangedSet", () => {
   it("accepts exactly the expected four, or none", () => {
@@ -21,5 +21,14 @@ describe("helpers", () => {
   it("lineDiff shows only changes with context", () => {
     const d = lineDiff("a\nb\nc\nd\ne\nf\ng\nh", "a\nb\nc\nX\ne\nf\ng\nh", 1);
     expect(d).toBe("  c\n- d\n+ X\n  e");
+  });
+});
+
+describe("appliedExactlyOnce", () => {
+  it("needs one row from each statement", () => {
+    expect(appliedExactlyOnce([[{ id: "a" }], [{ id: "a" }]])).toBe(true);
+    expect(appliedExactlyOnce([[], []])).toBe(false);
+    expect(appliedExactlyOnce([[{ id: "a" }], []])).toBe(false);
+    expect(appliedExactlyOnce([[{ id: "a" }]])).toBe(false);
   });
 });
