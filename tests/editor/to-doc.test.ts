@@ -59,7 +59,10 @@ describe("markdownToDoc", () => {
 
     it("nested marks use one canonical order", () => {
       // Schema rank order (link, bold, code, italic, strike), whatever the
-      // nesting; adjacent runs with equal marks merge.
+      // nesting; adjacent runs with equal marks merge. (Mapping only: the
+      // default fidelity check is covered below.)
+      const body = (markdown: string) =>
+        markdownToDoc(`${TITLE}\n\n${markdown}`, () => true).doc.content![1];
       const both = [{ type: "bold" }, { type: "italic" }];
       expect(body("*__x__*")).toEqual(para(text("x", both)));
       expect(body("__*x*__")).toEqual(para(text("x", both)));
@@ -332,6 +335,25 @@ describe("markdownToDoc", () => {
       expect(body("- a\n\n- b")).toEqual(raw("- a\n\n- b"));
       const table = "| a | b |\n| :-- | --: |\n| 1 | 2 |";
       expect(body(table)).toEqual(raw(table));
+    });
+
+    it("by default, a block whose JSON writes back differently is raw", () => {
+      // The JSON holds no nesting order, so the serializer writes the
+      // canonical one (link > bold > italic > strike, outermost first).
+      expect(body("**_x_**")).toEqual(
+        para(text("x", [{ type: "bold" }, { type: "italic" }])),
+      );
+      expect(body("__*x*__")).toEqual(
+        para(text("x", [{ type: "bold" }, { type: "italic" }])),
+      );
+      expect(body("*a **b***")).toEqual(
+        para(
+          text("a ", [{ type: "italic" }]),
+          text("b", [{ type: "bold" }, { type: "italic" }]),
+        ),
+      );
+      expect(body("*__x__*")).toEqual(raw("*__x__*"));
+      expect(body("~~*[a](/p)*~~")).toEqual(raw("~~*[a](/p)*~~"));
     });
 
     it("a failing fidelity check makes the block raw", () => {

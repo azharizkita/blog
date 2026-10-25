@@ -7,6 +7,7 @@ import type {
 } from "@tanstack/markdown";
 import type { JSONContent } from "@tiptap/react";
 import { splitTopLevelBlocks, type TopLevelBlock } from "@/lib/markdown/blocks";
+import { parseArticle } from "@/lib/markdown/config";
 import {
   CALLOUT_KINDS,
   HEADING_LEVELS,
@@ -15,6 +16,8 @@ import {
   NODES,
   type CalloutKind,
 } from "./schema-names";
+import { deepEqual } from "./deep-equal";
+import { blockToMarkdown, UnserializableError } from "./to-markdown";
 
 // Pure on purpose (no DOM, editor instance or React): Vitest runs it in node,
 // and the editor's paste handler reuses it.
@@ -42,6 +45,27 @@ export type MarkdownDoc = {
 
 /** Load-time check that a block's JSON serializes back to the same AST. */
 export type Fidelity = (block: TopLevelBlock, json: JSONContent) => boolean;
+
+/**
+ * The load-time check: the block's JSON, written back to Markdown and parsed
+ * on its own (with the document's definitions, so references resolve as in
+ * the full parse), must give the node the full parse gave it.
+ */
+export function serializesBack(definitions: string): Fidelity {
+  return (block, json) => {
+    let markdown: string;
+    try {
+      markdown = blockToMarkdown(json);
+    } catch (error) {
+      if (error instanceof UnserializableError) return false;
+      throw error;
+    }
+    const parsed = parseArticle(
+      markdown + (definitions ? "\n\n" + definitions : ""),
+    ).children[0];
+    return deepEqual(parsed, block.node);
+  };
+}
 
 /** Thrown inside a block's mapping; the whole top-level block becomes raw. */
 class Unmappable extends Error {}
@@ -308,15 +332,17 @@ const isTitle = (json: JSONContent | undefined) =>
 /**
  * Converts a post's Markdown into TipTap JSON for the editor. Each top-level
  * block maps to one top-level node; a block the editor can't hold exactly
- * (or that fails `fidelity`) becomes a locked `rawBlock` with its source.
+ * (or that fails `fidelity`, by default `serializesBack`) becomes a locked
+ * `rawBlock` with its source.
  * The document always starts with a level-2 title heading: when the post
  * doesn't, an empty synthetic one is prepended.
  */
 export function markdownToDoc(
   source: string,
-  fidelity: Fidelity = () => true,
+  fidelity?: Fidelity,
 ): MarkdownDoc {
   const { blocks: split, definitions } = splitTopLevelBlocks(source);
+  const check = fidelity ?? serializesBack(definitions);
   const content: JSONContent[] = [];
   const blocks: LoadedBlock[] = [];
 
@@ -327,7 +353,7 @@ export function markdownToDoc(
     } catch (error) {
       if (!(error instanceof Unmappable)) throw error;
     }
-    const raw = !json || !fidelity(block, json);
+    const raw = !json || !check(block, json);
     content.push(raw ? rawBlock(block.source) : json!);
     blocks.push({ source: block.source, node: block.node, raw });
   }
