@@ -18,6 +18,7 @@ export { highlightCode };
 
 export const parseOptions: ParseOptions = {
   allowHtml: false,
+  frontmatter: false,
   headingIds: (text) => getSlug(text),
   extensions: [
     // Callouts must precede the generic blockquote parser.
