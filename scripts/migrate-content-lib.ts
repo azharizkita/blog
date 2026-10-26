@@ -1,13 +1,19 @@
 // Pure helpers for scripts/migrate-content.ts (kept separate so tests can import them).
 
-import { LEGACY_POST_SLUGS } from "../lib/markdown/legacy-shim.ts";
+/** The posts that held MDX-era syntax (production dry run, 2026-10-26). */
+export const LEGACY_POST_SLUGS: readonly string[] = [
+  "21-guns",
+  "hiduplah-dengan-tenang",
+  "the-astral-omen",
+  "the-weight-of-silence",
+];
 
 /** Posts the old editor's TrailingNode left ending in an empty `#` heading. */
 export const EMPTY_HEADING_SLUGS: readonly string[] = ["hiduplah-dengan-tenang", "parking-lot"];
 
 /**
- * The only slugs this migration may change: the MDX-era posts (shared with
- * the read shim) and the posts with a trailing empty heading.
+ * The only slugs this migration may change: the MDX-era posts and the
+ * posts with a trailing empty heading.
  */
 export const EXPECTED_CHANGED: readonly string[] = [
   ...new Set([...LEGACY_POST_SLUGS, ...EMPTY_HEADING_SLUGS]),

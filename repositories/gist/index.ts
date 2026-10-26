@@ -7,7 +7,6 @@ import extractCoverImage, {
   type CoverImage,
 } from "@/lib/extract-cover-image";
 import { CONTENT_FILENAME } from "@/lib/gist-file";
-import { applyLegacyShim } from "@/lib/markdown/legacy-shim";
 import getSlug from "@/lib/get-slug";
 import parseEntry from "@/lib/parse-entry";
 import readingTime from "@/lib/reading-time";
@@ -103,7 +102,7 @@ function toGistShape(row: PostRow) {
     files: {
       [CONTENT_FILENAME]: {
         filename: CONTENT_FILENAME,
-        content: applyLegacyShim(row.id, row.content), // LEGACY SHIM — remove after production migration (spec §6)
+        content: row.content,
       },
     } as Record<string, { filename: string; content: string } | undefined>,
   };
