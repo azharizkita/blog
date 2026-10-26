@@ -1,9 +1,16 @@
-// One-off: rewrite MDX-era post syntax into TanStack Markdown in the `posts` table.
+// One-off: rewrite MDX-era post syntax into TanStack Markdown in the `posts` table,
+// and drop the empty `#` headings the old editor appended to post endings.
 // Usage: node --env-file=<env> scripts/migrate-content.ts                       (dry run)
 //        node --env-file=<env> scripts/migrate-content.ts --apply --confirm-host=<host>
 import { neon } from "@neondatabase/serverless";
 import { convertLegacyMarkdown } from "../lib/markdown/legacy.ts";
-import { appliedExactlyOnce, assertChangedSet, lineDiff, readingTime } from "./migrate-content-lib.ts";
+import {
+  appliedExactlyOnce,
+  assertChangedSet,
+  lineDiff,
+  readingTime,
+  stripTrailingEmptyHeadings,
+} from "./migrate-content-lib.ts";
 
 const args = process.argv.slice(2);
 const apply = args.includes("--apply");
@@ -31,7 +38,8 @@ const problems: string[] = [];
 for (const row of rows) {
   const res = convertLegacyMarkdown(row.content);
   for (const line of res.unconvertible) problems.push(`${row.slug}: ${line}`);
-  if (res.changed && res.content !== row.content) changes.push({ row, content: res.content });
+  const content = stripTrailingEmptyHeadings(res.content);
+  if (content !== row.content) changes.push({ row, content });
 }
 
 if (problems.length) {

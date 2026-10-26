@@ -31,7 +31,10 @@ function Callout({
         aria-hidden
         className={cn("mt-0.5 size-4 flex-none", variant.iconClass)}
       />
-      <div className="prose-p min-w-0 [&>p]:m-0">{children}</div>
+      {/* Not prose-p: its not-first:mt-6 would push the body below the icon.
+          The ! beats the paragraphs' own prose-p margin (matches the editor's
+          .callout-body p rule). */}
+      <div className="min-w-0 flex-1 leading-7 [&>p]:m-0!">{children}</div>
     </aside>
   );
 }

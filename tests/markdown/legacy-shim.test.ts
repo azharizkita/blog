@@ -17,8 +17,8 @@ describe("applyLegacyShim", () => {
     expect(applyLegacyShim("other", NEW_STYLE)).toBe(NEW_STYLE);
     expect(applyLegacyShim("other", LEGACY)).toBe(LEGACY);
   });
-  it("shares the migration script's slug set", () => {
-    expect([...Object.values(LEGACY_POST_IDS)].sort()).toEqual([...EXPECTED_CHANGED].sort());
+  it("is part of the migration script's slug set", () => {
+    expect(EXPECTED_CHANGED).toEqual(expect.arrayContaining(Object.values(LEGACY_POST_IDS)));
     expect(Object.keys(LEGACY_POST_IDS)).toHaveLength(4);
   });
 });

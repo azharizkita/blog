@@ -2,8 +2,26 @@
 
 import { LEGACY_POST_SLUGS } from "../lib/markdown/legacy-shim.ts";
 
-/** The only slugs that may still hold MDX-era syntax (shared with the read shim). */
-export const EXPECTED_CHANGED: readonly string[] = LEGACY_POST_SLUGS;
+/** Posts the old editor's TrailingNode left ending in an empty `#` heading. */
+export const EMPTY_HEADING_SLUGS: readonly string[] = ["hiduplah-dengan-tenang", "parking-lot"];
+
+/**
+ * The only slugs this migration may change: the MDX-era posts (shared with
+ * the read shim) and the posts with a trailing empty heading.
+ */
+export const EXPECTED_CHANGED: readonly string[] = [
+  ...new Set([...LEGACY_POST_SLUGS, ...EMPTY_HEADING_SLUGS]),
+].sort();
+
+/** Drops empty ATX headings (`#`, `## `…) at the very end of a post, with the blank lines before them. */
+export function stripTrailingEmptyHeadings(markdown: string): string {
+  const lines = markdown.split("\n");
+  let end = lines.length;
+  while (end > 0 && !lines[end - 1].trim()) end--;
+  if (end === 0 || !/^#{1,6}[ \t]*$/.test(lines[end - 1])) return markdown;
+  while (end > 0 && (!lines[end - 1].trim() || /^#{1,6}[ \t]*$/.test(lines[end - 1]))) end--;
+  return lines.slice(0, end).join("\n");
+}
 
 const WORDS_PER_MINUTE = 275; // mirrors lib/reading-time.ts (Ghost's convention)
 
