@@ -1,0 +1,2360 @@
+/* /23 — a birthday page.
+   One stylesheet for one small world: a soft-focus evening sky, a red rubber
+   ball, and a dial you can spin until the page goes dizzy. Everything is
+   scoped to .t23, plus the canvas rules below, which only match while the
+   page is mounted. Colors are OKLCH tokens; restyle through them. */
+
+/* ---------- tokens ---------- */
+
+/* Late afternoon, a little overexposed. Defined on the root (not .t23) so the
+   canvas behind the page can share the sky. */
+:root:has(.t23) {
+  --t23-sky-1: oklch(0.815 0.075 278);
+  --t23-sky-2: oklch(0.855 0.065 312);
+  --t23-sky-3: oklch(0.885 0.062 350);
+  --t23-sky-4: oklch(0.895 0.075 55);
+  --t23-sun-core: oklch(0.97 0.05 95);
+  --t23-sun-mid: oklch(0.905 0.1 62);
+  --t23-ink: oklch(0.29 0.075 295);
+  --t23-ink-soft: oklch(0.4 0.075 298);
+  --t23-red: oklch(0.63 0.225 27);
+  --t23-red-hi: oklch(0.76 0.16 35);
+  --t23-red-lo: oklch(0.5 0.19 22);
+  /* The two "double vision" ghosts, as bare L C H so their alpha can track
+     how dizzy the page is. */
+  --t23-ghost-warm: 0.63 0.225 27;
+  --t23-ghost-cool: 0.62 0.14 255;
+  --t23-grain: 0.42;
+  /* The now-playing scrim, as bare L C H; the print paper and its ink. */
+  --t23-scrim: 0.17 0.04 300;
+  --t23-paper: oklch(0.985 0.008 80);
+  --t23-paper-ink: oklch(0.29 0.075 295);
+  /* Release cards: lightness and chroma; each card brings its own hue. */
+  --t23-accent-text: oklch(0.5 0.19 22);
+}
+:root.dark:has(.t23) {
+  --t23-paper: oklch(0.97 0.01 80);
+  /* Lime goes olive in the dark; it turns mint instead. */
+  --t23-accent-text: oklch(0.8 0.14 38);
+}
+
+/* After midnight: the same sky once the sun is under the horizon. */
+:root.dark:has(.t23) {
+  --t23-sky-1: oklch(0.195 0.05 280);
+  --t23-sky-2: oklch(0.235 0.07 302);
+  --t23-sky-3: oklch(0.27 0.085 325);
+  --t23-sky-4: oklch(0.31 0.095 348);
+  --t23-sun-core: oklch(0.6 0.15 50);
+  --t23-sun-mid: oklch(0.44 0.135 12);
+  --t23-ink: oklch(0.95 0.025 85);
+  --t23-ink-soft: oklch(0.85 0.04 70);
+  --t23-red: oklch(0.66 0.215 27);
+  --t23-red-hi: oklch(0.8 0.14 38);
+  --t23-red-lo: oklch(0.5 0.19 22);
+  --t23-ghost-warm: 0.66 0.215 27;
+  --t23-ghost-cool: 0.72 0.12 250;
+  --t23-grain: 0.36;
+}
+
+/* NewJeans: data-look="newjeans" on the page root (page.tsx). Their colours
+   rather than their assets: faded-denim ink on a clear sky-blue day (or a
+   dark-denim night), a bubblegum-pink ball where the red one was, and a
+   camcorder viewfinder over the flipbook. Remove the attribute to go back
+   to the evening sky. */
+:root:has(.t23[data-look="newjeans"]) {
+  /* The palette: indigo, lavender mist and periwinkle, plus five bright
+     colours, each with a pastel. */
+  --nj-indigo: #3a4496;
+  --nj-mist: #cccedf;
+  --nj-periwinkle: #7983d6;
+  --nj-blue: #2890ff;
+  --nj-pink: #f065cc;
+  --nj-yellow: #fde441;
+  --nj-green: #48da75;
+  --nj-purple: #ba4ce1;
+  --nj-blue-50: #c7e2ff;
+  --nj-pink-50: #f8d3ef;
+  --nj-yellow-50: #fff6d1;
+  --nj-green-50: #d3f5df;
+  --nj-purple-50: #ebcff7;
+
+  --t23-sky-1: #9ea6e6;
+  --t23-sky-2: #b3b8e6;
+  --t23-sky-3: var(--nj-mist);
+  --t23-sky-4: #e4e5ef;
+  --t23-sun-core: #f6f6fb;
+  --t23-sun-mid: #c3c7ec;
+  --t23-ink: var(--nj-indigo);
+  --t23-ink-soft: #5a63b0;
+  --t23-red: var(--nj-pink);
+  --t23-red-hi: #f9b8e8;
+  --t23-red-lo: #c93fa6;
+  --t23-ghost-warm: 0.7 0.2 340;
+  --t23-ghost-cool: 0.62 0.11 278;
+  --t23-grain: 0.34;
+  --t23-scrim: 0.25 0.09 276;
+  --t23-paper: #f6f6fb;
+  --t23-paper-ink: var(--nj-indigo);
+  --t23-accent-text: #c2389f;
+}
+:root.dark:has(.t23[data-look="newjeans"]) {
+  --t23-sky-1: #1b2157;
+  --t23-sky-2: #232a6a;
+  --t23-sky-3: #2c347d;
+  --t23-sky-4: var(--nj-indigo);
+  --t23-sun-core: var(--nj-periwinkle);
+  --t23-sun-mid: #4b55a8;
+  --t23-ink: #eef0fb;
+  --t23-ink-soft: var(--nj-mist);
+  --t23-red: var(--nj-pink);
+  --t23-red-hi: #f9b8e8;
+  --t23-red-lo: #c93fa6;
+  --t23-ghost-warm: 0.7 0.2 340;
+  --t23-ghost-cool: 0.68 0.11 278;
+  --t23-grain: 0.3;
+  --t23-scrim: 0.2 0.08 276;
+  --t23-accent-text: #f9b8e8;
+}
+
+/* The canvas shows through on overscroll and in the scrollbar gutter, so it
+   wears the nearest end of the sky. spin.tsx sets data-t23-low once the
+   reader is past the midpoint of the page. */
+html:has(.t23) body {
+  background-color: var(--t23-sky-1);
+}
+html[data-t23-low]:has(.t23) body {
+  /* The bottom of the page is the ending's dark sheet (below). */
+  background-color: #2a2319;
+}
+
+/* ---------- page ---------- */
+
+.t23 {
+  --t23-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  isolation: isolate;
+  flex: 1 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  overflow: clip;
+  color: var(--t23-ink);
+  font-family: var(--font-averia), "Iowan Old Style", Georgia, serif;
+  font-weight: 400;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+.t23 ::selection {
+  background-color: color-mix(in oklch, var(--t23-red) 30%, transparent);
+}
+
+/* The sky: one long gradient, cool at the top and warm where the sun sits,
+   with a little film grain so the blend never bands. */
+.t23-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    to bottom,
+    var(--t23-sky-1),
+    var(--t23-sky-2) 34%,
+    var(--t23-sky-3) 66%,
+    var(--t23-sky-4)
+  );
+  background-image: linear-gradient(
+    to bottom in oklch,
+    var(--t23-sky-1),
+    var(--t23-sky-2) 34%,
+    var(--t23-sky-3) 66%,
+    var(--t23-sky-4)
+  );
+}
+.t23-sky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.35' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1.5 0 0 0 -0.25 1.5 0 0 0 -0.25 1.5 0 0 0 -0.25 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  mix-blend-mode: soft-light;
+  opacity: var(--t23-grain);
+}
+
+.t23-page {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 44rem;
+  margin-inline: auto;
+  padding-inline: max(1.5rem, env(safe-area-inset-left))
+    max(1.5rem, env(safe-area-inset-right));
+}
+
+/* ---------- paper bands ---------- */
+
+/* The middle of the letter (recall to "coming soon") and its ending sit on
+   sheets of light paper laid over the sky, edge to edge, each with rounded
+   top corners like a page of a NewJeans-style zine: the middle one pale
+   with soft sky-blue pinstripes, the last one plain. Whatever the theme,
+   they are light, so they carry the light palette inside. */
+.t23-band {
+  --t23-ink: var(--nj-indigo);
+  --t23-ink-soft: #5a63b0;
+  --t23-accent-text: #c2389f;
+  --t23-red: var(--nj-pink);
+  --t23-red-hi: #f9b8e8;
+  --t23-red-lo: #c93fa6;
+  --t23-sun-core: #f6f6fb;
+  --t23-sun-mid: #c3c7ec;
+  --t23-paper: #f6f6fb;
+  --band-pad: max(1.5rem, calc(50vw - 20.5rem));
+  position: relative;
+  display: grid;
+  gap: clamp(3.5rem, 12vh, 6.5rem);
+  margin-inline: calc(50% - 50vw);
+  padding: clamp(3.5rem, 10vh, 6rem) var(--band-pad);
+  border-radius: 1.75rem 1.75rem 0 0;
+  color: var(--t23-ink);
+  box-shadow: 0 -1rem 2.5rem -1.5rem oklch(0.15 0.05 260 / 0.45);
+}
+/* The recall and her EPs: an album-poster sheet in the Freudian colour
+   scheme. Cream paper, dark-brown ink, a slate-grey second ink and the
+   sky blue for the accent (deepened so it reads as text), with the
+   poster's row of five swatches in the top corner. */
+.t23-band--paper {
+  --dc-sky: #92b8c0;
+  --dc-sand: #d5c7ac;
+  --dc-taupe: #9d8e7a;
+  --dc-slate: #535056;
+  --dc-brown: #433a2d;
+  /* Dark sheet in the poster's brown shading into its slate, with its
+     sand for the type and its sky for the accent: easy on the eyes after
+     the indigo, and still the poster's colours. */
+  --t23-ink: var(--dc-sand);
+  --t23-ink-soft: #bfb19a;
+  --t23-accent-text: var(--dc-sky);
+  background-color: var(--dc-brown);
+  background-image: linear-gradient(
+    to bottom,
+    #3d3529,
+    var(--dc-brown) 45%,
+    #48464b
+  );
+}
+/* Dark sheet: shadows go dark, and the brown and slate swatches get a
+   hairline so they show. */
+.t23-band--paper .t23-pc-face {
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.18),
+    0 1.5rem 3rem -1.25rem rgb(0 0 0 / 0.65);
+}
+.t23-band--paper::before {
+  filter: drop-shadow(0 0 0.6px rgb(213 199 172 / 0.7));
+}
+/* Each section carries its colour scheme as a row of five swatches in its
+   top corner, like the palette strip on an album poster. Each section sets
+   --sw1 … --sw5; swatches that would vanish into the background get a thin
+   outline. */
+.t23-band::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: clamp(1.75rem, 5vh, 2.5rem);
+  right: var(--band-pad);
+  width: 7.5rem;
+  height: 1.1rem;
+  background-image: linear-gradient(
+    90deg,
+    var(--sw1) 0 17%,
+    transparent 17% 20.75%,
+    var(--sw2) 20.75% 37.75%,
+    transparent 37.75% 41.5%,
+    var(--sw3) 41.5% 58.5%,
+    transparent 58.5% 62.25%,
+    var(--sw4) 62.25% 79.25%,
+    transparent 79.25% 83%,
+    var(--sw5) 83%
+  );
+}
+/* Freudian. */
+.t23-band--paper {
+  --sw1: var(--dc-sky);
+  --sw2: var(--dc-sand);
+  --sw3: var(--dc-taupe);
+  --sw4: var(--dc-slate);
+  --sw5: var(--dc-brown);
+}
+/* The three albums' colours, for any sheet. */
+.t23-band {
+  --pv-teal: #365556;
+  --pv-slate: #4d676a;
+  --pv-grey: #716a64;
+  --pv-rose: #9a7264;
+  --pv-terracotta: #c4816b;
+}
+/* Section 3, the reminder: Turnover's Peripheral Vision cover (the album
+   the song is from): deep teal, slate teal, warm grey, dusty rose,
+   terracotta. */
+.t23-band--reminder {
+  --sw1: var(--pv-teal);
+  --sw2: var(--pv-slate);
+  --sw3: var(--pv-grey);
+  --sw4: var(--pv-rose);
+  --sw5: var(--pv-terracotta);
+}
+/* Its teal swatches sit on teal: a hairline outline keeps them visible. */
+.t23-band--reminder::before {
+  filter: drop-shadow(0 0 0.6px rgb(241 223 212 / 0.75));
+}
+/* Section 4, the ending: where the three meet. Each one's dominant colour
+   and its accent, six swatches: NewJeans indigo and pink, Freudian sky and
+   brown, Peripheral Vision teal and terracotta. The dark ones sit on a dark
+   sheet, so the row gets a hairline outline. */
+.t23-band--light::before {
+  width: 9.2rem;
+  background-image: linear-gradient(
+    90deg,
+    var(--nj-indigo) 0 14%,
+    transparent 14% 17.2%,
+    var(--nj-pink) 17.2% 31.2%,
+    transparent 31.2% 34.4%,
+    #92b8c0 34.4% 48.4%,
+    transparent 48.4% 51.6%,
+    #433a2d 51.6% 65.6%,
+    transparent 65.6% 68.8%,
+    var(--pv-teal) 68.8% 82.8%,
+    transparent 82.8% 86%,
+    var(--pv-terracotta) 86%
+  );
+  filter: drop-shadow(0 0 0.6px rgb(246 246 251 / 0.7));
+}
+/* ---------- each section's contents in its own palette ---------- */
+
+/* Recall (Freudian): ink brown and slate; the pink of the rest of the page
+   (signatures, balls, the pushpin) becomes the poster's sky; doodles are
+   sky, sand and taupe; the card backs are pale washes of the five. */
+.t23-band--paper {
+  --t23-red: #92b8c0;
+  --t23-red-hi: #cfe2e6;
+  --t23-red-lo: #5f8c96;
+  --pc-ink: var(--dc-brown);
+  --pc-grid: rgb(67 58 45 / 0.08);
+  --dd-pink: #92b8c0;
+  --dd-lime: #d5c7ac;
+  --dd-sky: #cfe2e6;
+  --dd-white: #e9e1d0;
+  --ddp-pink: #5f8c96;
+  --ddp-sky: #9d8e7a;
+}
+.t23-band--paper .t23-pc-back,
+.t23-band--paper .t23-pc[data-tint] .t23-pc-back {
+  background-color: #ece3d1;
+}
+.t23-band--paper .t23-pc[data-tint="sky"] .t23-pc-back {
+  background-color: #dce9ec;
+}
+.t23-band--paper .t23-pc[data-tint="lilac"] .t23-pc-back {
+  background-color: #e4ddd2;
+}
+.t23-band--paper .t23-pc[data-tint="lime"] .t23-pc-back {
+  background-color: #dfdde2;
+}
+.t23-band--paper .t23-pc-set {
+  color: var(--dc-taupe);
+}
+.t23-band--paper .t23-pc-sign {
+  text-shadow:
+    0 0 1px #f4efe4,
+    0 0 2px #f4efe4,
+    0 2px 6px rgb(0 0 0 / 0.25);
+}
+/* The sticky note: sand paper, brown ink, a sky pin. */
+.t23-band--paper .t23-release-more {
+  background-color: #e6dcc6;
+  color: var(--dc-brown);
+}
+
+/* Reminder (Turnover): doodles and signature in the cover's sunlit
+   peach and terracotta, a pale teal; captions in teal. */
+.t23-band--reminder {
+  --t23-red: var(--pv-terracotta);
+  --t23-red-hi: #edc3b2;
+  --t23-red-lo: #8f5444;
+  --pc-ink: var(--pv-teal);
+  --pc-grid: rgb(54 85 86 / 0.1);
+  --dd-pink: #e2a48c;
+  --dd-lime: #f1dfd4;
+  --dd-sky: #9fc0c1;
+  --dd-white: #f1dfd4;
+  --ddp-pink: var(--pv-terracotta);
+  --ddp-sky: var(--pv-teal);
+}
+
+/* The ending: her interests and mine in one place. A dark sheet that
+   shades from NewJeans' indigo through Peripheral Vision's teal into
+   Freudian's brown, each taken down to night; light type; the closing line
+   runs through the three accents (pink, sky, terracotta); the dial's ball
+   is pink turning terracotta. */
+.t23-band--light {
+  --t23-ink: #efeaf0;
+  --t23-ink-soft: #c9c4cf;
+  --t23-accent-text: var(--nj-pink);
+  --t23-red: var(--nj-pink);
+  --t23-red-hi: #f9b8e8;
+  --t23-red-lo: var(--pv-terracotta);
+  box-shadow: 0 -1rem 2.5rem -1.5rem rgb(10 12 20 / 0.6);
+}
+.t23-band--light .t23-closing {
+  background-image: linear-gradient(
+    90deg,
+    var(--nj-pink),
+    #92b8c0 55%,
+    var(--pv-terracotta)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.t23-band--light .t23-numeral {
+  color: #f6f6fb;
+}
+.t23-band--light .t23-ring {
+  color: #92b8c0;
+}
+
+/* The top: NewJeans white, mist and periwinkle on indigo, pink accents. */
+:root.dark .t23 {
+  --t23-ink: #f6f6fb;
+}
+@media (max-width: 43.99rem) {
+  .t23 .t23-np {
+    --np-ink: #f6f6fb;
+    --np-soft: var(--nj-mist);
+    --np-faint: rgb(204 206 223 / 0.3);
+  }
+}
+
+/* The indigo top: NewJeans' indigo-side colours and their pink, on the
+   kicker's line ("DEBUT · 23 NOVEMBER"), pushed to the right. Their indigo
+   itself would vanish on the indigo, so their white stands in for it. */
+.t23-hero .t23-kicker {
+  --sw1: var(--nj-mist);
+  --sw2: var(--nj-periwinkle);
+  --sw3: var(--nj-pink);
+  --sw4: var(--nj-pink-50);
+  --sw5: #f6f6fb;
+  display: flex;
+  align-items: center;
+}
+.t23-hero .t23-kicker::after {
+  content: "";
+  flex: none;
+  width: 7.5rem;
+  height: 1.1rem;
+  margin-left: auto;
+  background-image: linear-gradient(
+    90deg,
+    var(--sw1) 0 17%,
+    transparent 17% 20.75%,
+    var(--sw2) 20.75% 37.75%,
+    transparent 37.75% 41.5%,
+    var(--sw3) 41.5% 58.5%,
+    transparent 58.5% 62.25%,
+    var(--sw4) 62.25% 79.25%,
+    transparent 79.25% 83%,
+    var(--sw5) 83%
+  );
+}
+
+.t23-band--paper .t23-recall-pink {
+  color: var(--t23-accent-text);
+}
+
+/* The Kina "reminder" (Turnover): the cover's teal, with its sunlit
+   peach for the type. The card back is a warm peach paper with a teal grid. */
+.t23-band--reminder {
+  --t23-ink: #f1dfd4;
+  --t23-ink-soft: #d9b8a8;
+  background-image: linear-gradient(
+    to bottom,
+    var(--pv-slate),
+    var(--pv-teal) 60%
+  );
+}
+.t23-band--reminder .t23-shelf-head svg {
+  color: var(--pv-terracotta);
+}
+.t23-band--reminder .t23-pc-back {
+  background-color: #f1e3da;
+}
+.t23-band--reminder .t23-pc-set {
+  color: var(--pv-grey);
+}
+.t23-band--reminder .t23-pc-flip {
+  border-color: rgb(241 223 212 / 0.3);
+}
+
+/* Sheets one after another overlap a little, with no gap between them. */
+.t23-band + .t23-band {
+  margin-top: calc(-1 * var(--letter-gap) - 1.75rem);
+}
+.t23-band--light {
+  /* Laid over the end of the striped sheet, and running to the very bottom
+     of the page (the page's own bottom padding moves in here). */
+  margin-top: -1.75rem;
+  padding-bottom: 8rem;
+  background-color: #1f2a33;
+  background-image: linear-gradient(to bottom, #1c2152, #1d3436 50%, #2a2319);
+}
+.t23-page:has(.t23-band--light) {
+  padding-bottom: 0;
+}
+/* The letter's own gap sits above the striped sheet; inside, the sheet
+   keeps the same rhythm. */
+.t23-band .t23-recall-pink {
+  color: var(--t23-accent-text);
+}
+
+/* ---------- hero ---------- */
+
+.t23-hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  /* Room above the title for the ball to fall through, without leaving
+     half a screen of nothing after the now-playing screen. */
+  min-height: clamp(16rem, 44vh, 34rem);
+  min-height: clamp(16rem, 44svh, 34rem);
+}
+
+.t23-kicker {
+  margin-bottom: 0.85em;
+  font-size: clamp(1.0625rem, 0.95rem + 0.5vw, 1.25rem);
+  font-style: italic;
+  color: var(--t23-ink-soft);
+  animation: t23-arrive 1.1s var(--t23-ease) 0.15s both;
+}
+
+.t23-title {
+  font-size: clamp(3.25rem, 15.5vw, 8.25rem);
+  font-style: italic;
+  font-weight: 300;
+  line-height: 0.88;
+  letter-spacing: -0.035em;
+}
+.t23-line {
+  display: block;
+  white-space: nowrap;
+}
+.t23-line--in {
+  margin-inline-start: clamp(0rem, 9vw, 0.62em);
+}
+.t23-word {
+  display: inline-block;
+  animation: t23-arrive 1.3s var(--t23-ease) calc(0.3s + var(--i, 0) * 0.18s)
+    both;
+}
+
+/* ---------- the red rubber ball ---------- */
+
+.t23-ball {
+  display: block;
+  border-radius: 50%;
+  background-image: radial-gradient(
+    circle at 34% 30%,
+    var(--t23-red-hi) 0%,
+    var(--t23-red) 48%,
+    var(--t23-red-lo) 100%
+  );
+  box-shadow: 0 0.1em 0.3em
+    color-mix(in oklch, var(--t23-red-lo) 30%, transparent);
+}
+
+/* In the title it is the full stop: it falls out of the sky, bounces three
+   times and stays put. */
+.t23-ball--stop {
+  display: inline-block;
+  width: 0.17em;
+  height: 0.17em;
+  margin-inline-start: 0.07em;
+  vertical-align: baseline;
+  transform-origin: 50% 100%;
+  animation: t23-drop 2.6s linear 1.25s both;
+}
+
+/* Until the intro has gone, the title waits where it is (paused at frame 0,
+   so it hasn't arrived yet), then plays from the start. */
+.t23[data-intro] .t23-kicker,
+.t23[data-intro] .t23-word,
+.t23[data-intro] .t23-ball--stop,
+.t23[data-reveal-ready] [data-cue]:not([data-shown]) .t23-kicker,
+.t23[data-reveal-ready] [data-cue]:not([data-shown]) .t23-word,
+.t23[data-reveal-ready] [data-cue]:not([data-shown]) .t23-ball--stop {
+  animation-play-state: paused;
+}
+/* Paused at its first frame, the ball hangs high above the title, over the
+   now-playing screen; keep it out of sight until it falls. */
+.t23[data-reveal-ready] [data-cue]:not([data-shown]) .t23-ball--stop {
+  visibility: hidden;
+}
+
+/* ---------- the letter ---------- */
+
+.t23-letter {
+  --letter-gap: clamp(3.5rem, 12vh, 6.5rem);
+  display: grid;
+  gap: var(--letter-gap);
+  margin-top: clamp(3rem, 10vh, 5.5rem);
+  font-size: clamp(1.1875rem, 1.05rem + 0.7vw, 1.4375rem);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.t23-prose {
+  display: grid;
+  gap: 1.15em;
+  max-width: 36ch;
+}
+
+/* Scroll-driven unfolding; only once reveal.tsx is running. */
+.t23[data-reveal-ready] [data-reveal] {
+  transition:
+    opacity 1.1s var(--t23-ease),
+    filter 1.1s var(--t23-ease),
+    translate 1.1s var(--t23-ease);
+}
+.t23[data-reveal-ready] [data-reveal]:not([data-shown]) {
+  opacity: 0;
+  filter: blur(10px);
+  translate: 0 1.25rem;
+}
+
+/* ---------- her artist page ---------- */
+
+/* Small labels and shelf headings, the way a music app heads its rows. */
+.t23-label {
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--t23-ink-soft);
+}
+.t23-shelf-head {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-bottom: 1rem;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.t23-chevron {
+  flex: none;
+  width: 1.35rem;
+  height: 1.35rem;
+  fill: none;
+  stroke: var(--t23-ink-soft);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.t23-bio {
+  display: grid;
+  gap: 1rem;
+}
+
+/* The recall line: its own section, set exactly like the "happy birthday"
+   title, with the end of the question in pink. */
+.t23-recall {
+  /* Broken into set lines like the title (page.tsx), a little smaller so
+     the longest of them still fits a phone. */
+  font-size: clamp(2.75rem, 12.5vw, 5.75rem);
+  font-style: italic;
+  font-weight: 300;
+  line-height: 0.88;
+  letter-spacing: -0.035em;
+}
+.t23-recall-pink {
+  color: var(--t23-accent-text);
+}
+
+/* Liner notes: the longer story of each EP, under the card row. */
+.t23-liner {
+  margin-top: 2.5rem;
+}
+.t23-liner-list {
+  display: grid;
+  gap: 2rem;
+  margin-top: 1.25rem;
+  font-size: 0.95em;
+  line-height: 1.6;
+}
+.t23-liner-kind {
+  margin-bottom: 0.4rem;
+  font-family: var(--font-roboto-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--t23-accent-text);
+}
+/* The b-side paragraphs and the notes under the Kina card and before the
+   closing line. */
+.t23-release-more,
+.t23-note {
+  display: grid;
+  gap: 1rem;
+  max-width: 36rem;
+  font-size: 0.95em;
+  line-height: 1.6;
+}
+/* The b-side side note: a sticky note pinned to the sheet, a little
+   crooked, with a pink pushpin at the top. */
+.t23-release-more {
+  position: relative;
+  width: min(100%, 30rem);
+  margin: 3.5rem auto 0.5rem;
+  padding: 2.1rem 1.5rem 1.6rem;
+  rotate: -1.5deg;
+  font-size: 0.88em;
+  line-height: 1.55;
+  color: #4a4030;
+  background-color: #fbf0b8;
+  background-image: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0.035),
+    transparent 1.4rem
+  );
+  /* Lifted at the bottom corners, the way a paper note curls. */
+  box-shadow:
+    0 1px 1px rgb(67 58 45 / 0.12),
+    0 0.9rem 1.4rem -0.8rem rgb(67 58 45 / 0.45);
+  border-radius: 2px 2px 6px 6px / 2px 2px 14px 14px;
+}
+/* The pushpin: a pink head with a small shadow where it meets the paper. */
+.t23-release-more::before {
+  content: "";
+  position: absolute;
+  top: -0.55rem;
+  left: 50%;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-left: -0.675rem;
+  border-radius: 50%;
+  background-image: radial-gradient(
+    circle at 34% 30%,
+    var(--t23-red-hi),
+    var(--t23-red) 50%,
+    var(--t23-red-lo) 100%
+  );
+  box-shadow:
+    0.15rem 0.3rem 0.35rem rgb(67 58 45 / 0.4),
+    inset -0.1rem -0.15rem 0.2rem rgb(0 0 0 / 0.15);
+}
+.t23-release-more::after {
+  content: "";
+  position: absolute;
+  top: 0.55rem;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.3rem;
+  margin-left: -0.05rem;
+  border-radius: 50%;
+  background: rgb(67 58 45 / 0.25);
+  filter: blur(1px);
+}
+.t23-note {
+  margin-top: 2rem;
+}
+/* The ending sits outside the letter, so it takes the letter's size here. */
+.t23-band--light .t23-note {
+  margin-top: 0;
+  font-size: calc(0.95 * clamp(1.1875rem, 1.05rem + 0.7vw, 1.4375rem));
+}
+
+/* ---------- the photocard ---------- */
+
+/* A K-pop album's photocard: 55 × 85, rounded corners, a holographic foil.
+   It sits a little tilted, like it just fell out of the album. */
+.t23-pc-wrap {
+  display: grid;
+  justify-items: center;
+  gap: 1.1rem;
+  padding-block: 0.5rem 0.25rem;
+  perspective: 1400px;
+}
+.t23-pc {
+  --mx: 30%;
+  --my: 20%;
+  --rx: 0deg;
+  --ry: 0deg;
+  width: min(20rem, 76vw);
+  aspect-ratio: 55 / 85;
+  /* The lean toward a mouse lives here and follows quickly; the flip lives
+     on .t23-pc-inner and stays slow. */
+  transform: rotateZ(var(--tilt, -2.5deg)) rotateX(var(--rx)) rotateY(var(--ry));
+  transform-style: preserve-3d;
+  transition: transform 0.25s ease-out;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.t23-pc-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.9s var(--t23-ease);
+}
+.t23-pc[data-flipped] .t23-pc-inner {
+  transform: rotateY(180deg);
+}
+.t23-pc-face {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 0.9rem;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--t23-ink) 10%, transparent),
+    0 1.5rem 3rem -1.25rem color-mix(in oklch, var(--t23-ink) 55%, transparent);
+}
+.t23-pc-back {
+  transform: rotateY(180deg);
+}
+/* backface-visibility alone isn't enough: iOS Safari still draws a face's
+   animated or filtered children (doodles, signature, scribbles) through the
+   other side, mirrored. So each face is also switched off outright when the
+   card is edge-on: with this easing that's ~13% into the 0.9s turn. */
+.t23-pc-front,
+.t23-pc-back {
+  transition: visibility 0s linear 0.12s;
+}
+.t23-pc-back,
+.t23-pc[data-flipped] .t23-pc-front {
+  visibility: hidden;
+}
+.t23-pc[data-flipped] .t23-pc-back {
+  visibility: visible;
+}
+
+/* Her EPs, one photocard each, in a row she swipes sideways (like a shop's
+   product shelf). Each card snaps to the centre, one per swipe, with the
+   cards either side peeking in at the edges; the row runs out to the
+   window's edges for that. The scrollbar is hidden in every browser. */
+.t23-pc-list {
+  --pc-w: min(15.5rem, 60vw);
+  display: flex;
+  gap: 2rem;
+  /* Full window width, whatever the column (the page root clips the
+     overflow, so no sideways scrollbar). */
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  /* Side padding lets the first and last cards reach the centre too; the
+     top and bottom leave room for the tilt and the shadow. */
+  /* In vw, not %: a percentage here would be of the text column, not of
+     the row, and the first card would sit off centre. */
+  padding: 1.25rem calc(50vw - var(--pc-w) / 2) 1.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* old Edge */
+}
+/* The letter is a grid; without this the row would stretch the page to
+   its full width instead of scrolling. */
+.t23-releases:has(> .t23-pc-list) {
+  min-width: 0;
+}
+/* Mid-size screens: the row still scrolls, so cards fade out toward the
+   window's edges instead of being cut off. */
+@media (min-width: 44rem) and (max-width: 74.99rem) {
+  /* Starts in line with the text column (the page is 44rem wide, 1.5rem
+     side padding), and cards snap to that line rather than the centre, so
+     the row doesn't open with half a screen of nothing on the left. */
+  .t23-pc-list {
+    --col: max(1.5rem, calc(50vw - 20.5rem));
+    padding-inline: var(--col);
+    scroll-padding-inline: var(--col);
+  }
+  .t23-pc-list > li {
+    scroll-snap-align: start;
+  }
+  .t23-pc-list {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 12%,
+      #000 88%,
+      transparent
+    );
+  }
+}
+/* Wide screens: all four fit, so no scrolling, no fade, just a centred row. */
+@media (min-width: 75rem) {
+  .t23-pc-list {
+    justify-content: center;
+    padding-inline: 1.5rem;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+}
+.t23-pc-list::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+.t23-pc-list > li {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+.t23-pc-list .t23-pc {
+  width: var(--pc-w);
+}
+.t23-pc-list .t23-pc-back {
+  gap: 0.8rem;
+  padding: 1.2rem 1.1rem 1.1rem;
+}
+.t23-pc-list .t23-pc-title {
+  font-size: 1.15rem;
+}
+.t23-pc-list .t23-pc-text {
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.t23-pc-list .t23-pc-words {
+  font-size: 3.6rem;
+}
+
+/* Front: a yearbook print. The photo sits on cream paper with a serif
+   caption under it (the release in caps over a crayon scribble); doodles
+   and her signature are scribbled over the photo. */
+.t23-pc-front {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0.5rem 0;
+  background-color: oklch(0.965 0.018 85);
+}
+.t23-pc-photo {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 0.3rem;
+}
+.t23-pc-cap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0.45rem 0.35rem 0.6rem;
+  font-family: var(--font-yearbook), Georgia, serif;
+  line-height: 1.05;
+  color: var(--pc-ink, var(--nj-indigo, #3a4496));
+}
+.t23-pc-cap-mark {
+  position: relative;
+  isolation: isolate;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.t23-pc-cap-line {
+  position: absolute;
+  z-index: -1;
+  left: -6%;
+  bottom: -0.15em;
+  width: 112%;
+  height: 0.55em;
+}
+.t23-pc-img {
+  object-fit: cover;
+}
+.t23-pc-sign {
+  position: absolute;
+  left: 1rem;
+  bottom: 0.85rem;
+  font-family: var(--font-pen), cursive;
+  font-size: 2.75rem;
+  line-height: 1;
+  color: var(--t23-red);
+  rotate: -9deg;
+  /* A white edge, the way marker sits on a glossy print. */
+  text-shadow:
+    0 0 1px oklch(0.99 0.01 350),
+    0 0 2px oklch(0.99 0.01 350),
+    0 2px 6px oklch(0 0 0 / 0.25);
+}
+.t23-pc-sign[data-at="top"] {
+  top: 0.6rem;
+  bottom: auto;
+}
+/* A front set in type when there's no photo: big and round, pink into sky. */
+.t23-pc-words {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1.25rem;
+  background-image: linear-gradient(
+    165deg,
+    var(--t23-red-hi),
+    var(--t23-red) 50%,
+    oklch(0.72 0.12 245)
+  );
+  color: oklch(0.99 0.01 350);
+  font-size: clamp(3.5rem, 19vw, 5rem);
+  font-weight: 800;
+  line-height: 0.85;
+  letter-spacing: -0.06em;
+}
+.t23-pc-words > span:nth-child(2) {
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* ---------- yearbook doodles (doodles.tsx) ---------- */
+
+.t23-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+.t23-doodles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.t23-doodle {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  /* Sizes in copy.ts are a base; drawn a size up so they read as bold
+     crayon rather than fine line. */
+  width: calc(var(--s) * 1.3);
+  height: auto;
+  overflow: visible;
+  translate: -50% -50%;
+  rotate: var(--r);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: url(#t23-crayon);
+}
+.t23-doodle[data-fill] {
+  fill: currentColor;
+  fill-opacity: 0.85;
+}
+.t23-scribble {
+  display: block;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  filter: url(#t23-crayon);
+}
+/* Bright crayon over photos... */
+:is(.t23-doodle, .t23-scribble)[data-color="pink"] {
+  color: var(--dd-pink, var(--nj-pink));
+}
+:is(.t23-doodle, .t23-scribble)[data-color="lime"] {
+  color: var(--dd-lime, var(--nj-yellow));
+}
+:is(.t23-doodle, .t23-scribble)[data-color="sky"] {
+  color: var(--dd-sky, #6fb4ff);
+}
+:is(.t23-doodle, .t23-scribble)[data-color="white"] {
+  color: var(--dd-white, oklch(0.99 0.005 350));
+}
+/* ...and a deeper one on paper, so it still shows. */
+.t23-scribble[data-color="pink"]:is(.t23-pc-cap *, .t23-pc-back *) {
+  color: var(--ddp-pink, #e04fb8);
+}
+.t23-scribble[data-color="sky"]:is(.t23-pc-cap *, .t23-pc-back *) {
+  color: var(--ddp-sky, var(--nj-blue));
+}
+/* Animation, no library. When a card first comes into view (data-seen),
+   and again each time it turns back to its front, its doodles draw
+   themselves in one after another and the caption scribble follows; a
+   heart fills in once its outline is done. After that each doodle "boils"
+   (a tiny stepped wobble, like a hand-drawn cartoon redrawn every few
+   frames). Small and slow, nothing flashes. Off with reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .t23-doodle path,
+  .t23-scribble path {
+    stroke-dasharray: 1 1;
+  }
+  .t23-pc[data-seen]:not([data-flipped]) .t23-doodle path {
+    animation: t23-draw 0.55s cubic-bezier(0.6, 0, 0.3, 1)
+      calc(0.15s + var(--i, 0) * 0.14s) both;
+  }
+  .t23-pc[data-seen]:not([data-flipped]) .t23-doodle[data-fill] path {
+    animation:
+      t23-draw 0.55s cubic-bezier(0.6, 0, 0.3, 1)
+        calc(0.15s + var(--i, 0) * 0.14s) both,
+      t23-fill 0.3s ease-out calc(0.6s + var(--i, 0) * 0.14s) both;
+  }
+  .t23-pc[data-seen]:not([data-flipped]) .t23-pc-cap .t23-scribble path {
+    animation: t23-draw 0.5s cubic-bezier(0.6, 0, 0.3, 1) 0.75s both;
+  }
+  /* The back's title scribble, once the card has turned over. */
+  .t23-pc[data-flipped] .t23-pc-back .t23-scribble path {
+    animation: t23-draw 0.5s cubic-bezier(0.6, 0, 0.3, 1) 0.6s both;
+  }
+  .t23-pc[data-seen] .t23-doodle {
+    animation: t23-boil 1.2s steps(1) calc(var(--i, 0) * -0.3s) infinite;
+  }
+}
+@keyframes t23-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes t23-fill {
+  from {
+    fill-opacity: 0;
+  }
+}
+@keyframes t23-boil {
+  0% {
+    transform: none;
+  }
+  33% {
+    transform: rotate(3deg) scale(1.03);
+  }
+  66% {
+    transform: rotate(-2deg) scale(0.98);
+  }
+}
+
+.t23-pc-title-line {
+  width: 62%;
+  height: 0.45rem;
+  margin-top: 0.3rem;
+}
+
+/* Back: the message, on a pastel card back with a faint grid. */
+.t23-pc-back {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.4rem 1.3rem 1.3rem;
+  background-color: var(--nj-pink-50);
+  background-image:
+    linear-gradient(var(--pc-grid, rgb(58 68 150 / 0.06)) 1px, transparent 1px),
+    linear-gradient(
+      90deg,
+      var(--pc-grid, rgb(58 68 150 / 0.06)) 1px,
+      transparent 1px
+    );
+  background-size: 1.1rem 1.1rem;
+  color: var(--pc-ink, var(--nj-indigo, #3a4496));
+}
+.t23-pc[data-tint="sky"] .t23-pc-back {
+  background-color: var(--nj-blue-50);
+}
+.t23-pc[data-tint="lilac"] .t23-pc-back {
+  background-color: var(--nj-purple-50);
+}
+.t23-pc[data-tint="lime"] .t23-pc-back {
+  background-color: var(--nj-green-50);
+}
+.t23-pc-title {
+  margin-top: -0.25rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.t23-pc-set {
+  font-family: var(--font-roboto-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgb(58 68 150 / 0.7);
+}
+.t23-pc-text {
+  font-size: clamp(0.98rem, 4.3vw, 1.15rem);
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+.t23-pc-ball {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: auto;
+  align-self: flex-end;
+}
+
+/* The holographic foil: a soft rainbow sheen that follows a mouse, or
+   drifts slowly on its own on a touch screen. Low contrast and slow, so it
+   shimmers rather than flashes. */
+.t23-pc-foil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(
+      circle at var(--mx) var(--my),
+      oklch(1 0 0 / 0.35),
+      transparent 45%
+    ),
+    linear-gradient(
+      115deg,
+      transparent 20%,
+      oklch(0.9 0.1 350 / 0.35) 35%,
+      oklch(0.92 0.1 200 / 0.35) 45%,
+      oklch(0.95 0.1 110 / 0.3) 55%,
+      oklch(0.88 0.1 290 / 0.35) 65%,
+      transparent 80%
+    );
+  background-size:
+    100% 100%,
+    250% 250%;
+  background-position:
+    0 0,
+    var(--mx) var(--my);
+  mix-blend-mode: soft-light;
+}
+@media (hover: none) {
+  .t23-pc-foil {
+    animation: t23-foil 7s ease-in-out infinite alternate;
+  }
+}
+@keyframes t23-foil {
+  from {
+    background-position:
+      0 0,
+      0% 0%;
+  }
+  to {
+    background-position:
+      0 0,
+      100% 100%;
+  }
+}
+
+.t23-pc-flip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid color-mix(in oklch, var(--t23-ink) 18%, transparent);
+  border-radius: 999px;
+  background: none;
+  color: var(--t23-ink-soft);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.t23-pc-flip svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.t23-pc-flip:focus-visible {
+  outline: 2px solid var(--t23-ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t23-pc-inner {
+    transition-duration: 0.01s;
+  }
+  .t23-pc-front,
+  .t23-pc-back {
+    transition-delay: 0s;
+  }
+  .t23-pc-foil {
+    animation: none;
+  }
+}
+
+.t23-closing {
+  max-width: 18ch;
+  font-size: clamp(1.75rem, 1.2rem + 2.6vw, 2.6rem);
+  font-style: italic;
+  font-weight: 300;
+  line-height: 1.18;
+  text-wrap: balance;
+}
+
+/* ---------- the intro prompt ---------- */
+
+html:has(.t23-intro) {
+  overflow: hidden;
+}
+
+.t23-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  align-items: end;
+  padding: max(2rem, env(safe-area-inset-top))
+    max(1.5rem, env(safe-area-inset-right))
+    max(3.5rem, env(safe-area-inset-bottom))
+    max(1.5rem, env(safe-area-inset-left));
+  background-image: linear-gradient(
+    to bottom,
+    var(--t23-sky-1),
+    var(--t23-sky-2) 55%,
+    var(--t23-sky-3)
+  );
+  background-image: linear-gradient(
+    to bottom in oklch,
+    var(--t23-sky-1),
+    var(--t23-sky-2) 55%,
+    var(--t23-sky-3)
+  );
+  color: var(--t23-ink);
+  transition:
+    opacity 0.9s var(--t23-ease),
+    filter 0.9s var(--t23-ease);
+}
+.t23-intro[data-leaving] {
+  opacity: 0;
+  filter: blur(18px);
+  pointer-events: none;
+}
+
+.t23-intro-step {
+  outline: none;
+  width: 100%;
+  max-width: 40rem;
+  margin-inline: auto;
+}
+.t23-intro-step > * {
+  animation: t23-focus 1.1s var(--t23-ease) both;
+}
+.t23-intro-step > :nth-child(2) {
+  animation-delay: 0.22s;
+}
+.t23-intro-step > :nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+.t23-intro-title {
+  margin-bottom: 0.3em;
+  font-size: clamp(3.25rem, 16vw, 6.5rem);
+  font-style: italic;
+  font-weight: 300;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+.t23-intro-body {
+  max-width: 22ch;
+  font-size: clamp(1.5rem, 1.1rem + 2vw, 2.125rem);
+  font-style: italic;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.t23-intro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: clamp(2rem, 7vh, 3rem);
+}
+.t23-intro-btn {
+  min-height: 3rem;
+  padding: 0.7rem 1.5rem;
+  border: 1.5px solid var(--t23-ink);
+  border-radius: 999px;
+  background: var(--t23-ink);
+  color: var(--t23-sky-1);
+  font: inherit;
+  font-size: 1.125rem;
+  font-style: italic;
+  line-height: 1.2;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    scale 0.15s var(--t23-ease),
+    background-color 0.2s var(--t23-ease);
+}
+.t23-intro-btn--quiet {
+  background: transparent;
+  color: var(--t23-ink);
+}
+.t23-intro-btn:active {
+  scale: 0.96;
+}
+.t23-intro-btn:focus-visible {
+  outline: 2px solid var(--t23-red);
+  outline-offset: 3px;
+}
+
+/* The loading bar along the bottom of the intro: NewJeans' first-section
+   colours, a mist track, a periwinkle-to-pink fill and the pink ball
+   riding at its tip. It fades away once everything is in. */
+.t23-intro {
+  grid-template-rows: 1fr auto;
+}
+.t23-load {
+  width: 100%;
+  max-width: 40rem;
+  margin: clamp(2rem, 6vh, 3rem) auto 0;
+  transition: opacity 0.6s var(--t23-ease) 0.6s;
+}
+.t23-load[data-ready] {
+  opacity: 0;
+}
+.t23-load-track {
+  position: relative;
+  height: 0.375rem;
+  border-radius: 999px;
+  background-color: rgb(204 206 223 / 0.22);
+}
+.t23-load-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--p, 0) * 100%);
+  border-radius: inherit;
+  background-image: linear-gradient(
+    90deg,
+    var(--nj-periwinkle, #7983d6),
+    var(--t23-red)
+  );
+  transition: width 0.4s var(--t23-ease);
+}
+.t23-load-ball {
+  position: absolute;
+  top: 50%;
+  right: -0.55rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  translate: 0 -50%;
+  animation: t23-load-bob 1.2s ease-in-out infinite;
+}
+@keyframes t23-load-bob {
+  50% {
+    translate: 0 -80%;
+  }
+}
+.t23-load-text {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.85rem;
+  /* Room for two lines either way, so the words above never shift when
+     the message changes. */
+  min-height: calc(2 * 1.45em);
+  line-height: 1.45;
+  font-family: var(--font-roboto-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--t23-ink-soft);
+}
+.t23-load-pct {
+  font-variant-numeric: tabular-nums;
+}
+.t23-intro-btn:disabled {
+  opacity: 0.4;
+  cursor: progress;
+}
+@media (prefers-reduced-motion: reduce) {
+  .t23-load-ball {
+    animation: none;
+  }
+  .t23-load-fill {
+    transition: none;
+  }
+}
+
+/* ---------- now playing ---------- */
+
+/* On a phone: the photos are the whole screen, the controls sit over the
+   bottom of them on a dusk-coloured scrim, in light type whatever the theme. */
+.t23-np {
+  --np-ink: oklch(0.97 0.012 80);
+  --np-soft: oklch(0.97 0.012 80 / 0.66);
+  --np-faint: oklch(0.97 0.012 80 / 0.26);
+  --np-dusk: oklch(var(--t23-scrim));
+  position: relative;
+  display: grid;
+  align-items: end;
+  min-height: 100vh;
+  min-height: 100svh;
+  /* Out to the screen edges, past the page's side padding. */
+  margin-inline: calc(50% - 50vw);
+  overflow: hidden;
+  background-color: var(--np-dusk);
+  color: var(--np-ink);
+  /* On a phone the screen's dark scrim would end in a hard line against the
+     page; the last stretch fades out into it instead. Extra room at the
+     bottom keeps the controls clear of the fade. */
+  padding-bottom: 1.75rem;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent);
+}
+.t23-np-art {
+  position: absolute;
+  inset: 0;
+}
+.t23-np-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    to bottom,
+    oklch(var(--t23-scrim) / 0.35),
+    transparent 16%,
+    transparent 46%,
+    oklch(var(--t23-scrim) / 0.72) 72%,
+    oklch(var(--t23-scrim) / 0.94)
+  );
+}
+
+.t23-flip {
+  position: absolute;
+  inset: 0;
+}
+/* Out of layout until the intro's loader (preload.ts) has the photos, so
+   none of them is fetched while the intro is first painting. */
+.t23:not([data-photos]) .t23-flip {
+  display: none;
+}
+/* And unpainted while the intro covers it: it's revealed as the intro
+   starts to fade, so the first thing on screen stays the intro's words. */
+.t23:has(.t23-intro:not([data-leaving])) .t23-flip {
+  visibility: hidden;
+}
+.t23-flip-frame {
+  object-fit: cover;
+  opacity: 0;
+}
+.t23-flip-frame[data-on] {
+  opacity: 1;
+}
+
+/* The camcorder viewfinder over the flipbook (NewJeans look only): corner
+   brackets, a REC light and the date, in the way an old handycam burns them
+   into the tape. The REC light blinks once every two seconds while the song
+   plays, far under any flash threshold. */
+.t23-cam {
+  display: none;
+}
+.t23[data-look="newjeans"] .t23-cam {
+  --cam-ink: oklch(0.98 0.01 230 / 0.92);
+  position: absolute;
+  z-index: 1;
+  inset: max(1rem, env(safe-area-inset-top)) 1rem auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 0.95rem;
+  font-family: var(--font-roboto-mono), ui-monospace, monospace;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  color: var(--cam-ink);
+  text-shadow: 0 1px 2px oklch(0 0 0 / 0.45);
+  pointer-events: none;
+}
+/* Viewfinder brackets on the two top corners. */
+.t23[data-look="newjeans"] .t23-cam::before,
+.t23[data-look="newjeans"] .t23-cam::after {
+  content: "";
+  position: absolute;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid var(--cam-ink);
+}
+.t23[data-look="newjeans"] .t23-cam::before {
+  top: 0;
+  left: 0;
+  border-width: 2px 0 0 2px;
+}
+.t23[data-look="newjeans"] .t23-cam::after {
+  top: 0;
+  right: 0;
+  border-width: 2px 2px 0 0;
+}
+.t23-cam-rec {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+}
+.t23-cam-rec::before {
+  content: "";
+  width: 0.6em;
+  height: 0.6em;
+  border-radius: 50%;
+  background: oklch(0.66 0.22 27);
+  box-shadow: 0 0 0.5em oklch(0.66 0.22 27 / 0.7);
+}
+.t23-np[data-playing] .t23-cam-rec::before {
+  animation: t23-rec 2s steps(1, end) infinite;
+}
+@keyframes t23-rec {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+.t23-np-panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1.35rem;
+  width: 100%;
+  max-width: 30rem;
+  margin-inline: auto;
+  padding: 0 max(1.75rem, env(safe-area-inset-left))
+    max(1.25rem, env(safe-area-inset-bottom))
+    max(1.75rem, env(safe-area-inset-right));
+}
+
+.t23-np-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.t23-np-artist {
+  margin-top: 0.1rem;
+  font-size: 1.25rem;
+  font-style: italic;
+  color: var(--np-soft);
+}
+
+.t23-np .t23-np-seek {
+  --seek-h: 6px;
+  --seek-fill: var(--np-ink);
+  --seek-rest: var(--np-faint);
+  display: block;
+  width: 100%;
+  height: 1.25rem;
+}
+/* No thumb, like the bar on a phone's player; it shows while dragging. */
+.t23-np .t23-np-seek::-webkit-slider-thumb {
+  width: 0;
+  background: var(--np-ink);
+  transition: width 0.15s var(--t23-ease);
+}
+.t23-np .t23-np-seek:active::-webkit-slider-thumb {
+  width: 0.9rem;
+}
+.t23-np .t23-np-seek::-moz-range-thumb {
+  width: 0;
+  background: var(--np-ink);
+}
+.t23-np .t23-np-seek:focus-visible {
+  outline-color: var(--np-ink);
+}
+.t23-np-times {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--np-soft);
+}
+
+.t23-np-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2.5rem, 14vw, 3.5rem);
+}
+.t23-np-play .t23-song-ball {
+  width: 4.25rem;
+  height: 4.25rem;
+}
+.t23-np-play .t23-song-icon {
+  width: 1.9rem;
+  height: 1.9rem;
+}
+.t23-np-play:focus-visible {
+  outline-color: var(--np-ink);
+}
+.t23-np[data-playing] .t23-np-play .t23-song-ball {
+  animation: t23-breathe 2.4s ease-in-out infinite;
+}
+.t23-np-skip {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--np-ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: scale 0.2s var(--t23-ease);
+}
+.t23-np-skip:active {
+  scale: 0.88;
+}
+.t23-np-skip:focus-visible {
+  outline: 2px solid var(--np-ink);
+  outline-offset: 2px;
+}
+.t23-np-skip-icon {
+  width: 2.25rem;
+  height: 1.7rem;
+  fill: currentColor;
+}
+.t23-np-skip--ahead .t23-np-skip-icon {
+  scale: -1 1;
+}
+
+/* There's more below. */
+.t23-np-cue {
+  justify-self: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: -0.25rem;
+  fill: none;
+  stroke: var(--np-soft);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: t23-nudge 2.2s ease-in-out infinite;
+}
+@keyframes t23-nudge {
+  50% {
+    translate: 0 0.3rem;
+  }
+}
+
+/* Wider screens: a square sleeve on the sky with the controls under it, in
+   the page's own ink. Paused, the sleeve settles back a little. */
+@media (min-width: 44rem) {
+  .t23-np {
+    --np-ink: var(--t23-ink);
+    --np-soft: var(--t23-ink-soft);
+    --np-faint: color-mix(in oklch, var(--t23-ink) 20%, transparent);
+    align-content: center;
+    justify-items: center;
+    gap: 2.25rem;
+    margin-inline: 0;
+    padding-block: 3rem;
+    background: none;
+    mask-image: none;
+  }
+  .t23-np-art {
+    position: relative;
+    inset: auto;
+    width: min(26rem, 52svh);
+    aspect-ratio: 1;
+    border-radius: 0.9rem;
+    overflow: hidden;
+    background-color: var(--np-dusk);
+    box-shadow:
+      0 1.75rem 3.5rem -1.25rem
+        color-mix(in oklch, var(--t23-ink) 45%, transparent),
+      0 0 0 1px color-mix(in oklch, var(--t23-ink) 8%, transparent);
+    scale: 0.86;
+    transition: scale 0.7s var(--t23-ease);
+  }
+  .t23-np[data-playing] .t23-np-art {
+    scale: 1;
+  }
+  .t23-np-art::after {
+    content: none;
+  }
+  .t23[data-look="newjeans"] .t23-cam {
+    inset: 0.75rem 0.75rem auto;
+    font-size: 0.75rem;
+  }
+  .t23-np-panel {
+    max-width: min(26rem, 52svh);
+    padding: 0;
+  }
+}
+
+/* ---------- the dock ---------- */
+
+/* Docked at the bottom once the intro is done; the page leaves room for it. */
+.t23-page {
+  padding-bottom: 7rem;
+}
+.t23-dock {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  padding: 0 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+  pointer-events: none;
+  transition:
+    opacity 0.8s var(--t23-ease) 0.5s,
+    translate 0.8s var(--t23-ease) 0.5s,
+    visibility 0s 0.5s;
+}
+.t23[data-intro] .t23-dock,
+.t23[data-np-in] .t23-dock {
+  opacity: 0;
+  translate: 0 1.5rem;
+  /* Hidden for keyboards too, once it has faded. */
+  visibility: hidden;
+  transition:
+    opacity 0.4s var(--t23-ease),
+    translate 0.4s var(--t23-ease),
+    visibility 0s 0.4s;
+}
+/* Liquid glass, the way iOS draws its floating bars: mostly clear, the page
+   blurred and a little more saturated behind it, a faint tint so the type
+   still reads over a light card, a bright rim along the top edge and a
+   softer one along the bottom. It takes on whichever section it floats
+   over. Light type always, since it always floats over something. */
+.t23-dock {
+  --t23-ink: #f6f6fb;
+  --t23-ink-soft: rgb(246 246 251 / 0.72);
+}
+.t23-dock .t23-song {
+  width: 100%;
+  max-width: 26rem;
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 999px;
+  background-color: rgb(18 20 34 / 0.28);
+  background-image: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.14),
+    rgb(255 255 255 / 0.03) 55%,
+    rgb(255 255 255 / 0.07)
+  );
+  -webkit-backdrop-filter: blur(18px) saturate(1.8);
+  backdrop-filter: blur(18px) saturate(1.8);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    inset 0 -1px 0 rgb(255 255 255 / 0.1),
+    0 0.75rem 2rem -0.75rem rgb(0 0 0 / 0.45);
+  pointer-events: auto;
+}
+.t23[data-intro] .t23-dock .t23-song,
+.t23[data-np-in] .t23-dock .t23-song {
+  pointer-events: none;
+}
+
+/* ---------- the song ---------- */
+
+.t23-song {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.t23-song-play {
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.t23-song-play:focus-visible {
+  outline: 2px solid var(--t23-ink);
+  outline-offset: 4px;
+}
+.t23-song-ball {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  transition: scale 0.2s var(--t23-ease);
+}
+.t23-song-play:active .t23-song-ball {
+  scale: 0.92;
+}
+/* While the song plays, the ball breathes. */
+.t23-song[data-playing] .t23-song-ball {
+  animation: t23-breathe 2.4s ease-in-out infinite;
+}
+.t23-song-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: oklch(0.98 0.015 60);
+}
+
+.t23-song-body {
+  flex: 1;
+  min-width: 0;
+}
+.t23-song-title {
+  overflow: hidden;
+  font-size: 1rem;
+  font-style: italic;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.t23-song-artist {
+  margin-inline-start: 0.35em;
+  color: var(--t23-ink-soft);
+}
+
+.t23-song-track {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.1rem;
+}
+.t23-song-time {
+  flex: none;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--t23-ink-soft);
+}
+
+/* A hairline track that fills with red; the thumb is a small red ball. */
+.t23-song-seek {
+  flex: 1;
+  min-width: 0;
+  height: 1.5rem;
+  margin: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.t23-song-seek {
+  --seek-h: 2px;
+  --seek-fill: var(--t23-red);
+  --seek-rest: color-mix(in oklch, var(--t23-ink) 22%, transparent);
+}
+.t23-song-seek::-webkit-slider-runnable-track {
+  height: var(--seek-h);
+  border-radius: var(--seek-h);
+  background: linear-gradient(
+    to right,
+    var(--seek-fill) calc(var(--p, 0) * 100%),
+    var(--seek-rest) calc(var(--p, 0) * 100%)
+  );
+}
+.t23-song-seek::-moz-range-track {
+  height: var(--seek-h);
+  border-radius: var(--seek-h);
+  background: var(--seek-rest);
+}
+.t23-song-seek::-moz-range-progress {
+  height: var(--seek-h);
+  border-radius: var(--seek-h);
+  background: var(--seek-fill);
+}
+.t23-song-seek::-webkit-slider-thumb {
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-top: calc(var(--seek-h) / 2 - 0.4rem);
+  border: 0;
+  border-radius: 50%;
+  background: var(--t23-red);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.t23-song-seek::-moz-range-thumb {
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--t23-red);
+}
+.t23-song-seek:focus-visible {
+  outline: 2px solid var(--t23-ink);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@keyframes t23-breathe {
+  50% {
+    scale: 1.06;
+  }
+}
+
+/* "i know a guy.": a link to his WhatsApp, underlined in the ball's colour. */
+.t23-guy {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.22em;
+  text-decoration-color: var(--t23-red);
+  -webkit-tap-highlight-color: transparent;
+}
+.t23-guy:hover {
+  text-decoration-thickness: 2.5px;
+}
+.t23-guy:focus-visible {
+  outline: 2px solid var(--t23-ink);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ---------- the stage: sun, dial, and what comes after ---------- */
+
+.t23-stage {
+  --d: clamp(14.5rem, 66vw, 20rem);
+  --b: calc(var(--d) * 0.086);
+  --t23-stage-top: clamp(4.5rem, 15vh, 8.5rem);
+  position: relative;
+  display: grid;
+  justify-items: center;
+  padding-block: var(--t23-stage-top) clamp(5rem, 18vh, 9rem);
+}
+
+/* The low sun, centred on the dial. It sits behind the whole page (z-index
+   -1 inside .t23-page's stacking context), so the note above it stays crisp. */
+.t23-sun {
+  position: absolute;
+  top: calc(var(--t23-stage-top) + var(--d) / 2);
+  left: 50%;
+  z-index: -1;
+  width: min(200vw, 64rem);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  pointer-events: none;
+  background-image: radial-gradient(
+    closest-side,
+    var(--t23-sun-core) 0%,
+    var(--t23-sun-mid) 24%,
+    color-mix(in oklch, var(--t23-sun-mid) 46%, transparent) 50%,
+    transparent 100%
+  );
+}
+
+/* Dial and caption sway together while the page is dizzy. */
+.t23-swing {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  rotate: calc(var(--t23-sway, 0) * 1deg);
+  transform-origin: 50% calc(var(--d) / 2);
+}
+/* Only while it is actually swaying: its own layer, so the sky underneath
+   isn't repainted every frame. */
+.t23-stage[data-dizzy] .t23-swing {
+  will-change: transform;
+}
+
+.t23-dial {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--d);
+  height: var(--d);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.t23-dial:active {
+  cursor: grabbing;
+}
+.t23-dial:focus-visible {
+  outline: 2px solid var(--t23-ink);
+  outline-offset: calc(var(--b) * 0.9);
+}
+
+/* Everything that turns: the hairline orbit, the lettering, the ball. */
+.t23-orbit {
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in oklch, var(--t23-ink) 34%, transparent);
+  border-radius: 50%;
+  will-change: transform;
+}
+
+.t23-ring {
+  font-size: calc(var(--d) * 0.054);
+  font-style: italic;
+  color: var(--t23-ink);
+}
+.t23-ring span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2em;
+  margin: -0.5em 0 0 -1em;
+  line-height: 1;
+  text-align: center;
+  transform: rotate(var(--a)) translateY(calc(var(--d) * -0.405));
+}
+
+/* A comet tail behind the ball; spin.tsx sets its length, opacity and side. */
+.t23-trail {
+  position: absolute;
+  inset: calc(var(--b) * -0.36);
+  border-radius: 50%;
+  background-image: conic-gradient(
+    from 0turn,
+    transparent 0turn,
+    transparent calc(1turn - var(--t23-tail, 0turn)),
+    var(--t23-red) 1turn
+  );
+  -webkit-mask-image: radial-gradient(
+    closest-side,
+    transparent calc(100% - var(--b) * 0.72),
+    #000 calc(100% - var(--b) * 0.72 + 0.5px)
+  );
+  mask-image: radial-gradient(
+    closest-side,
+    transparent calc(100% - var(--b) * 0.72),
+    #000 calc(100% - var(--b) * 0.72 + 0.5px)
+  );
+  opacity: var(--t23-trail, 0);
+  transform: scaleX(var(--t23-dir, 1));
+  will-change: opacity;
+}
+
+.t23-ball--orbit {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--b);
+  height: var(--b);
+  margin: calc(var(--b) / -2) 0 0 calc(var(--b) / -2);
+  font-size: var(--b);
+}
+
+/* The numeral stays upright while everything orbits it. Dizzy = double
+   vision: a warm and a cool ghost drift apart, then settle back into one. */
+.t23-numeral {
+  position: relative;
+  margin-inline-end: 0.06em;
+  font-size: calc(var(--d) * 0.43);
+  font-style: italic;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  pointer-events: none;
+  text-shadow:
+    calc(var(--t23-dizzy, 0) * 0.17em) calc(var(--t23-dizzy, 0) * -0.02em) 0
+      oklch(var(--t23-ghost-warm) / calc(var(--t23-dizzy, 0) * 0.8)),
+    calc(var(--t23-dizzy, 0) * -0.17em) calc(var(--t23-dizzy, 0) * 0.02em) 0
+      oklch(var(--t23-ghost-cool) / calc(var(--t23-dizzy, 0) * 0.8));
+}
+
+/* Caption and the line that replaces it share one grid cell, so nothing
+   jumps when one hands over to the other. */
+.t23-after {
+  display: grid;
+  justify-items: center;
+  min-height: 6.5em;
+  margin-top: clamp(1.75rem, 5vh, 2.75rem);
+  font-size: clamp(1.1875rem, 1.05rem + 0.7vw, 1.4375rem);
+  text-align: center;
+}
+.t23-hint,
+.t23-secret {
+  grid-area: 1 / 1;
+}
+.t23-hint {
+  font-style: italic;
+  color: var(--t23-ink-soft);
+  transition:
+    opacity 0.6s var(--t23-ease),
+    visibility 0s linear 0.6s;
+}
+.t23-stage[data-phase="spinning"] .t23-hint,
+.t23-stage[data-phase="revealed"] .t23-hint {
+  opacity: 0;
+}
+.t23-stage[data-phase="revealed"] .t23-hint {
+  visibility: hidden;
+}
+
+.t23-secret {
+  display: grid;
+  gap: 0.55em;
+  max-width: 17em;
+  font-size: 1.22em;
+  font-style: italic;
+  font-weight: 300;
+  line-height: 1.28;
+  text-wrap: balance;
+  scroll-margin-block: 4.5rem;
+}
+.t23-secret span {
+  display: block;
+  animation: t23-focus 1.9s var(--t23-ease) calc(var(--i, 0) * 1.15s) both;
+}
+
+/* ---------- type: lokey.bio's own ---------- */
+
+/* data-type="lokey" on the page root (page.tsx) sets the page in the blog's
+   own faces instead of Averia: Inter (--font-sans) for the words and Roboto
+   Mono (--font-roboto-mono) for the small labels and numbers. Inter has no
+   italic loaded, so everything stands upright, and the display lines lean on
+   weight and tight tracking instead. Remove the attribute to go back. */
+.t23[data-type="lokey"] {
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+.t23[data-type="lokey"] *,
+.t23[data-type="lokey"] *::before,
+.t23[data-type="lokey"] *::after {
+  font-style: normal;
+}
+/* English words in the copy (rich.tsx) stay italic, as in the journal. */
+.t23[data-type="lokey"] em {
+  font-style: italic;
+}
+.t23[data-type="lokey"]
+  :is(.t23-title, .t23-numeral, .t23-intro-title, .t23-recall) {
+  font-weight: 650;
+  letter-spacing: -0.055em;
+}
+.t23[data-type="lokey"] .t23-title {
+  line-height: 0.92;
+}
+/* More lines than the title, so a little more air between them. */
+.t23[data-type="lokey"] .t23-recall {
+  line-height: 0.98;
+}
+.t23[data-type="lokey"] .t23-np-title {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.t23[data-type="lokey"] :is(.t23-closing, .t23-secret) {
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+.t23[data-type="lokey"] :is(.t23-prose, .t23-intro-body) {
+  letter-spacing: -0.01em;
+}
+.t23[data-type="lokey"]
+  :is(.t23-kicker, .t23-label, .t23-np-times, .t23-song-time, .t23-ring) {
+  font-family: var(--font-roboto-mono), ui-monospace, monospace;
+  letter-spacing: 0;
+}
+.t23[data-type="lokey"] .t23-kicker {
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ---------- motion ---------- */
+
+/* Type comes into focus rather than sliding in. */
+@keyframes t23-arrive {
+  from {
+    opacity: 0;
+    filter: blur(12px);
+    transform: translateY(0.16em);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+}
+
+/* Starts all but invisible rather than fully transparent: it looks the
+   same, but browsers count the intro's words as painted from the first
+   frame, which is what they are (page-speed metrics skip anything that
+   starts at opacity 0). */
+@keyframes t23-focus {
+  from {
+    opacity: 0.01;
+    filter: blur(14px);
+    transform: translateY(0.28em);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+}
+
+/* A real bounce: accelerate into each landing, decelerate out of it, squash
+   a little on contact, lose height every time. */
+/* It starts high but unseen and fades in as it falls, so it never shows up
+   floating over the player controls above the title. */
+@keyframes t23-drop {
+  0% {
+    transform: translateY(-85vh);
+    opacity: 0;
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  22% {
+    opacity: 1;
+  }
+  34% {
+    transform: translateY(0) scale(1.14, 0.84);
+    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
+  }
+  52% {
+    transform: translateY(-1.25em) scale(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  68% {
+    transform: translateY(0) scale(1.09, 0.9);
+    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
+  }
+  79% {
+    transform: translateY(-0.5em) scale(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  89% {
+    transform: translateY(0) scale(1.04, 0.95);
+    animation-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
+  }
+  95% {
+    transform: translateY(-0.14em) scale(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* globals.css already collapses animation durations for reduced motion;
+   drop the delays too so nothing sits invisible waiting for its cue. */
+@media (prefers-reduced-motion: reduce) {
+  .t23 *,
+  .t23 *::before,
+  .t23 *::after {
+    animation-delay: 0s !important;
+  }
+}
+
+/* ---------- wide screens: the title beside the player ---------- */
+
+@media (min-width: 64rem) {
+  .t23-opening {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: clamp(3rem, 6vw, 6rem);
+    width: min(72rem, calc(100vw - 4rem));
+    min-height: 100svh;
+    margin-inline: calc(50% - min(36rem, 50vw - 2rem));
+  }
+  .t23-opening .t23-np {
+    min-height: 0;
+  }
+  .t23-opening .t23-hero {
+    min-height: 0;
+    justify-content: center;
+  }
+  .t23-opening .t23-title {
+    font-size: clamp(3.5rem, 6.6vw, 7.5rem);
+  }
+}
