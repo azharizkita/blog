@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 
 /**
@@ -10,11 +11,29 @@ import { useTheme } from "next-themes";
  * nothing until it scrolls near the viewport.
  *
  * The player follows the site theme via the embed's `theme` query param.
- * next-themes resolves the theme only after mount (the Mermaid pattern), so
- * the box renders empty at its final size first — the iframe then loads
- * once with the correct palette instead of flashing light-then-dark, and a
- * theme toggle re-renders it with the other palette.
+ * The theme is only known in the browser, so the box renders empty at its
+ * final size first — the iframe then loads once with the correct palette
+ * instead of flashing light-then-dark, and a theme toggle re-renders it with
+ * the other palette.
+ *
+ * "Empty first" has to be explicit: next-themes reads the stored/system
+ * theme in its initial client state, so `resolvedTheme` is already set while
+ * React hydrates but undefined on the server. Gating on it alone renders an
+ * iframe the server HTML doesn't have, a hydration mismatch that makes React
+ * throw away and rebuild the surrounding tree. `useMounted` keeps the
+ * hydration render identical to the server's and flips right after.
  */
+
+const subscribeToNothing = () => () => {};
+
+/** False on the server and during hydration, true from then on. */
+function useMounted(): boolean {
+  return useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false,
+  );
+}
 
 /** Normalizes a music.apple.com / embed.music.apple.com link to the embed
  * host; returns null for anything that isn't an Apple Music URL. */
@@ -45,6 +64,7 @@ function embedHeight(embedUrl: URL): number {
 
 export function AppleMusic({ url, title }: { url: string; title?: string }) {
   const { resolvedTheme } = useTheme();
+  const mounted = useMounted();
   const embedUrl = toAppleMusicEmbedUrl(url);
   if (!embedUrl) return null;
 
@@ -56,7 +76,7 @@ export function AppleMusic({ url, title }: { url: string; title?: string }) {
       className="mx-auto block w-full max-w-165"
       style={{ height: embedHeight(themed) }}
     >
-      {resolvedTheme && (
+      {mounted && resolvedTheme && (
         <iframe
           className="block size-full overflow-hidden rounded-lg border-0 bg-transparent"
           src={themed.toString()}
