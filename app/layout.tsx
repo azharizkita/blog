@@ -112,19 +112,24 @@ export default function RootLayout({
             <div className="flex min-h-dvh flex-col gap-4">
               {/* Same container recipe as <main> and the footer wrapper below
                   (max-w-3xl mx-auto px-4) so the chrome and content always
-                  share left/right edges. */}
-              <header className="w-full max-w-3xl mx-auto flex-none px-4 pt-4">
+                  share left/right edges.
+
+                  The `chromeless:` classes only apply on pages that render a
+                  [data-chromeless] element (variant defined in globals.css):
+                  the header and footer step aside and <main> goes full-bleed
+                  so the page can own the whole viewport. */}
+              <header className="w-full max-w-3xl mx-auto flex-none px-4 pt-4 chromeless:hidden">
                 <NavigationBar />
               </header>
 
               <main
                 id="main-content"
-                className="isolate flex w-full flex-1 flex-col gap-8 px-4 max-w-3xl mx-auto"
+                className="isolate flex w-full flex-1 flex-col gap-8 px-4 max-w-3xl mx-auto chromeless:max-w-none chromeless:px-0"
               >
                 {children}
               </main>
 
-              <div className="w-full max-w-3xl mx-auto px-4 pb-8">
+              <div className="w-full max-w-3xl mx-auto px-4 pb-8 chromeless:hidden">
                 <Footer />
               </div>
             </div>

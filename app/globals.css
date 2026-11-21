@@ -5,6 +5,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Chromeless pages: a page that renders an element with [data-chromeless]
+   takes over the whole viewport. The root layout uses this variant to hide
+   the header/footer and lift <main>'s column constraints (app/layout.tsx). */
+@custom-variant chromeless (body:has([data-chromeless]) &);
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
