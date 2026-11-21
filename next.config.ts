@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
-  allowedDevOrigins: ['lokey-mac.gate-scylla.ts.net'],
+  allowedDevOrigins: ["lokey-mac.gate-scylla.ts.net"],
   experimental: {
     agentUpgrade: "latest",
     serverActions: {
@@ -36,7 +36,30 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    // /23 is private (a birthday page): nothing from it, its photos or its
+    // song should be indexed, archived, snippeted or used for AI.
+    const privateRobots = {
+      key: "X-Robots-Tag",
+      value:
+        "noindex, nofollow, noarchive, nosnippet, noimageindex, notranslate, noai, noimageai",
+    };
     return [
+      {
+        source: "/23",
+        headers: [
+          privateRobots,
+          // Links out (the WhatsApp one) don't pass the page's address on.
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+      },
+      { source: "/23/:path*", headers: [privateRobots] },
+      { source: "/audio/:path*", headers: [privateRobots] },
+      {
+        // Its photos as served by the image optimizer.
+        source: "/_next/image",
+        has: [{ type: "query", key: "url", value: "/(23|audio)/.*" }],
+        headers: [privateRobots],
+      },
       {
         // Defense in depth for the dev-only editor: the pages 404 in
         // production and carry noindex meta, but the header also covers
