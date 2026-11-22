@@ -172,10 +172,10 @@ export const STORY = {
   opening: [
     "kalau katanya semua orang akan mengalami _quarter life crisis_, _I really hope God is kind enough to bless you with the most merciful kind of crisis_ (atau bahkan jangan sampai kena krisis sama sekali yaa, haha).",
     "tapi gue cukup yakin, Sherin yang gue kenal sanggup melewati segala jenis krisis _like she always does_ (alias lo keren).",
-    "_btw_, gue ngetik ini dalam keadaan _sober_, ditemani lagu yang sama yang lagi lo dengerin sekarang. lagu ini udah gue puter _on repeat_ sejak halaman ini mulai gue bikin, jadi maaf kalo nanti lagunya ikut nyangkut di kepala lo juga.",
+    "_btw_, gue ngetik ini dalam keadaan _sober_, ditemani lagu yang sama yang lagi lo dengerin sekarang.",
     "oh iya, _disclaimer_ dulu: tulisan ini mungkin agak panjang. bukan karena gue gak bisa nulis singkat, tapi karena ternyata setahun itu lumayan banyak isinya. dimanapun lo baca ini, cari tempat bersandar ya biar ga pegel.",
     'katanya umur segini itu umur yang aneh. udah gak bisa pake alasan "masih muda" buat semua hal, tapi juga belum cukup tua buat ngerasa hidup udah ketebak. orang-orang di sekitar mulai sibuk ngebandingin _timeline_: siapa yang udah ini, siapa yang belum itu, siapa yang kayaknya lebih duluan sampe. capek gak sih? gue aja yang cuma nonton udah capek.',
-    "jadi sebelum lo ikut-ikutan ngitung apa yang belum, gue mau ngajak lo ngitung apa yang udah. tenang, gak pake rumus kok.",
+    "jadi sebelum lo ikut-ikutan ngitung apa yang belum, gue mau ngajak lo ngitung apa yang udah.",
   ],
 
   // Set like the title, one line per entry; the lines from pinkFrom on are
@@ -217,7 +217,7 @@ export const STORY = {
       body: "perlu gue akui semua _skill_ olahraga yang lo suka emang gokil! _next time_ ada _event_ gini lagi, gue bakal bawa spanduk yang lebih gede.",
       release: "2nd EP",
       notes:
-        "mewakili kantor itu artinya ada satu kantor yang percaya sama lo, dan kepercayaan kayak gitu gak dibagiin ke sembarang orang. gue gak akan pura-pura ngerti aturan skor _badminton_, karena memang gak ngerti. yang gue tau, lo selalu keliatan paling semangat kalo udah urusan olahraga. soal spanduk yang lebih gede tadi, ukurannya masih gue rundingin sama abang sablon. doain lolos _budget_.",
+        "mewakili kantor itu artinya ada satu kantor yang percaya sama lo, dan kepercayaan kayak gitu gak dibagiin ke sembarang orang. yang gue tau, lo selalu keliatan paling semangat kalo udah urusan olahraga. soal spanduk yang lebih gede tadi, ukurannya masih gue rundingin sama abang sablon. doain lolos _budget_.",
       // The team photo, centred on her face; everyone but her (face and
       // peace-sign hand) is blurred.
       cover: "/23/covers/dana.jpg",

@@ -340,12 +340,24 @@ html[data-t23-low]:has(.t23) body {
   --t23-red-lo: #5f8c96;
   --pc-ink: var(--dc-brown);
   --pc-grid: rgb(67 58 45 / 0.08);
-  --dd-pink: #92b8c0;
-  --dd-lime: #d5c7ac;
-  --dd-sky: #cfe2e6;
-  --dd-white: #e9e1d0;
-  --ddp-pink: #5f8c96;
-  --ddp-sky: #9d8e7a;
+  /* The doodles over the photos borrow the ending's mix instead (NewJeans
+     pink, Freudian sky, Peripheral Vision terracotta, the last two brightened
+     to hold up on photos): Freudian's own pale
+     sand and sky got lost on bright photos. */
+  --dd-pink: var(--nj-pink);
+  --dd-lime: #e07a55;
+  --dd-sky: #4fa3b5;
+  --dd-white: var(--nj-periwinkle);
+  --ddp-pink: var(--nj-pink);
+  --ddp-sky: #5f8c96;
+}
+/* Bolder strokes with a cream sticker edge (like the signature's), so
+   each doodle reads on light, dark and busy photos alike. */
+.t23-band--paper .t23-doodle {
+  stroke-width: 5;
+  filter: url(#t23-crayon) drop-shadow(0 0 0.6px #fbf7ef)
+    drop-shadow(0 0 0.6px #fbf7ef) drop-shadow(0 0 0.8px #fbf7ef)
+    drop-shadow(0 1px 3px rgb(28 24 19 / 0.35));
 }
 .t23-band--paper .t23-pc-back,
 .t23-band--paper .t23-pc[data-tint] .t23-pc-back {
@@ -364,6 +376,7 @@ html[data-t23-low]:has(.t23) body {
   color: var(--dc-taupe);
 }
 .t23-band--paper .t23-pc-sign {
+  color: var(--nj-pink);
   text-shadow:
     0 0 1px #f4efe4,
     0 0 2px #f4efe4,
