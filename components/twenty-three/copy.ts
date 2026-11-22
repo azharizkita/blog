@@ -65,11 +65,11 @@ export const FLIPBOOK = {
 /** The camcorder's burnt-in labels over the flipbook (NewJeans look). */
 export const CAM = {
   rec: "REC",
-  stamp: "NOV. 23 2026",
+  stamp: "2025-2026",
 } as const;
 
 export const META = {
-  title: "the twenty-third",
+  title: "met ultah 🎂🎉",
   description: "a small page, and a song.",
 } as const;
 
@@ -296,7 +296,6 @@ export const STORY = {
 export const COPY = {
   // Lettering around the dial. It repeats until the circle is full.
   ring: "happy birthday · the twenty-third · ",
-  numeral: "23",
   // Caption under the dial, and its name for screen readers.
   hint: "p.s. coba puter angkanya.",
   dialLabel: "Spin the 23",

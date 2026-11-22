@@ -69,6 +69,16 @@ function locate(event: React.PointerEvent<HTMLElement>) {
   };
 }
 
+/** The sagittarius sign (♐), her sign, drawn as strokes so it follows the
+ * dial's ink colour: an arrow pointing up-right with a bar across the shaft. */
+function Sagittarius() {
+  return (
+    <svg className="t23-sign" viewBox="0 0 100 100" focusable="false">
+      <path d="M18 82 80 20M46 20h34v34M29 45l26 26" />
+    </svg>
+  );
+}
+
 export function Spin() {
   const [phase, setPhase] = useState<Phase>("idle");
 
@@ -332,7 +342,7 @@ export function Spin() {
             <span className="t23-ball t23-ball--orbit" />
           </span>
           <span className="t23-numeral" aria-hidden="true">
-            {COPY.numeral}
+            <Sagittarius />
           </span>
         </button>
 

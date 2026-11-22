@@ -2151,6 +2151,28 @@ html:has(.t23-intro) {
     calc(var(--t23-dizzy, 0) * -0.17em) calc(var(--t23-dizzy, 0) * 0.02em) 0
       oklch(var(--t23-ghost-cool) / calc(var(--t23-dizzy, 0) * 0.8));
 }
+/* The sign itself: strokes in the numeral's colour, with the same double
+   vision as the text-shadow above (SVG strokes ignore text-shadow). */
+.t23-sign {
+  display: block;
+  width: 0.92em;
+  height: 0.92em;
+  margin-inline-start: 0.06em;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(
+      calc(var(--t23-dizzy, 0) * 0.17em) calc(var(--t23-dizzy, 0) * -0.02em) 0
+        oklch(var(--t23-ghost-warm) / calc(var(--t23-dizzy, 0) * 0.8))
+    )
+    drop-shadow(
+      calc(var(--t23-dizzy, 0) * -0.17em) calc(var(--t23-dizzy, 0) * 0.02em) 0
+        oklch(var(--t23-ghost-cool) / calc(var(--t23-dizzy, 0) * 0.8))
+    );
+}
 
 /* Caption and the line that replaces it share one grid cell, so nothing
    jumps when one hands over to the other. */
